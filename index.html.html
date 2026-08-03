@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التقارير المالية برج الاندلس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#1b1f3f;
+    --night-2:#282c66;
+    --wall:#e8a53d;
+    --wall-2:#f2c46b;
+    --paper:#f8f7f4;
+    --paper-2:#efece3;
+    --ink:#211f2e;
+    --ink-soft:#726f83;
+    --lit:#e8a53d;
+    --lit-glow:#f8cf8a;
+    --dim:#4b4f7e;
+    --vacant:#918bab;
+    --good:#1f9d76;
+    --bad:#e2573f;
+    --line:#e6e0d3;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'IBM Plex Mono','IBM Plex Sans Arabic',monospace; font-weight:600;}
+  h1,h2,h3{font-family:'El Messiri', sans-serif; margin:0;}
+
+  /* ---------- HERO / FACADE ---------- */
+  .hero{
+    position:relative; overflow:hidden;
+    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%);
+    padding:16px 14px 20px;
+    border-radius:0 0 22px 22px;
+    box-shadow:0 10px 28px rgba(20,16,50,.18);
+  }
+  .hero::before{
+    content:'';
+    position:absolute; top:-120px; left:50%; transform:translateX(-50%);
+    width:320px; height:320px; border-radius:50%;
+    background:radial-gradient(circle, rgba(232,165,61,.30) 0%, rgba(232,165,61,0) 70%);
+    pointer-events:none;
+  }
+  .hero > *{position:relative;}
+  .hero-top{
+    display:flex; align-items:center; justify-content:space-between;
+    color:#fff; margin-bottom:12px;
+  }
+  .hero-title{color:#fff; font-size:23px; letter-spacing:.3px; font-weight:700;}
+  .month-nav{display:flex; align-items:center; gap:10px; color:#fff;}
+  .month-nav button{
+    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+    color:#fff; width:32px; height:32px; border-radius:50%;
+    font-size:16px; cursor:pointer;
+  }
+  .month-nav button:active{background:rgba(255,255,255,.3);}
+  .month-label{font-family:'IBM Plex Mono'; font-size:15px; min-width:110px; text-align:center;}
+
+  .hero-title{cursor:default; user-select:none;}
+
+  #lockBtn{
+    background:transparent; border:none; color:transparent;
+    width:6px; height:32px; font-size:0; cursor:default; padding:0;
+  }
+  #lockBtn.revealed{
+    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+    color:#fff; width:32px; border-radius:50%; font-size:14px; cursor:pointer;
+  }
+  #lockBtn.change-mode{
+    background:rgba(255,255,255,.35); border:1px solid #fff;
+  }
+  #tapHint{
+    font-size:10.5px; color:#fff; margin-inline-end:2px; white-space:nowrap;
+  }
+  #unlockPanel{
+    display:none; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+    border-radius:10px; padding:8px 10px; margin-bottom:12px; gap:8px;
+  }
+  #unlockPanel.show{display:flex; align-items:center;}
+  #unlockPanel input{
+    flex:1; border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12);
+    color:#fff; border-radius:8px; padding:7px 10px; font-family:'IBM Plex Mono'; font-size:13px;
+  }
+  #unlockPanel button{
+    background:#fff; color:var(--night); border:none; border-radius:8px;
+    padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer;
+  }
+  .view-only-banner{
+    background:var(--paper-2); color:var(--ink-soft); font-size:12px; text-align:center;
+    padding:8px 10px; border-radius:10px; margin-bottom:12px; border:1px solid var(--line);
+  }
+  #content.locked input, #content.locked select,
+  #content.locked button.pill, #content.locked button.del,
+  #content.locked form.inline button, #content.locked .preset,
+  #content.locked input[type=checkbox]{
+    pointer-events:none; opacity:.45;
+  }
+  /* الـ label اللي لافة حوالين أي checkbox (زي "مأهولة"، "أسانسير"، "تحديد الكل") لازم تتقفل هي كمان،
+     لأن الضغط على نص الـ label بيفعّل الـ checkbox جواه حتى لو الـ checkbox نفسه pointer-events:none */
+  #content.locked label{
+    pointer-events:none;
+  }
+  .facade.locked .win{ pointer-events:none; }
+
+  .balance-hero{
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3);
+    border-radius:14px; padding:14px 16px; margin-bottom:12px; text-align:center;
+  }
+  .balance-hero .lbl{color:#e4e1f0; font-size:13px;}
+  .balance-hero .val{color:#fff; font-size:40px; margin-top:4px; font-weight:700;}
+  .balance-hero.balance-neg .val{color:#ffd0c8;}
+
+  .facade{
+    display:flex; flex-direction:column-reverse; gap:4px;
+    background:rgba(255,255,255,.12); border-radius:10px; padding:9px 9px 7px;
+    border:1px solid rgba(255,255,255,.25);
+  }
+  .floor-row{display:flex; align-items:center; gap:6px;}
+  .floor-label{
+    width:40px; flex-shrink:0; color:#e4e1f0; font-size:11px; font-weight:600; text-align:left;
+    font-family:'IBM Plex Mono';
+  }
+  .windows{display:flex; gap:5px; flex:1;}
+  .win{
+    position:relative;
+    flex:1; min-width:0; height:58px; border-radius:8px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1px; padding:0 3px;
+    transition:transform .12s ease;
+    border:1px solid rgba(0,0,0,.12);
+  }
+  .win .apt-num{
+    font-size:13px; font-family:'IBM Plex Mono'; font-weight:700; line-height:1.15;
+  }
+  .win .apt-name{
+    font-size:10px; font-family:'IBM Plex Sans Arabic'; font-weight:600; line-height:1.15;
+    max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92;
+  }
+  .win .apt-sub{
+    font-size:9px; font-family:'IBM Plex Mono'; line-height:1.1; opacity:.85;
+  }
+  .win .occ-dot{
+    position:absolute; top:4px; left:4px;
+    width:9px; height:9px; border-radius:50%;
+    border:1px solid rgba(0,0,0,.25);
+  }
+  .win .occ-dot.occ-yes{ background:#3ddc73; box-shadow:0 0 6px 2px rgba(61,220,115,.85); }
+  .win .occ-dot.occ-no{ background:#ff5b4d; box-shadow:0 0 6px 2px rgba(255,91,77,.75); }
+  .win:active{transform:scale(.94);}
+  .win.paid{background:var(--lit); box-shadow:0 0 8px 0 rgba(232,165,61,.55); color:#241a04;}
+  .win.partial{background:var(--dim); color:#fff; border-inline-start:3px solid var(--lit);}
+  .win.unpaid{background:var(--dim); color:#fff;}
+  .win.vacant{background:var(--vacant); color:#f3f0ea; border-style:dashed;}
+  .win.vacant .apt-name{display:none;}
+
+  .stats{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;
+  }
+  .stat{
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26);
+    border-radius:10px; padding:10px 12px;
+  }
+  .stat .lbl{color:#e4e1f0; font-size:12px;}
+  .stat .val{color:#fff; font-size:25px; margin-top:2px;}
+  .stat.balance-neg .val{color:#ffd0c8;}
+
+  /* ---------- TABS ---------- */
+  .tabbar{
+    display:flex; background:var(--paper-2); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:20; overflow-x:auto;
+  }
+  .tabbar button{
+    flex:1; min-width:82px; background:none; border:none; padding:12px 6px;
+    font-family:'IBM Plex Sans Arabic'; font-size:13px; color:var(--ink-soft);
+    cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap;
+  }
+  .tabbar button.active{color:var(--ink); border-bottom-color:var(--lit); font-weight:600;}
+
+  .content{padding:14px 14px 60px; max-width:640px; margin:0 auto;}
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; margin-bottom:10px;
+    box-shadow:0 2px 10px rgba(33,31,46,.045);
+  }
+  .section-title{font-size:13px; color:var(--ink-soft); margin:16px 0 8px; font-weight:600;}
+  .bulk-checkbox{
+    width:16px; height:16px; flex-shrink:0; margin:2px 0 0; accent-color:var(--lit); cursor:pointer;
+  }
+
+  /* apartment row */
+  .apt-row{
+    display:flex; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--line);
+    gap:8px;
+  }
+  .apt-row:last-child{border-bottom:none;}
+  .apt-info{display:flex; flex-direction:column; flex:1; min-width:0;}
+  .apt-info .name{font-size:14.5px; font-weight:600;}
+  .apt-info .meta{font-size:11.5px; color:var(--ink-soft);}
+  .apt-actions{display:flex; align-items:center; gap:6px;}
+  .amount-input{
+    width:64px; text-align:center; border:1px solid var(--line); border-radius:8px;
+    padding:6px 4px; font-family:'IBM Plex Mono'; font-size:13px;
+  }
+  .pill{
+    font-size:11px; padding:5px 10px; border-radius:20px; border:none; cursor:pointer;
+    font-family:'IBM Plex Sans Arabic'; font-weight:600;
+  }
+  .pill.pay{background:var(--good); color:#fff;}
+  .pill.pay.done{background:#e9f5ef; color:var(--good); border:1px solid var(--good);}
+  .vacant-tag{font-size:11px; color:var(--ink-soft); background:var(--paper-2); padding:4px 10px; border-radius:20px;}
+  .export-btn{
+    font-size:12px; padding:7px 14px; border-radius:20px; border:none; cursor:pointer;
+    font-family:'IBM Plex Sans Arabic'; font-weight:600; background:var(--ink); color:#fff;
+  }
+
+  .floor-group-title{
+    font-size:11px; color:#96907d; margin:14px 0 2px; letter-spacing:.5px;
+  }
+
+  /* expenses / fund list */
+  .tx-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .tx-row:last-child{border-bottom:none;}
+  .tx-main{display:flex; flex-direction:column;}
+  .tx-main .note{font-weight:600;}
+  .tx-main .date{font-size:11px; color:var(--ink-soft);}
+  .tx-amt.out{color:var(--bad);}
+  .tx-amt.in{color:var(--good);}
+
+  form.inline{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+  form.inline input, form.inline select{
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+    font-family:'IBM Plex Sans Arabic'; font-size:13px; flex:1; min-width:100px;
+  }
+  form.inline button{
+    background:var(--ink); color:#fff; border:none; border-radius:8px;
+    padding:8px 16px; font-size:13px; cursor:pointer; font-weight:600;
+  }
+  .preset-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .preset{
+    font-size:11.5px; background:var(--paper-2); border:1px solid var(--line);
+    border-radius:20px; padding:5px 10px; cursor:pointer; color:var(--ink-soft);
+  }
+
+  .plan-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .plan-row:last-child{border-bottom:none;}
+  .plan-row .item{flex:1; font-size:13.5px;}
+  .plan-row.done .item{text-decoration:line-through; color:#a19c8c;}
+  .plan-row input[type=checkbox]{width:18px; height:18px; accent-color:var(--good);}
+
+  .empty{text-align:center; color:var(--ink-soft); font-size:13px; padding:20px 0;}
+  .note-strip{
+    background:#fbf3df; border:1px solid #e8d9a8; border-radius:10px; padding:9px 12px;
+    font-size:12px; color:#7a6320; margin-bottom:12px;
+  }
+  .del{background:none; border:none; color:#b7a9a9; cursor:pointer; font-size:15px; padding:2px 6px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-title">🏢 التقارير المالية برج الاندلس</div>
+    <div class="month-nav">
+      <button id="lockBtn" title="">🔒</button>
+      <button id="prevMonth">‹</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button id="nextMonth">›</button>
+    </div>
+  </div>
+  <div id="unlockPanel">
+    <input type="password" id="pinInput" inputmode="numeric">
+    <button id="pinSubmit">فتح</button>
+  </div>
+  <div id="syncStatus" style="font-size:10.5px; text-align:center; color:#cfe9db; margin:-4px 0 10px;">🔄 بيتزامن مع جوجل شيت...</div>
+  <div class="balance-hero" id="balanceHero"></div>
+  <div class="stats" id="stats"></div>
+  <div class="facade" id="facade"></div>
+</div>
+
+<div class="tabbar" id="tabbar">
+  <button data-tab="collect">التحصيل</button>
+  <button data-tab="balance" class="active">رصيد السكان</button>
+  <button data-tab="arrears">متأخرات السكان</button>
+  <button data-tab="commitments">التزامات العمارة</button>
+  <button data-tab="expenses">المصروفات</button>
+  <button data-tab="fund">الصندوق</button>
+  <button data-tab="plans">خطط مستقبلية</button>
+  <button data-tab="apts">الشقق</button>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const STORE_KEY = 'building-finances-v1';
+const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
+const START_MONTH = '2026-08';
+
+function seedState(){
+  const apts = [
+    ['801','الأرضي','أبو سيد',250,false],
+    ['802','الأول','زكريا شكري',450,true],
+    ['803','الأول','مستأجر جديد',450,true],
+    ['804','الأول','علي العرباوي',450,true],
+    ['805','الثاني','',0,true],
+    ['806','الثاني','ام اميرة',450,true],
+    ['807','الثاني','',0,true],
+    ['808','الثالث','محمد محي',450,true],
+    ['809','الثالث','',0,true],
+    ['810','الثالث','كريم',450,true],
+    ['811','الرابع','اشرف يوسف',450,true],
+    ['812','الرابع','محمد مصطفي',500,true],
+    ['813','الرابع','ممدوح الكاشف',500,true],
+    ['814','الخامس','أسماء',500,true],
+    ['815','الخامس','امين',500,true],
+    ['816','الخامس','عبادة',500,true],
+    ['817','السادس','إبراهيم عواد',500,true],
+    ['818','السادس','الجزار',500,true],
+    ['819','السادس','',0,true],
+    ['820','السابع','احمد علي',500,true],
+    ['821','السابع','مختار',500,true],
+    ['822','السابع','',0,true],
+    ['823','الثامن','إبراهيم المقدم',500,true],
+    ['824','الثامن','كرلس',500,true],
+    ['825','الثامن','',0,true],
+    ['826','التاسع','محمد',500,true],
+    ['827','التاسع','ام سيد',500,true],
+    ['828','التاسع','بكر',500,true],
+    ['829','العاشر','رامي',500,true],
+    ['830','العاشر','صلاح سمير',500,true],
+    ['831','العاشر','',0,true],
+    ['832','الحادي عشر','محمد يوسف',500,true],
+    ['833','الحادي عشر','مستأجر جديد',500,true],
+    ['834','الحادي عشر','',0,true],
+    ['835','الثاني عشر','محمد خالد',500,true],
+    ['836','الثاني عشر','أبو احمد',500,true],
+    ['837','الثاني عشر','محمد إبراهيم',500,true],
+    ['838','الثالث عشر','محمود توفيق',500,true],
+    ['839','الثالث عشر','ام احمد',500,true],
+    ['840','الثالث عشر','',0,true],
+  ].map(a=>({id:a[0], floor:a[1], name:a[2], subscription:a[3], elevator:a[4], occupied: a[2]!==''}));
+
+  return {
+    apartments: apts,
+    payments: { '2026-08': { '820': 500 } },
+    paymentDates: { '2026-08': { '820': '2026-08-01' } },
+    expenses: [
+      {id:'e1', date:'2026-07-01', category:'مياه', note:'مياه يوليه', amount:550}
+    ],
+    fundLedger: [],
+    commitments: [],
+    commitmentPayments: [],
+    plans: [
+      {id:'p1', item:'عتب أسانسير في كل دور', cost:2000, done:false},
+      {id:'p2', item:'لوك باب عمارة + شفرات', cost:9000, done:false},
+      {id:'p3', item:'كاميرات لكل دور والمدخل', cost:15000, done:false},
+      {id:'p4', item:'واير أسانسير', cost:21000, done:false},
+    ],
+    billPresets: [
+      {category:'مياه', amount:6500},
+      {category:'كهرباء', amount:5000},
+      {category:'نظافة سلم', amount:1000},
+    ],
+    settings: {
+      elevatorAmount: 500,
+      noElevatorAmount: 450,
+      openingBalance: 4050,
+      editPin: '1234',
+      unlockTaps: 4,
+      changePinTaps: 7
+    },
+    _seededNote: true
+  };
+}
+
+let state = null;
+let currentTab = 'balance';
+let currentMonth = '2026-08'; // YYYY-MM
+let unlocked = false; // resets to locked/view-only every time the page loads — not persisted
+let editingCommitId = null; // id of the commitment currently open for inline editing (apts tab)
+let selectedCommitIds = new Set(); // ids of commitments ticked for bulk delete
+let selectedArrearApts = new Set(); // apartment ids ticked for bulk settle in arrears report
+
+function monthKey(y,m){ return y+'-'+String(m).padStart(2,'0'); }
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return MONTH_NAMES[m-1] + ' ' + y;
+}
+function shiftMonth(key, delta){
+  let [y,m] = key.split('-').map(Number);
+  m += delta;
+  if(m>12){m=1;y++;} if(m<1){m=12;y--;}
+  return monthKey(y,m);
+}
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/* ---------------- شيت جوجل كقاعدة بيانات مشتركة ---------------- */
+/* غيّر الرابط ده لو عملت نشر (Deploy) جديد للسكريبت وطلع لك رابط مختلف */
+const REMOTE_DB_URL = 'https://script.google.com/macros/s/AKfycbz1_5VB0BEdJt6w0GiajPA2Rwdyx63CWSaYhZ2EYfu9EG038vZmsgDleAYxZrW1-Ch3aA/exec';
+
+let lastSyncedRaw = null;
+let syncTimer = null;
+
+function hasClaudeStorage(){
+  return typeof window!=='undefined' && window.storage && typeof window.storage.get==='function';
+}
+
+function setSyncStatus(txt, isError){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  el.textContent = txt;
+  el.style.color = isError ? '#ffb3a3' : '#cfe9db';
+}
+
+async function storageGet(key){
+  if(hasClaudeStorage()){
+    try{
+      const res = await window.storage.get(key, true);
+      return res ? res.value : null;
+    }catch(e){ /* not found yet, or storage not usable here */ }
+  }
+  if(REMOTE_DB_URL){
+    try{
+      const res = await fetch(REMOTE_DB_URL + '?key=' + encodeURIComponent(key), {cache:'no-store'});
+      const json = await res.json();
+      if(json && json.value){
+        try{ localStorage.setItem(key, json.value); }catch(e){}
+        setSyncStatus('🟢 متصل بجوجل شيت');
+        return json.value;
+      }
+      setSyncStatus('🟢 متصل بجوجل شيت');
+      return null;
+    }catch(e){
+      setSyncStatus('🟠 مفيش اتصال — بيشتغل من آخر نسخة محفوظة على الجهاز', true);
+    }
+  }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+
+async function storageSet(key, value){
+  if(hasClaudeStorage()){
+    try{ await window.storage.set(key, value, true); return; }catch(e){ /* fall through to local */ }
+  }
+  try{ localStorage.setItem(key, value); }catch(e){ console.error('save failed', e); }
+  if(REMOTE_DB_URL){
+    try{
+      await fetch(REMOTE_DB_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, // نص عادي عشان نتفادى preflight من جوجل أبس سكريبت
+        body: JSON.stringify({key, value})
+      });
+      setSyncStatus('🟢 متصل بجوجل شيت');
+    }catch(e){
+      setSyncStatus('🟠 التعديل محفوظ على جهازك بس — هيتزامن أول ما النت يرجع', true);
+    }
+  }
+}
+
+async function loadState(){
+  const raw = await storageGet('data');
+  if(raw){
+    lastSyncedRaw = raw;
+    state = JSON.parse(raw);
+    migrateState();
+    return;
+  }
+  state = seedState();
+  await persist();
+}
+
+/* بيجيب آخر نسخة من جوجل شيت دوري، عشان أي حد غيّر حاجة يظهر التغيير عند الكل من غير ما يحتاج يعمل ريفريش يدوي.
+   بيوقف أثناء ما حد فاتح وضع التعديل (unlocked) عشان مايبوظش حاجة وهو بيكتب. */
+async function pollRemote(){
+  if(unlocked) return;
+  try{
+    const raw = await storageGet('data');
+    if(raw && raw !== lastSyncedRaw){
+      lastSyncedRaw = raw;
+      state = JSON.parse(raw);
+      migrateState();
+      renderAll();
+    }
+  }catch(e){ /* تجاهل أي خطأ مؤقت في الشبكة */ }
+}
+function startSyncPolling(){
+  if(!REMOTE_DB_URL) return;
+  if(syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(pollRemote, 20000); // كل 20 ثانية
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) pollRemote();
+  });
+}
+
+function migrateState(){
+  let changed = false;
+  if(!state.settings){
+    state.settings = { elevatorAmount:500, noElevatorAmount:450 };
+    changed = true;
+  }
+  if(!state.settings.editPin){
+    state.settings.editPin = '1234';
+    changed = true;
+  }
+  if(typeof state.settings.unlockTaps !== 'number'){
+    state.settings.unlockTaps = 4;
+    changed = true;
+  }
+  if(typeof state.settings.changePinTaps !== 'number'){
+    state.settings.changePinTaps = 7;
+    changed = true;
+  }
+  if(typeof state.settings.openingBalance !== 'number'){
+    const oldLedgerSum = (state.fundLedger||[]).reduce((s,f)=>s+f.amount,0);
+    state.settings.openingBalance = oldLedgerSum || 4050;
+    state.fundLedger = [];
+    changed = true;
+  }
+  state.apartments.forEach(a=>{
+    if(typeof a.elevator !== 'boolean'){
+      a.elevator = a.floor !== 'الأرضي';
+      changed = true;
+    }
+    if(typeof a.occupied !== 'boolean'){
+      a.occupied = !!a.name;
+      changed = true;
+    }
+    if(!Array.isArray(a.occupancyPeriods)){
+      // بيانات قديمة: لو الشقة مأهولة حاليًا نعتبرها مأهولة من أول شهر متسجّل عندنا عشان مانخسرش المتأخرات القديمة
+      a.occupancyPeriods = a.occupied ? [{from: START_MONTH, to: null}] : [];
+      changed = true;
+    }
+  });
+  if(!Array.isArray(state.commitments)){
+    state.commitments = [];
+    changed = true;
+  }
+  if(!Array.isArray(state.commitmentPayments)){
+    state.commitmentPayments = [];
+    changed = true;
+  }
+  if(!Array.isArray(state.elevatorSpends)){
+    state.elevatorSpends = [];
+    changed = true;
+  }
+  if(!state.paymentDates){
+    state.paymentDates = {};
+    changed = true;
+  }
+  (state.commitments||[]).forEach(c=>{
+    if(typeof c.fundType !== 'string'){
+      c.fundType = 'general';
+      changed = true;
+    }
+  });
+  if(changed) persist();
+}
+
+async function persist(){
+  const raw = JSON.stringify(state);
+  lastSyncedRaw = raw;
+  await storageSet('data', raw);
+}
+
+function fmt(n){
+  n = Math.round(n);
+  return n.toLocaleString('en-US');
+}
+
+function apartmentsByFloor(){
+  const groups = {};
+  state.apartments.forEach(a=>{
+    if(!groups[a.floor]) groups[a.floor]=[];
+    groups[a.floor].push(a);
+  });
+  return groups;
+}
+
+function isOccupiedInMonth(apt, monthKey){
+  const periods = apt.occupancyPeriods || [];
+  return periods.some(p => monthKey >= p.from && (p.to===null || monthKey < p.to));
+}
+
+function statusFor(apt, monthKey){
+  if(!isOccupiedInMonth(apt, monthKey)) return 'vacant';
+  const paid = (state.payments[monthKey]||{})[apt.id] || 0;
+  if(paid<=0) return 'unpaid';
+  if(paid>=apt.subscription) return 'paid';
+  return 'partial';
+}
+
+function computeMonthTotals(monthKey){
+  let expected=0, collected=0, outstanding=0;
+  state.apartments.forEach(a=>{
+    if(!isOccupiedInMonth(a, monthKey)) return;
+    expected += a.subscription;
+    const paid = (state.payments[monthKey]||{})[a.id] || 0;
+    collected += paid;
+    if(paid < a.subscription) outstanding++;
+  });
+  return {expected, collected, outstanding};
+}
+
+function computeFundBalance(){
+  let bal = state.settings.openingBalance || 0;
+  state.fundLedger.forEach(f=> bal += f.amount);
+  Object.values(state.payments).forEach(monthObj=>{
+    Object.values(monthObj).forEach(v=> bal += v);
+  });
+  (state.commitmentPayments||[]).forEach(cp=>{
+    const c = state.commitments.find(x=>x.id===cp.commitmentId);
+    if(c && !c.aptId){
+      bal -= cp.amount; // سداد التزام عام (دين/فاتورة على العمارة) = فلوس بتخرج من الصندوق
+    } else {
+      bal += cp.amount; // تحصيل التزام إضافي من ساكن معيّن = فلوس بتدخل الصندوق
+    }
+  });
+  state.expenses.forEach(e=> bal -= e.amount);
+  (state.elevatorSpends||[]).forEach(sp=> bal -= sp.amount);
+  return bal;
+}
+
+/* ---------------- COMMITMENTS (التزامات) ---------------- */
+const COMMITMENT_TYPES = {
+  once: 'مرة واحدة',
+  monthly: 'شهري ثابت',
+  installment: 'قسط شهري'
+};
+
+function commitmentTotalDue(c, uptoMonthKey){
+  uptoMonthKey = uptoMonthKey || currentMonth;
+  if(uptoMonthKey < c.startMonth) return 0;
+  if(c.type==='once') return c.amount;
+  const months = monthsRange(c.startMonth, uptoMonthKey).length;
+  if(c.type==='installment') return Math.min(c.totalAmount||0, c.amount * months);
+  // monthly: تراكم كل شهر من شهر البداية لحد الشهر الحالي
+  return c.amount * months;
+}
+
+function commitmentPaidTotal(c){
+  return (state.commitmentPayments||[])
+    .filter(cp=>cp.commitmentId===c.id)
+    .reduce((s,cp)=>s+cp.amount,0);
+}
+
+function commitmentRemaining(c, uptoMonthKey){
+  const due = commitmentTotalDue(c, uptoMonthKey);
+  const paid = commitmentPaidTotal(c);
+  const rem = due - paid;
+  return c.type==='monthly' ? rem : Math.max(0, rem);
+}
+
+function commitmentTotalRemaining(c){
+  // remaining to fully close the commitment, regardless of how many months elapsed
+  const total = c.type==='installment' ? (c.totalAmount||0) : commitmentTotalDue(c, currentMonth);
+  return Math.max(0, total - commitmentPaidTotal(c));
+}
+
+function commitmentSuggestedAmount(c){
+  const rem = commitmentRemaining(c, currentMonth);
+  if(c.type==='monthly') return c.amount;
+  return Math.max(0, Math.min(c.amount, rem));
+}
+
+function aptCommitments(aptId){
+  return (state.commitments||[]).filter(c=>c.aptId===aptId && c.startMonth<=currentMonth);
+}
+
+function monthsRange(fromKey, toKey){
+  const months = [];
+  let cur = fromKey;
+  // safety cap so a bad date never loops forever
+  for(let i=0;i<240;i++){
+    months.push(cur);
+    if(cur===toKey) break;
+    cur = shiftMonth(cur, 1);
+  }
+  return months;
+}
+
+function computeArrears(){
+  const months = monthsRange(START_MONTH, currentMonth);
+  const perApt = {}; // aptId -> {apt, total, items:[{label, owed}]}
+  state.apartments.forEach(apt=>{
+    months.forEach(mk=>{
+      if(!isOccupiedInMonth(apt, mk)) return;
+      const paid = (state.payments[mk]||{})[apt.id] || 0;
+      const owed = apt.subscription - paid;
+      if(owed>0){
+        if(!perApt[apt.id]) perApt[apt.id] = {apt, total:0, items:[]};
+        perApt[apt.id].total += owed;
+        perApt[apt.id].items.push({label: monthLabel(mk), owed});
+      }
+    });
+    aptCommitments(apt.id).forEach(c=>{
+      const rem = commitmentRemaining(c, currentMonth);
+      if(rem>0){
+        if(!perApt[apt.id]) perApt[apt.id] = {apt, total:0, items:[]};
+        perApt[apt.id].total += rem;
+        perApt[apt.id].items.push({label: 'دين: ' + (c.note||COMMITMENT_TYPES[c.type]), owed: rem});
+      }
+    });
+  });
+  return Object.values(perApt).sort((a,b)=> b.total - a.total);
+}
+
+function settleArrearsForApt(aptId){
+  const apt = state.apartments.find(a=>a.id===aptId);
+  if(!apt) return;
+  const months = monthsRange(START_MONTH, currentMonth);
+  months.forEach(mk=>{
+    if(!isOccupiedInMonth(apt, mk)) return;
+    if(!state.payments[mk]) state.payments[mk] = {};
+    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
+    const paid = state.payments[mk][apt.id] || 0;
+    if(paid < apt.subscription){
+      state.payments[mk][apt.id] = apt.subscription;
+      state.paymentDates[mk][apt.id] = todayStr();
+    }
+  });
+  aptCommitments(apt.id).forEach(c=>{
+    const rem = commitmentRemaining(c, currentMonth);
+    if(rem>0){
+      if(!state.commitmentPayments) state.commitmentPayments=[];
+      state.commitmentPayments.push({
+        id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
+        commitmentId:c.id, aptId:c.aptId, date: currentMonth+'-01', amount: rem
+      });
+    }
+  });
+}
+
+function computeElevatorFundBalance(){
+  // بيجمع بس الالتزامات اللي اتعلّمت "خاصة باشتراكات الأسانسير" — سواء تحصيل من ساكن مشترك جديد (بيزوّد الرصيد)
+  // أو التزام عام مرتبط بالأسانسير بدون شقة معيّنة (بيقلل منه)، بالإضافة لعمليات الصرف اليدوي
+  let bal = 0;
+  (state.commitmentPayments||[]).forEach(cp=>{
+    const c = state.commitments.find(x=>x.id===cp.commitmentId);
+    if(c && c.fundType==='elevator'){
+      bal += c.aptId ? cp.amount : -cp.amount;
+    }
+  });
+  (state.elevatorSpends||[]).forEach(sp=> bal -= sp.amount);
+  return bal;
+}
+
+function apartmentElevatorCredit(aptId){
+  // الرصيد ده ملك مشترك لكل المشتركين في الأسانسير مع بعض (مش خاص بمين دفع بالظبط) — بيتقسم بالتساوي بينهم
+  const apt = state.apartments.find(a=>a.id===aptId);
+  if(!apt || !apt.elevator || !apt.occupied) return 0;
+  const subscribers = state.apartments.filter(a=>a.occupied && a.elevator);
+  if(subscribers.length===0) return 0;
+  return computeElevatorFundBalance() / subscribers.length;
+}
+
+function computeTotalObligations(){
+  // بس الالتزامات العامة على العمارة (بدون شقة) — مش المبالغ الإضافية المطلوبة من ساكن معيّن
+  return (state.commitments||[]).filter(c=>!c.aptId).reduce((s,c)=> s + commitmentTotalRemaining(c), 0);
+}
+
+function commitmentAptLabel(c){
+  if(!c.aptId) return 'التزام عام (بدون شقة)';
+  const apt = state.apartments.find(a=>a.id===c.aptId);
+  return apt ? (apt.name||apt.id) : c.aptId;
+}
+
+function computeMonthExpenses(monthKey){
+  return state.expenses
+    .filter(e=> e.date && e.date.slice(0,7)===monthKey)
+    .reduce((s,e)=>s+e.amount,0);
+}
+
+/* ---------------- RENDER: HERO ---------------- */
+function renderHero(){
+  document.getElementById('monthLabel').textContent = monthLabel(currentMonth);
+  const prevBtn = document.getElementById('prevMonth');
+  const atStart = currentMonth <= START_MONTH;
+  prevBtn.style.opacity = atStart ? '.35' : '';
+  prevBtn.style.cursor = atStart ? 'not-allowed' : '';
+
+  const groups = apartmentsByFloor();
+  const facade = document.getElementById('facade');
+  facade.innerHTML = '';
+  FLOOR_ORDER.filter(f=>groups[f]).forEach(floor=>{
+    const row = document.createElement('div');
+    row.className='floor-row';
+    const label = document.createElement('div');
+    label.className='floor-label';
+    label.textContent = floor;
+    row.appendChild(label);
+    const wins = document.createElement('div');
+    wins.className='windows';
+    groups[floor].forEach(apt=>{
+      const st = statusFor(apt, currentMonth);
+      const w = document.createElement('div');
+      w.className = 'win ' + st;
+      w.title = (apt.name||'شاغرة') + ' — ' + apt.id + (apt.occupied ? ' — مأهولة' : ' — شاغرة');
+      const dot = document.createElement('div');
+      dot.className = 'occ-dot ' + (apt.occupied ? 'occ-yes' : 'occ-no');
+      w.appendChild(dot);
+      const numEl = document.createElement('div');
+      numEl.className = 'apt-num';
+      numEl.textContent = apt.id;
+      w.appendChild(numEl);
+      if(apt.occupied){
+        const nameEl = document.createElement('div');
+        nameEl.className = 'apt-name';
+        nameEl.textContent = apt.name || '';
+        w.appendChild(nameEl);
+      }
+      const subEl = document.createElement('div');
+      subEl.className = 'apt-sub';
+      subEl.textContent = fmt(apt.subscription) + ' ج';
+      w.appendChild(subEl);
+      if(st!=='vacant'){
+        w.addEventListener('click', ()=> quickTogglePaid(apt.id));
+      }
+      wins.appendChild(w);
+    });
+    row.appendChild(wins);
+    facade.appendChild(row);
+  });
+
+  const {expected, collected, outstanding} = computeMonthTotals(currentMonth);
+  const balance = computeFundBalance();
+  const monthExpenses = computeMonthExpenses(currentMonth);
+  const totalArrears = computeArrears().reduce((s,a)=>s+a.total,0);
+  const totalApts = state.apartments.length;
+  const occupiedCount = state.apartments.filter(a=>a.occupied).length;
+  const vacantCount = totalApts - occupiedCount;
+  const totalObligations = computeTotalObligations();
+  const netKPI = balance - totalObligations;
+  const elevatorFund = computeElevatorFundBalance();
+
+  const balanceHero = document.getElementById('balanceHero');
+  balanceHero.classList.toggle('balance-neg', balance<0);
+  balanceHero.innerHTML = `<div class="lbl">رصيد الصندوق</div><div class="val num">${fmt(balance)} <span style="font-size:14px;font-weight:400">جنيه</span></div>`;
+
+  const stats = document.getElementById('stats');
+  stats.innerHTML = `
+    <div class="stat"><div class="lbl">المتوقع الشهر ده</div><div class="val num">${fmt(expected)}</div></div>
+    <div class="stat"><div class="lbl">المحصّل</div><div class="val num">${fmt(collected)} <span style="font-size:11px;color:#8fd6bb">/ متبقي ${outstanding}</span></div></div>
+    <div class="stat"><div class="lbl">مصروفات الشهر</div><div class="val num">${fmt(monthExpenses)}</div></div>
+    <div class="stat ${totalArrears>0?'balance-neg':''}"><div class="lbl">إجمالي المتأخرات</div><div class="val num">${fmt(totalArrears)}</div></div>
+    <div class="stat"><div class="lbl">الشقق</div><div class="val num">${totalApts} <span style="font-size:11px;color:#c9c5e0">(${occupiedCount} مسكونة / ${vacantCount} شاغرة)</span></div></div>
+    <div class="stat ${totalObligations>0?'balance-neg':''}"><div class="lbl">إجمالي الالتزامات المتبقية</div><div class="val num">${fmt(totalObligations)}</div></div>
+    <div class="stat ${netKPI<0?'balance-neg':''}"><div class="lbl">الفائض / العجز بعد الالتزامات</div><div class="val num">${fmt(netKPI)}</div></div>
+    <div class="stat"><div class="lbl">🛗 رصيد مشتركي الأسانسير</div><div class="val num">${fmt(elevatorFund)} <span style="font-size:11px;color:#c9c5e0">من ${fmt(balance)} إجمالي</span></div></div>
+    <div class="stat"><div class="lbl">رصيد عام لكل السكان (غير الأسانسير)</div><div class="val num">${fmt(balance-elevatorFund)}</div></div>
+  `;
+}
+
+function quickTogglePaid(aptId){
+  if(!unlocked) return;
+  const apt = state.apartments.find(a=>a.id===aptId);
+  if(!apt) return;
+  if(!state.payments[currentMonth]) state.payments[currentMonth]={};
+  if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
+  const current = state.payments[currentMonth][aptId]||0;
+  const goingToZero = current>=apt.subscription;
+  state.payments[currentMonth][aptId] = goingToZero ? 0 : apt.subscription;
+  if(goingToZero){
+    delete state.paymentDates[currentMonth][aptId];
+  } else {
+    state.paymentDates[currentMonth][aptId] = todayStr();
+  }
+  persist();
+  renderAll();
+}
+
+/* ---------------- RENDER: TABS ---------------- */
+function renderAll(){
+  renderHero();
+  const c = document.getElementById('content');
+  c.classList.toggle('locked', !unlocked);
+  document.getElementById('facade').classList.toggle('locked', !unlocked);
+  let banner = unlocked ? '' : `<div class="view-only-banner">👁 وضع العرض فقط</div>`;
+  if(currentTab==='collect') c.innerHTML = banner + tplCollect();
+  if(currentTab==='balance') c.innerHTML = banner + tplResidentsBalance();
+  if(currentTab==='arrears') c.innerHTML = banner + tplArrearsReport();
+  if(currentTab==='commitments') c.innerHTML = banner + tplBuildingCommitments();
+  if(currentTab==='expenses') c.innerHTML = banner + tplExpenses();
+  if(currentTab==='fund') c.innerHTML = banner + tplFund();
+  if(currentTab==='plans') c.innerHTML = banner + tplPlans();
+  if(currentTab==='apts') c.innerHTML = banner + tplApts();
+  bindTabEvents();
+}
+
+function collectTabCommitmentIds(){
+  let ids = [];
+  (state.apartments||[]).filter(a=>a.occupied).forEach(apt=>{
+    aptCommitments(apt.id).forEach(c=>{
+      const rem = commitmentRemaining(c, currentMonth);
+      if(c.type!=='monthly' && rem<=0) return;
+      ids.push(c.id);
+    });
+  });
+  return ids;
+}
+
+function tplCollect(){
+  const groups = apartmentsByFloor();
+  const visibleCommitIds = collectTabCommitmentIds();
+  const selCount = visibleCommitIds.filter(id=>selectedCommitIds.has(id)).length;
+  let html = `<div class="note-strip">دوس على أي شقة في الرسمة فوق عشان تعلّمها مدفوعة، أو استخدم مبلغ جزئي هنا تحت.</div>`;
+  if(visibleCommitIds.length>0){
+    html += `<div style="display:flex; justify-content:flex-end; align-items:center; margin:8px 0; gap:8px; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+        <input type="checkbox" id="selectAllCollectCommits" class="bulk-checkbox" ${selCount>0 && selCount===visibleCommitIds.length ? 'checked':''}>
+        تحديد كل الالتزامات
+      </label>
+      <button type="button" id="delSelectedCollectCommits" class="del" ${selCount===0?'disabled':''} style="${selCount===0?'opacity:.4;cursor:not-allowed;':''}">
+        🗑 حذف المحدد${selCount>0?' ('+selCount+')':''}
+      </button>
+    </div>`;
+  }
+  FLOOR_ORDER.filter(f=>groups[f]).forEach(floor=>{
+    html += `<div class="floor-group-title">${floor}</div><div class="card">`;
+    groups[floor].forEach(apt=>{
+      if(!apt.occupied){
+        html += `<div class="apt-row"><div class="apt-info"><div class="name">${apt.id} — شقة شاغرة</div></div><div class="vacant-tag">غير مأهولة</div></div>`;
+        return;
+      }
+      const paid = (state.payments[currentMonth]||{})[apt.id]||0;
+      const done = paid>=apt.subscription;
+      html += `
+        <div class="apt-row">
+          <div class="apt-info">
+            <div class="name">${apt.name||'—'}</div>
+            <div class="meta">شقة ${apt.id} · اشتراك <span class="num">${fmt(apt.subscription)}</span></div>
+          </div>
+          <div class="apt-actions">
+            <input type="number" class="amount-input pay-amount" data-apt="${apt.id}" value="${paid||''}" placeholder="0">
+            <button class="pill pay ${done?'done':''}" data-toggle="${apt.id}">${done?'مدفوع ✓':'دفع كامل'}</button>
+          </div>
+        </div>`;
+      aptCommitments(apt.id).forEach(c=>{
+        const rem = commitmentRemaining(c, currentMonth);
+        if(c.type!=='monthly' && rem<=0) return;
+        const suggested = commitmentSuggestedAmount(c);
+        html += `
+        <div class="apt-row" style="padding-inline-start:14px;border-inline-start:2px solid var(--line);">
+          <div class="apt-info" style="display:flex; align-items:flex-start; gap:6px;">
+            <input type="checkbox" class="commit-select bulk-checkbox" data-commit-select="${c.id}" ${selectedCommitIds.has(c.id)?'checked':''} style="margin-top:3px;">
+            <div>
+              <div class="name" style="font-size:13px;">↳ ${c.note||COMMITMENT_TYPES[c.type]}</div>
+              <div class="meta">${COMMITMENT_TYPES[c.type]} · ${c.type==='once' ? 'متبقي '+fmt(rem) : 'مستحق لحد الشهر ده '+fmt(rem)}</div>
+              ${c.type==='installment' ? `<div class="meta" style="color:var(--ink-soft)">الباقي من الإجمالي: ${fmt(commitmentTotalRemaining(c))}</div>` : ''}
+            </div>
+          </div>
+          <div class="apt-actions">
+            <input type="number" class="amount-input commit-pay-amount" data-commit="${c.id}" placeholder="${suggested||0}">
+            <button class="pill pay" data-commit-pay="${c.id}">تسجيل دفع</button>
+            <button class="del" data-del-commit="${c.id}" title="حذف الالتزام">✕</button>
+          </div>
+        </div>`;
+      });
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+function tplElevatorFundBlock(){
+  const totalPool = computeElevatorFundBalance();
+  const subscribers = state.apartments.filter(a=>a.occupied && a.elevator);
+  const shareEach = subscribers.length>0 ? totalPool/subscribers.length : 0;
+  let html = `<div class="section-title">🛗 رصيد الأسانسير — ملك مشترك للمشتركين كلهم</div><div class="card">`;
+  if(subscribers.length===0){
+    html += `<div class="empty">مفيش شقق مشتركة في الأسانسير دلوقتي</div>`;
+  } else {
+    html += `<div class="note-strip">الرصيد ده مش خاص بمين دفع بالذات — هو ملك مشترك لكل الشقق المشتركة في الأسانسير حاليًا (${subscribers.length} شقة)، وبيتقسم بينهم بالتساوي.</div>`;
+    subscribers.forEach(apt=>{
+      html += `<div class="tx-row"><div class="tx-main"><div class="note">${apt.name||apt.id} — شقة ${apt.id}</div></div><div class="num ${shareEach<0?'balance-neg':''}">${fmt(shareEach)}</div></div>`;
+    });
+  }
+  html += `</div>
+    <div class="section-title">💳 صرف من رصيد الأسانسير</div>
+    <div class="card">
+      <form id="elevatorSpendForm" class="inline">
+        <select name="mode">
+          <option value="amount">اصرف مبلغ محدد</option>
+          <option value="all">اصرف كل الرصيد المتاح (${fmt(Math.max(0,totalPool))})</option>
+        </select>
+        <input type="number" name="amount" placeholder="المبلغ (لو مش هتصرف الكل)">
+        <input type="text" name="note" placeholder="البيان (مثلاً: شراء واير أسانسير)">
+        <button type="submit">صرف</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">الصرف بيقلل الرصيد المشترك ده كله (وبالتالي نصيب كل شقة بيقل بالتساوي)، ومبيحصلش غير لما تدوس "صرف" بنفسك من هنا — الحملات (تجميع الفلوس) متعملش خصم تلقائي من الرصيد ده خالص.</div>
+    </div>`;
+  return html;
+}
+
+function tplCommitmentsBlock(){
+  const commitments = (state.commitments||[]).filter(c=>!c.aptId);
+  const selCount = commitments.filter(c=>selectedCommitIds.has(c.id)).length;
+  let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px; gap:8px; flex-wrap:wrap;">
+      <div class="section-title" style="margin:0;">تقرير الالتزامات العامة على العمارة (ديون وفواتير قديمة بدون شقة)</div>
+      ${commitments.length>0 ? `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+          <input type="checkbox" id="selectAllCommits" class="bulk-checkbox" ${selCount>0 && selCount===commitments.length ? 'checked':''}>
+          تحديد الكل
+        </label>
+        <button type="button" id="delSelectedCommits" class="del" ${selCount===0?'disabled':''} style="${selCount===0?'opacity:.4;cursor:not-allowed;':''}">
+          🗑 حذف المحدد${selCount>0?' ('+selCount+')':''}
+        </button>
+      </div>` : ''}
+    </div>
+    <div class="card">`;
+  if(commitments.length===0){
+    html += `<div class="empty">مفيش التزامات عامة على العمارة (بدون شقة) مسجّلة</div>`;
+  } else {
+    commitments.forEach(c=>{
+      const rem = commitmentRemaining(c, currentMonth);
+      const paid = commitmentPaidTotal(c);
+      const suggested = commitmentSuggestedAmount(c);
+      if(editingCommitId===c.id){
+        html += `
+        <div class="tx-row" style="align-items:flex-start;">
+          <form class="inline" data-edit-commit-form="${c.id}" style="flex:1; margin:4px 0;">
+            <select name="type">
+              <option value="once" ${c.type==='once'?'selected':''}>مرة واحدة / فاتورة قديمة</option>
+              <option value="monthly" ${c.type==='monthly'?'selected':''}>شهري ثابت</option>
+              <option value="installment" ${c.type==='installment'?'selected':''}>قسط شهري لحد مبلغ معين</option>
+            </select>
+            <input type="text" name="note" placeholder="البيان" value="${c.note||''}">
+            <input type="number" name="amount" placeholder="المبلغ" value="${c.amount}" required>
+            <input type="number" name="totalAmount" placeholder="الإجمالي المستهدف (للقسط فقط)" value="${c.totalAmount||''}">
+            <input type="month" name="startMonth" value="${c.startMonth}">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;"><input type="checkbox" name="isElevator" ${c.fundType==='elevator'?'checked':''}> 🛗 خاص بالأسانسير</label>
+            <button type="submit">حفظ</button>
+            <button type="button" class="del" data-cancel-edit-commit="1" style="font-size:13px;">إلغاء</button>
+          </form>
+        </div>`;
+      } else {
+        let statusTxt;
+        if(c.type==='monthly') statusTxt = 'شهري ثابت ' + fmt(c.amount) + ' — إجمالي المحصّل ' + fmt(paid);
+        else if(c.type==='once') statusTxt = 'مبلغ ' + fmt(c.amount) + (rem<=0 ? ' — اتسدد بالكامل ✓' : ' — متبقي ' + fmt(rem) + ' (اتسدد ' + fmt(paid) + ')');
+        else {
+          const totalRem = commitmentTotalRemaining(c);
+          statusTxt = 'قسط ' + fmt(c.amount) + '/شهر من إجمالي ' + fmt(c.totalAmount) + (totalRem<=0 ? ' — خلص ✓' : ' — الباقي من الإجمالي ' + fmt(totalRem) + (rem>0 ? ' · مستحق لحد الشهر ده ' + fmt(rem) : ''));
+        }
+        html += `<div class="tx-row" style="align-items:flex-start; flex-wrap:wrap;">
+          <input type="checkbox" class="commit-select bulk-checkbox" data-commit-select="${c.id}" ${selectedCommitIds.has(c.id)?'checked':''}>
+          <div class="tx-main" style="flex:1; min-width:150px;">
+            <div class="note">${c.fundType==='elevator'?'🛗 ':''}${commitmentAptLabel(c)} — ${c.note||COMMITMENT_TYPES[c.type]}</div>
+            <div class="date">${statusTxt}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px; flex-wrap:wrap;">
+            ${rem>0||c.type==='monthly' ? `
+            <input type="number" class="amount-input commit-pay-amount" data-commit="${c.id}" placeholder="${fmt(suggested||0)}" style="width:70px;">
+            <button class="pill pay" data-commit-pay="${c.id}">سداد</button>` : ''}
+            <button class="del" data-edit-commit="${c.id}" title="تعديل">✎</button>
+            <button class="del" data-del-commit="${c.id}" title="حذف الالتزام">✕</button>
+          </div>
+        </div>`;
+      }
+    });
+  }
+  html += `</div>
+    <div class="section-title">إضافة التزام يدوي (زي فاتورة قديمة)</div>
+    <div class="card">
+      <form id="commitForm" class="inline">
+        <select name="aptId">
+          <option value="">— بدون شقة (التزام عام على العمارة)</option>
+          ${state.apartments.filter(a=>a.occupied).map(a=>`<option value="${a.id}">${a.name||a.id} — شقة ${a.id}</option>`).join('')}
+        </select>
+        <select name="type">
+          <option value="once">مرة واحدة / فاتورة قديمة</option>
+          <option value="monthly">شهري ثابت</option>
+          <option value="installment">قسط شهري لحد مبلغ معين</option>
+        </select>
+        <input type="text" name="note" placeholder="البيان (مثلاً: فاتورة كهرباء قديمة)">
+        <input type="number" name="amount" placeholder="المبلغ (شهري أو إجمالي المرة الواحدة)" required>
+        <input type="number" name="totalAmount" placeholder="الإجمالي المستهدف (للقسط فقط)">
+        <input type="month" name="startMonth" value="${currentMonth}">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;"><input type="checkbox" name="isElevator"> 🛗 خاص باشتراك/مصروف الأسانسير</label>
+        <button type="submit">إضافة</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">لو الالتزام مش مرتبط بشقة معينة (زي فاتورة أو دين قديم على العمارة كلها) سيب "بدون شقة" — ده اللي بيظهر في القائمة فوق. لو اخترت شقة معيّنة، الالتزام مش هيظهر هنا؛ هتلاقيه تحت اسم الساكن في تاب "التحصيل"، وضمن ديونه في تاب "متأخرات السكان" لو لسه متبقي منه حاجة. لو النوع "قسط شهري" لازم تحدد الإجمالي المستهدف كمان. علّم "خاص بالأسانسير" لو ده اشتراك جديد بيدفعه ساكن للأسانسير (فلوسه هتتحسب لوحدها في KPI "رصيد مشتركي الأسانسير")، أو لو ده سداد مصروف من فلوس الأسانسير نفسها.</div>
+    </div>
+
+    <div class="section-title">📢 تجميع فلوس لمشروع (كاميرات، صيانة، إلخ)</div>
+    <div class="card">
+      <form id="campaignForm" class="inline">
+        <input type="text" name="title" placeholder="اسم المشروع (مثلاً: كاميرات مراقبة)" required>
+        <input type="number" name="totalAmount" placeholder="إجمالي المبلغ المطلوب" required min="1">
+        <select name="targetGroup" required>
+          <option value="all">كل الشقق المأهولة</option>
+          <option value="elevator">المشتركين في الأسانسير بس</option>
+          <option value="noElevator">غير المشتركين في الأسانسير بس</option>
+        </select>
+        <input type="month" name="startMonth" value="${currentMonth}">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;"><input type="checkbox" name="isElevator"> 🛗 خاص بالأسانسير (يتحسب في رصيد المشتركين)</label>
+        <button type="submit">قسّم المبلغ على الناس</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">هيقسّم المبلغ بالتساوي على عدد الشقق في المجموعة اللي هتختارها، ويعمل التزام "مرة واحدة" مستقل لكل شقة بنفس اسم المشروع، وهيظهر لكل ساكن نصيبه هنا فوق وتقدر تحصّله بالسداد العادي. لو المبلغ مش بيتقسم بالظبط، هيتوزع الفرق (جنيه واحد) على أول كام شقة بس عشان الإجمالي يظبط تمام. ده مش بيخصم حاجة من رصيد الأسانسير تلقائي — لو عايز تصرف من رصيد المشتركين استخدم قسم "صرف من رصيد الأسانسير" تحت.</div>
+    </div>`;
+  return html;
+}
+
+function tplResidentsBalance(){
+  return tplElevatorFundBlock();
+}
+
+function tplArrearsReport(){
+  const arrears = computeArrears();
+  const selCount = arrears.filter(a=>selectedArrearApts.has(a.apt.id)).length;
+  let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
+      <div class="section-title" style="margin:0;">مين لسه مدفعش (وأي شهور)</div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        ${arrears.length>0 ? `
+        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+          <input type="checkbox" id="selectAllArrears" class="bulk-checkbox" ${selCount>0 && selCount===arrears.length ? 'checked':''}>
+          تحديد الكل
+        </label>
+        <button type="button" id="delSelectedArrears" class="del" ${selCount===0?'disabled':''} style="${selCount===0?'opacity:.4;cursor:not-allowed;':''}">
+          ✔ اعتبار المحدد متسدد${selCount>0?' ('+selCount+')':''}
+        </button>` : ''}
+        <button class="export-btn" id="exportReportBtn">⬇ تنزيل Excel</button>
+      </div>
+    </div>`;
+  if(arrears.length>0){
+    html += `<div class="note-strip" style="margin-bottom:10px;">تحديد شقة من هنا وحذفها مش هيمسح دينها من غير حساب — هيسجّلها "متسددة بالكامل" (بيكمّل المدفوعات الناقصة لكل الشهور المستحقة، وبيقفل أي دين مرتبط بيها) عشان تختفي من القائمة دي. لو مقصودك حاجة تانية قولّي.</div>`;
+  }
+  if(arrears.length===0){
+    html += `<div class="card"><div class="empty">مفيش متأخرات — كله متسدد 🎉</div></div>`;
+  } else {
+    html += `<div class="card">`;
+    arrears.forEach(a=>{
+      html += `
+        <div class="apt-row" style="align-items:flex-start;">
+          <input type="checkbox" class="arrear-select bulk-checkbox" data-arrear-select="${a.apt.id}" ${selectedArrearApts.has(a.apt.id)?'checked':''}>
+          <div class="apt-info">
+            <div class="name">${a.apt.name||'—'} <span style="color:var(--ink-soft);font-weight:400">· شقة ${a.apt.id}</span></div>
+            <div class="meta">${a.items.map(m=>m.label+' ('+fmt(m.owed)+')').join('، ')}</div>
+          </div>
+          <div class="num" style="color:var(--bad);white-space:nowrap;">${fmt(a.total)}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function tplBuildingCommitments(){
+  return tplCommitmentsBlock();
+}
+
+function exportReportCSV(){
+  const arrears = computeArrears();
+  const totalOwed = arrears.reduce((s,a)=>s+a.total,0);
+  const balance = computeFundBalance();
+  const rows = [];
+  rows.push(['التقارير المالية برج الاندلس', monthLabel(currentMonth)]);
+  rows.push(['رصيد الصندوق', balance]);
+  rows.push(['إجمالي المتأخرات', totalOwed]);
+  rows.push([]);
+  rows.push(['رقم الشقة','اسم الساكن','البنود المتأخرة','إجمالي المستحق']);
+  arrears.forEach(a=>{
+    rows.push([a.apt.id, a.apt.name||'—', a.items.map(m=>m.label+' ('+m.owed+')').join(' / '), a.total]);
+  });
+  const csv = '\uFEFF' + rows.map(r=> r.map(cell=>{
+    const s = String(cell==null?'':cell);
+    return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'تقرير-المتاخرات-'+currentMonth+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function tplExpenses(){
+  const monthExp = state.expenses.filter(e=>e.date.slice(0,7)===currentMonth);
+  const others = state.expenses.filter(e=>e.date.slice(0,7)!==currentMonth);
+  let html = `<div class="section-title">مصروفات ${monthLabel(currentMonth)}</div><div class="card">`;
+  if(monthExp.length===0) html += `<div class="empty">لسه مفيش مصروفات مسجّلة الشهر ده</div>`;
+  monthExp.forEach(e=>{
+    html += `<div class="tx-row"><div class="tx-main"><div class="note">${e.category} ${e.note?('— '+e.note):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+  });
+  html += `</div>`;
+
+  html += `
+    <div class="section-title">إضافة مصروف</div>
+    <div class="card">
+      <div class="preset-row">
+        ${state.billPresets.map(p=>`<div class="preset" data-preset='${JSON.stringify(p)}'>${p.category} · ${fmt(p.amount)}</div>`).join('')}
+      </div>
+      <form id="expForm" class="inline">
+        <input type="date" name="date" value="${currentMonth}-05" required>
+        <input type="text" name="category" placeholder="النوع (مياه، كهرباء..)" required>
+        <input type="text" name="note" placeholder="ملاحظة (اختياري)">
+        <input type="number" name="amount" placeholder="المبلغ" required>
+        <button type="submit">إضافة</button>
+      </form>
+    </div>`;
+
+  if(others.length){
+    html += `<div class="section-title">مصروفات شهور تانية</div><div class="card">`;
+    others.slice().reverse().forEach(e=>{
+      html += `<div class="tx-row"><div class="tx-main"><div class="note">${e.category} ${e.note?('— '+e.note):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function tplFund(){
+  const bal = computeFundBalance();
+  let html = `<div class="card" style="text-align:center;">
+      <div class="section-title" style="margin-top:0">الرصيد الحالي</div>
+      <div class="num" style="font-size:28px">${fmt(bal)} <span style="font-size:13px;color:var(--ink-soft)">جنيه</span></div>
+    </div>`;
+
+  html += `
+    <div class="section-title">الرصيد الافتتاحي</div>
+    <div class="card">
+      <form id="openingForm" class="inline">
+        <input type="number" name="openingBalance" value="${state.settings.openingBalance}">
+        <button type="submit">حفظ</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">ده الرقم اللي بيتحسب عليه كل حاجة (اللي بعده تحصيل وخصم مصروفات). لو الرصيد الحالي مش مظبوط، عدّل الرقم ده لحد ما يظبط.</div>
+    </div>`;
+
+  html += `<div class="section-title">دفتر الصندوق</div><div class="card">`;
+  const ledgerEntries = [
+    {date: monthsRange(START_MONTH, currentMonth)[0]+'-01', note:'الرصيد الافتتاحي', amount: state.settings.openingBalance, kind:'opening'},
+    ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id})),
+  ];
+  Object.entries(state.payments).forEach(([mk, obj])=>{
+    Object.entries(obj).forEach(([aptId, amt])=>{
+      if(amt>0){
+        const apt = state.apartments.find(a=>a.id===aptId);
+        const payDate = (state.paymentDates[mk]||{})[aptId] || (mk+'-01');
+        ledgerEntries.push({date:payDate, note:'تحصيل من '+(apt?apt.name:aptId), amount:amt, kind:'payment', month:mk, aptId});
+      }
+    });
+  });
+  (state.commitmentPayments||[]).forEach(cp=>{
+    const c = state.commitments.find(x=>x.id===cp.commitmentId);
+    const isGeneral = c && !c.aptId;
+    const amt = isGeneral ? -cp.amount : cp.amount;
+    ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id});
+  });
+  state.expenses.forEach(e=>{
+    ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id});
+  });
+  (state.elevatorSpends||[]).forEach(sp=>{
+    ledgerEntries.push({date:sp.date, note:'🛗 صرف من رصيد الأسانسير — '+sp.note, amount:-sp.amount, kind:'elevatorSpend', id:sp.id});
+  });
+  ledgerEntries.sort((a,b)=> a.date.localeCompare(b.date));
+  if(ledgerEntries.length===0) html += `<div class="empty">مفيش حركات لسه</div>`;
+  ledgerEntries.forEach(le=>{
+    let delAttr = '';
+    if(le.kind==='manual') delAttr = `data-del-fund="${le.id}"`;
+    else if(le.kind==='commitPay') delAttr = `data-del-commitpay="${le.id}"`;
+    else if(le.kind==='expense') delAttr = `data-del-exp-fund="${le.id}"`;
+    else if(le.kind==='payment') delAttr = `data-del-payment="${le.month}|${le.aptId}"`;
+    else if(le.kind==='elevatorSpend') delAttr = `data-del-elevator-spend="${le.id}"`;
+    const delBtn = delAttr ? `<button class="del" ${delAttr}>✕</button>` : '';
+    html += `<div class="tx-row"><div class="tx-main"><div class="note">${le.note}</div><div class="date">${le.date}</div></div><div style="display:flex;align-items:center;gap:6px"><div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `
+    <div class="section-title">إضافة حركة يدوية</div>
+    <div class="card">
+      <form id="fundForm" class="inline">
+        <input type="date" name="date" value="${currentMonth}-01" required>
+        <input type="text" name="note" placeholder="البيان" required>
+        <input type="number" name="amount" placeholder="+ إيداع أو - سحب" required>
+        <button type="submit">إضافة</button>
+      </form>
+    </div>`;
+  return html;
+}
+
+function tplPlans(){
+  let html = `<div class="section-title">خطط ومصاريف مستقبلية متوقعة</div><div class="card">`;
+  if(state.plans.length===0) html += `<div class="empty">مفيش خطط مسجلة</div>`;
+  state.plans.forEach(p=>{
+    html += `<div class="plan-row ${p.done?'done':''}">
+      <input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>
+      <div class="item">${p.item}</div>
+      <div class="num">${fmt(p.cost)}</div>
+      <button class="del" data-del-plan="${p.id}">✕</button>
+    </div>`;
+  });
+  const total = state.plans.filter(p=>!p.done).reduce((s,p)=>s+p.cost,0);
+  html += `</div><div class="card" style="display:flex;justify-content:space-between;"><div>إجمالي المتبقي</div><div class="num">${fmt(total)}</div></div>`;
+
+  html += `
+    <div class="section-title">إضافة خطة</div>
+    <div class="card">
+      <form id="planForm" class="inline">
+        <input type="text" name="item" placeholder="اسم البند" required>
+        <input type="number" name="cost" placeholder="التكلفة المتوقعة" required>
+        <button type="submit">إضافة</button>
+      </form>
+    </div>`;
+  return html;
+}
+
+function tplApts(){
+  let html = `
+    <div class="section-title">قيمة اشتراك الأسانسير</div>
+    <div class="card">
+      <form id="settingsForm" class="inline">
+        <input type="number" name="elevatorAmount" placeholder="مشترك بالأسانسير" value="${state.settings.elevatorAmount}">
+        <input type="number" name="noElevatorAmount" placeholder="مش مشترك" value="${state.settings.noElevatorAmount}">
+        <button type="submit">حفظ القيم</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">دوس على مربع "مشترك بالأسانسير" جنب أي شقة تحت وهيتغيّر اشتراكها تلقائي حسب القيم دي. الشقق اللي ليها استثناء (زي الأرضي بـ250) عدّل رقمها يدوي بعد كده وهيفضل زي ما هو.</div>
+    </div>
+    ${unlocked ? `
+    <div class="section-title">إعدادات الدخول</div>
+    <div class="card">
+      <form id="lockSettingsForm" class="inline">
+        <input type="text" name="editPin" placeholder="الرقم السري" value="${state.settings.editPin}">
+        <input type="number" name="unlockTaps" placeholder="عدد دوسات الدخول" value="${state.settings.unlockTaps}" min="2" max="30">
+        <input type="number" name="changePinTaps" placeholder="عدد دوسات تغيير الرقم السري" value="${state.settings.changePinTaps}" min="2" max="30">
+        <button type="submit">حفظ</button>
+      </form>
+      <div class="note-strip" style="margin:10px 0 0;">دوس على اسم العمارة فوق العدد اللي في "عدد دوسات الدخول" عشان يظهر زرار الدخول وتدخل الرقم السري عادي. لو دست العدد اللي في "عدد دوسات تغيير الرقم السري" هيوديك هنا مباشرة بعد ما تدخل الرقم السري عشان تغيّره.</div>
+    </div>` : ''}
+
+    <div class="section-title">إدارة الشقق (${state.apartments.length})</div><div class="card">`;
+  state.apartments.forEach(a=>{
+    html += `<div class="apt-row" style="flex-wrap:wrap;">
+      <div class="apt-info" style="flex:1; min-width:150px;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" data-apt-id="${a.id}" value="${a.id}" placeholder="رقم الشقة" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; width:70px; font-family:'IBM Plex Mono';">
+          <select data-apt-floor="${a.id}" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; flex:1;">
+            ${FLOOR_ORDER.map(f=>`<option value="${f}" ${f===a.floor?'selected':''}>${f}</option>`).join('')}
+          </select>
+        </div>
+        <input type="text" data-apt-name="${a.id}" value="${a.name}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;" ${a.occupied?'':'disabled'}>
+      </div>
+      <div class="apt-actions" style="gap:10px; flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
+          <input type="checkbox" data-apt-occupied="${a.id}" ${a.occupied?'checked':''}> مأهولة
+        </label>
+        ${a.occupied ? `
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
+          <input type="checkbox" data-apt-elevator="${a.id}" ${a.elevator?'checked':''}> أسانسير
+        </label>` : ''}
+        <input type="number" class="amount-input" data-apt-sub="${a.id}" value="${a.subscription}" style="width:74px" ${a.occupied?'':'disabled'}>
+        <button class="del" data-del-apt="${a.id}">✕</button>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `
+    <div class="section-title">إضافة شقة</div>
+    <div class="card">
+      <form id="aptForm" class="inline">
+        <input type="text" name="id" placeholder="رقم الشقة" required>
+        <input type="text" name="floor" placeholder="الدور" required>
+        <input type="text" name="name" placeholder="اسم الساكن">
+        <input type="number" name="subscription" placeholder="الاشتراك الشهري" required>
+        <button type="submit">إضافة</button>
+      </form>
+    </div>`;
+  return html;
+}
+
+/* ---------------- EVENTS ---------------- */
+function bindTabEvents(){
+  if(currentTab==='collect'){
+    document.querySelectorAll('.pay-amount').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const aptId = e.target.dataset.apt;
+        const val = Math.max(0, Number(e.target.value)||0);
+        if(!state.payments[currentMonth]) state.payments[currentMonth]={};
+        if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
+        state.payments[currentMonth][aptId] = val;
+        if(val>0){
+          state.paymentDates[currentMonth][aptId] = todayStr();
+        } else {
+          delete state.paymentDates[currentMonth][aptId];
+        }
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-toggle]').forEach(btn=>{
+      btn.addEventListener('click', ()=> quickTogglePaid(btn.dataset.toggle));
+    });
+    document.querySelectorAll('[data-commit-pay]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const cId = btn.dataset.commitPay;
+        const c = state.commitments.find(x=>x.id===cId);
+        if(!c) return;
+        const inp = document.querySelector(`.commit-pay-amount[data-commit="${cId}"]`);
+        const val = Number(inp.value) || commitmentSuggestedAmount(c);
+        if(val<=0) return;
+        if(!state.commitmentPayments) state.commitmentPayments=[];
+        state.commitmentPayments.push({
+          id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
+          date: currentMonth+'-01', amount: val
+        });
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-commit]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(!confirm('متأكد إنك عايز تحذف الالتزام ده؟')) return;
+        const id = b.dataset.delCommit;
+        state.commitments = state.commitments.filter(c=>c.id!==id);
+        state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=>cp.commitmentId!==id);
+        selectedCommitIds.delete(id);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-commit-select]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const id = cb.dataset.commitSelect;
+        if(cb.checked) selectedCommitIds.add(id); else selectedCommitIds.delete(id);
+        renderAll();
+      });
+    });
+    const selectAllCollectCommits = document.getElementById('selectAllCollectCommits');
+    if(selectAllCollectCommits){
+      selectAllCollectCommits.addEventListener('change', ()=>{
+        const ids = collectTabCommitmentIds();
+        if(selectAllCollectCommits.checked){
+          ids.forEach(id=>selectedCommitIds.add(id));
+        } else {
+          ids.forEach(id=>selectedCommitIds.delete(id));
+        }
+        renderAll();
+      });
+    }
+    const delSelectedCollectCommits = document.getElementById('delSelectedCollectCommits');
+    if(delSelectedCollectCommits){
+      delSelectedCollectCommits.addEventListener('click', ()=>{
+        const ids = collectTabCommitmentIds().filter(id=>selectedCommitIds.has(id));
+        if(ids.length===0) return;
+        if(!confirm(`متأكد إنك عايز تحذف ${ids.length} التزام مرة واحدة؟`)) return;
+        const idSet = new Set(ids);
+        state.commitments = (state.commitments||[]).filter(c=>!idSet.has(c.id));
+        state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=>!idSet.has(cp.commitmentId));
+        ids.forEach(id=>selectedCommitIds.delete(id));
+        persist(); renderAll();
+      });
+    }
+  }
+  if(currentTab==='balance'){
+    const spendForm = document.getElementById('elevatorSpendForm');
+    if(spendForm) spendForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      const mode = f.mode.value;
+      const note = f.note.value.trim();
+      const totalAvailable = Math.max(0, computeElevatorFundBalance());
+      if(totalAvailable<=0){
+        alert('مفيش رصيد متجمّع من المشتركين دلوقتي.');
+        return;
+      }
+      const spendAmount = mode==='all' ? totalAvailable : Math.min(totalAvailable, Number(f.amount.value)||0);
+      if(spendAmount<=0){
+        alert('لازم تدخل مبلغ أكبر من صفر.');
+        return;
+      }
+      if(!state.elevatorSpends) state.elevatorSpends=[];
+      state.elevatorSpends.push({
+        id:'esp'+Date.now(), date: currentMonth+'-01', note: note||'صرف من رصيد الأسانسير',
+        amount: spendAmount
+      });
+      persist(); renderAll();
+      alert(`اتصرف ${fmt(spendAmount)} جنيه من رصيد الأسانسير المشترك.`);
+    });
+  }
+  if(currentTab==='arrears'){
+    const exportBtn = document.getElementById('exportReportBtn');
+    if(exportBtn) exportBtn.addEventListener('click', exportReportCSV);
+    document.querySelectorAll('[data-arrear-select]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const id = cb.dataset.arrearSelect;
+        if(cb.checked) selectedArrearApts.add(id); else selectedArrearApts.delete(id);
+        renderAll();
+      });
+    });
+    const selectAllArrears = document.getElementById('selectAllArrears');
+    if(selectAllArrears){
+      selectAllArrears.addEventListener('change', ()=>{
+        if(selectAllArrears.checked){
+          computeArrears().forEach(a=>selectedArrearApts.add(a.apt.id));
+        } else {
+          selectedArrearApts.clear();
+        }
+        renderAll();
+      });
+    }
+    const delSelectedArrears = document.getElementById('delSelectedArrears');
+    if(delSelectedArrears){
+      delSelectedArrears.addEventListener('click', ()=>{
+        if(selectedArrearApts.size===0) return;
+        if(!confirm(`متأكد إنك عايز تعتبر ${selectedArrearApts.size} شقة متسددة بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
+        selectedArrearApts.forEach(aptId=> settleArrearsForApt(aptId));
+        selectedArrearApts.clear();
+        persist(); renderAll();
+      });
+    }
+  }
+  if(currentTab==='commitments'){
+    document.getElementById('commitForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      const type = f.type.value;
+      if(!state.commitments) state.commitments=[];
+      state.commitments.push({
+        id:'c'+Date.now(),
+        aptId: f.aptId.value || null,
+        note: f.note.value,
+        type,
+        amount: Number(f.amount.value)||0,
+        totalAmount: type==='installment' ? (Number(f.totalAmount.value)||0) : null,
+        startMonth: f.startMonth.value || currentMonth,
+        fundType: f.isElevator && f.isElevator.checked ? 'elevator' : 'general'
+      });
+      persist(); renderAll();
+    });
+    document.querySelectorAll('[data-edit-commit]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        editingCommitId = b.dataset.editCommit;
+        renderAll();
+      });
+    });
+    document.querySelectorAll('[data-cancel-edit-commit]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        editingCommitId = null;
+        renderAll();
+      });
+    });
+    document.querySelectorAll('[data-edit-commit-form]').forEach(f=>{
+      f.addEventListener('submit', e=>{
+        e.preventDefault();
+        const c = state.commitments.find(x=>x.id===f.dataset.editCommitForm);
+        const el = e.target;
+        c.type = el.type.value;
+        c.note = el.note.value;
+        c.amount = Number(el.amount.value)||0;
+        c.totalAmount = c.type==='installment' ? (Number(el.totalAmount.value)||0) : null;
+        c.startMonth = el.startMonth.value || c.startMonth;
+        c.fundType = el.isElevator && el.isElevator.checked ? 'elevator' : 'general';
+        editingCommitId = null;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-commit]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(!confirm('متأكد إنك عايز تحذف الالتزام ده؟')) return;
+        const id = b.dataset.delCommit;
+        state.commitments = state.commitments.filter(c=>c.id!==id);
+        state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=>cp.commitmentId!==id);
+        selectedCommitIds.delete(id);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-commit-select]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const id = cb.dataset.commitSelect;
+        if(cb.checked) selectedCommitIds.add(id); else selectedCommitIds.delete(id);
+        renderAll();
+      });
+    });
+    const selectAllCommits = document.getElementById('selectAllCommits');
+    if(selectAllCommits){
+      selectAllCommits.addEventListener('change', ()=>{
+        if(selectAllCommits.checked){
+          (state.commitments||[]).forEach(c=>selectedCommitIds.add(c.id));
+        } else {
+          selectedCommitIds.clear();
+        }
+        renderAll();
+      });
+    }
+    const delSelectedCommits = document.getElementById('delSelectedCommits');
+    if(delSelectedCommits){
+      delSelectedCommits.addEventListener('click', ()=>{
+        if(selectedCommitIds.size===0) return;
+        if(!confirm(`متأكد إنك عايز تحذف ${selectedCommitIds.size} التزام مرة واحدة؟`)) return;
+        state.commitments = (state.commitments||[]).filter(c=>!selectedCommitIds.has(c.id));
+        state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=>!selectedCommitIds.has(cp.commitmentId));
+        selectedCommitIds.clear();
+        persist(); renderAll();
+      });
+    }
+    document.querySelectorAll('[data-commit-pay]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const cId = btn.dataset.commitPay;
+        const c = state.commitments.find(x=>x.id===cId);
+        if(!c) return;
+        const inp = document.querySelector(`.commit-pay-amount[data-commit="${cId}"]`);
+        const val = Number(inp.value) || commitmentSuggestedAmount(c);
+        if(val<=0) return;
+        if(!state.commitmentPayments) state.commitmentPayments=[];
+        state.commitmentPayments.push({
+          id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
+          date: currentMonth+'-01', amount: val
+        });
+        persist(); renderAll();
+      });
+    });
+    const campaignForm = document.getElementById('campaignForm');
+    if(campaignForm) campaignForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      const total = Number(f.totalAmount.value)||0;
+      const title = f.title.value.trim();
+      const group = f.targetGroup.value;
+      const startMonth = f.startMonth.value || currentMonth;
+      const fundType = f.isElevator && f.isElevator.checked ? 'elevator' : 'general';
+      if(!state.commitments) state.commitments=[];
+      let targets = state.apartments.filter(a=>a.occupied);
+      if(group==='elevator') targets = targets.filter(a=>a.elevator);
+      else if(group==='noElevator') targets = targets.filter(a=>!a.elevator);
+      if(total<=0 || targets.length===0){
+        alert('لازم مبلغ أكبر من صفر، ولازم يكون فيه شقق في المجموعة اللي اخترتها.');
+        return;
+      }
+      const count = targets.length;
+      const base = Math.floor(total / count);
+      const remainder = total - base*count;
+      const campaignId = 'camp'+Date.now();
+      targets.forEach((apt, idx)=>{
+        const share = base + (idx < remainder ? 1 : 0);
+        state.commitments.push({
+          id: 'c'+Date.now()+'_'+apt.id,
+          aptId: apt.id,
+          note: title,
+          type: 'once',
+          amount: share,
+          totalAmount: null,
+          startMonth,
+          fundType,
+          campaignId
+        });
+      });
+      persist(); renderAll();
+      alert(`تم توزيع ${fmt(total)} جنيه على ${count} شقة — نصيب كل شقة تقريبًا ${fmt(base)} جنيه.`);
+    });
+  }
+  if(currentTab==='expenses'){
+    document.getElementById('expForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      state.expenses.push({
+        id: 'e'+Date.now(),
+        date: f.date.value,
+        category: f.category.value,
+        note: f.note.value,
+        amount: Number(f.amount.value)||0
+      });
+      persist(); renderAll();
+    });
+    document.querySelectorAll('.preset').forEach(p=>{
+      p.addEventListener('click', ()=>{
+        const data = JSON.parse(p.dataset.preset);
+        const f = document.getElementById('expForm');
+        f.category.value = data.category;
+        f.amount.value = data.amount;
+      });
+    });
+    document.querySelectorAll('[data-del-exp]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.expenses = state.expenses.filter(e=>e.id!==b.dataset.delExp);
+        persist(); renderAll();
+      });
+    });
+  }
+  if(currentTab==='fund'){
+    document.getElementById('openingForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      state.settings.openingBalance = Number(e.target.openingBalance.value)||0;
+      persist(); renderAll();
+    });
+    document.getElementById('fundForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      state.fundLedger.push({
+        id:'f'+Date.now(),
+        date: f.date.value,
+        note: f.note.value,
+        amount: Number(f.amount.value)||0
+      });
+      persist(); renderAll();
+    });
+    document.querySelectorAll('[data-del-fund]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.fundLedger = state.fundLedger.filter(f=>f.id!==b.dataset.delFund);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-commitpay]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=>cp.id!==b.dataset.delCommitpay);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-elevator-spend]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.elevatorSpends = (state.elevatorSpends||[]).filter(sp=>sp.id!==b.dataset.delElevatorSpend);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-exp-fund]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.expenses = state.expenses.filter(e=>e.id!==b.dataset.delExpFund);
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-payment]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const [mk, aptId] = b.dataset.delPayment.split('|');
+        if(state.payments[mk]) delete state.payments[mk][aptId];
+        if(state.paymentDates[mk]) delete state.paymentDates[mk][aptId];
+        persist(); renderAll();
+      });
+    });
+  }
+  if(currentTab==='plans'){
+    document.querySelectorAll('[data-plan-toggle]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const p = state.plans.find(x=>x.id===cb.dataset.planToggle);
+        p.done = cb.checked;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-plan]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.plans = state.plans.filter(p=>p.id!==b.dataset.delPlan);
+        persist(); renderAll();
+      });
+    });
+    document.getElementById('planForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      state.plans.push({id:'p'+Date.now(), item:f.item.value, cost:Number(f.cost.value)||0, done:false});
+      persist(); renderAll();
+    });
+  }
+  if(currentTab==='apts'){
+    document.getElementById('settingsForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      state.settings.elevatorAmount = Number(f.elevatorAmount.value)||0;
+      state.settings.noElevatorAmount = Number(f.noElevatorAmount.value)||0;
+      persist(); renderAll();
+    });
+    const lockSettingsForm = document.getElementById('lockSettingsForm');
+    if(lockSettingsForm){
+      lockSettingsForm.addEventListener('submit', e=>{
+        e.preventDefault();
+        const f = e.target;
+        state.settings.editPin = f.editPin.value || state.settings.editPin;
+        state.settings.unlockTaps = Number(f.unlockTaps.value) || state.settings.unlockTaps;
+        state.settings.changePinTaps = Number(f.changePinTaps.value) || state.settings.changePinTaps;
+        persist(); renderAll();
+      });
+    }
+    document.querySelectorAll('[data-apt-occupied]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const a = state.apartments.find(x=>x.id===cb.dataset.aptOccupied);
+        const wasOccupied = a.occupied;
+        a.occupied = cb.checked;
+        if(!Array.isArray(a.occupancyPeriods)) a.occupancyPeriods = [];
+        if(!a.occupied && wasOccupied){
+          // بقت شاغرة: نقفل الفترة المفتوحة عند بداية الشهر الجاي، عشان الشهر الحالي يفضل محسوب على الساكن (متأخراته/فلوسه متسحبش)
+          const openP = a.occupancyPeriods.find(p=>p.to===null);
+          if(openP) openP.to = shiftMonth(currentMonth, 1);
+        } else if(a.occupied && !wasOccupied){
+          // بقت مأهولة: الاشتراك هيتحسب من الشهر ده وما بعده بس، مش من الأول
+          a.occupancyPeriods.push({from: currentMonth, to: null});
+          if(a.subscription===0){
+            a.subscription = a.elevator ? state.settings.elevatorAmount : state.settings.noElevatorAmount;
+          }
+        }
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-apt-floor]').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const a = state.apartments.find(x=>x.id===sel.dataset.aptFloor);
+        a.floor = sel.value;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-apt-id]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const oldId = inp.dataset.aptId;
+        const newId = inp.value.trim();
+        if(!newId || newId===oldId){ inp.value = oldId; return; }
+        if(state.apartments.some(a=>a.id===newId)){
+          alert('رقم الشقة ده مستخدم بالفعل');
+          inp.value = oldId;
+          return;
+        }
+        const a = state.apartments.find(x=>x.id===oldId);
+        a.id = newId;
+        Object.values(state.payments).forEach(monthObj=>{
+          if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
+        });
+        Object.values(state.paymentDates).forEach(monthObj=>{
+          if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
+        });
+        (state.commitments||[]).forEach(c=>{ if(c.aptId===oldId) c.aptId=newId; });
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-apt-name]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const a = state.apartments.find(x=>x.id===inp.dataset.aptName);
+        a.name = inp.value;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-apt-elevator]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const a = state.apartments.find(x=>x.id===cb.dataset.aptElevator);
+        a.elevator = cb.checked;
+        a.subscription = a.elevator ? state.settings.elevatorAmount : state.settings.noElevatorAmount;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-apt-sub]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const a = state.apartments.find(x=>x.id===inp.dataset.aptSub);
+        a.subscription = Number(inp.value)||0;
+        persist(); renderAll();
+      });
+    });
+    document.querySelectorAll('[data-del-apt]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        state.apartments = state.apartments.filter(a=>a.id!==b.dataset.delApt);
+        persist(); renderAll();
+      });
+    });
+    document.getElementById('aptForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const f = e.target;
+      state.apartments.push({
+        id: f.id.value, floor: f.floor.value, name: f.name.value,
+        subscription: Number(f.subscription.value)||0, elevator:true, occupied:true,
+        occupancyPeriods: [{from: currentMonth, to: null}]
+      });
+      persist(); renderAll();
+    });
+  }
+}
+
+document.getElementById('tabbar').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+});
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  if(currentMonth <= START_MONTH) return; // مفيش بيانات قبل أول شهر مسجّل، فمنوقفش تحته
+  currentMonth = shiftMonth(currentMonth, -1); renderAll();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  currentMonth = shiftMonth(currentMonth, 1); renderAll();
+});
+
+let titleTaps = [];
+let pendingIntent = 'unlock'; // 'unlock' or 'changePin'
+document.querySelector('.hero-title').addEventListener('click', ()=>{
+  const now = Date.now();
+  titleTaps.push(now);
+  titleTaps = titleTaps.filter(t => now - t < 4000);
+  const s = state && state.settings;
+  if(!s) return;
+  const needed = s.unlockTaps || 4;
+  const neededChange = s.changePinTaps || 7;
+  if(titleTaps.length >= neededChange){
+    pendingIntent = 'changePin';
+    document.getElementById('lockBtn').classList.add('revealed');
+  } else if(titleTaps.length >= needed){
+    pendingIntent = 'unlock';
+    document.getElementById('lockBtn').classList.add('revealed');
+  }
+});
+
+document.getElementById('lockBtn').addEventListener('click', ()=>{
+  if(unlocked){
+    lockNow();
+    return;
+  }
+  document.getElementById('unlockPanel').classList.toggle('show');
+  document.getElementById('pinInput').focus();
+});
+document.getElementById('pinSubmit').addEventListener('click', tryUnlock);
+document.getElementById('pinInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') tryUnlock();
+});
+function tryUnlock(){
+  const val = document.getElementById('pinInput').value;
+  if(val === state.settings.editPin){
+    unlocked = true;
+    document.getElementById('unlockPanel').classList.remove('show');
+    document.getElementById('pinInput').value='';
+    if(pendingIntent==='changePin'){
+      currentTab = 'apts';
+      document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='apts'));
+    }
+    pendingIntent = 'unlock';
+    titleTaps = [];
+    renderAll();
+    resetIdleTimer();
+  } else {
+    document.getElementById('pinInput').value='';
+  }
+}
+
+function lockNow(){
+  unlocked = false;
+  document.getElementById('lockBtn').classList.remove('revealed');
+  document.getElementById('unlockPanel').classList.remove('show');
+  if(idleTimer) clearTimeout(idleTimer);
+  renderAll();
+}
+
+/* قفل تلقائي بعد فترة عدم استخدام، أو لما الصفحة تتخبى/تتقفل */
+let idleTimer = null;
+function resetIdleTimer(){
+  if(idleTimer) clearTimeout(idleTimer);
+  if(!unlocked) return;
+  idleTimer = setTimeout(lockNow, 3*60*1000); // 3 دقايق من غير أي تعديل
+}
+document.addEventListener('click', ()=>{ if(unlocked) resetIdleTimer(); });
+document.addEventListener('input', ()=>{ if(unlocked) resetIdleTimer(); });
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden && unlocked) lockNow();
+});
+window.addEventListener('pagehide', ()=>{
+  if(unlocked) lockNow();
+});
+
+(async function init(){
+  await loadState();
+  renderAll();
+  startSyncPolling();
+})();
+</script>
+</body>
+</html>
