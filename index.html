@@ -511,9 +511,15 @@ function seedState(){
   };
 }
 
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 let state = null;
 let currentTab = 'overview';
-let currentMonth = '2026-08'; // YYYY-MM
+let currentMonth = todayStr().slice(0,7); // YYYY-MM — يفتح دايمًا على الشهر الحالي فعليًا
+let collectDate = todayStr(); // التاريخ اللي بيتسجل بيه أي تحصيل/سداد جديد — قابل للتغيير من تبويبي التحصيل والالتزامات
 let unlocked = false; // resets to locked/view-only every time the page loads — not persisted
 let editingCommitId = null; // id of the commitment currently open for inline editing (apts tab)
 let selectedCommitIds = new Set(); // ids of commitments ticked for bulk delete
@@ -529,10 +535,6 @@ function shiftMonth(key, delta){
   m += delta;
   if(m>12){m=1;y++;} if(m<1){m=12;y--;}
   return monthKey(y,m);
-}
-function todayStr(){
-  const d = new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
 /* ---------------- شيت جوجل كقاعدة بيانات مشتركة ---------------- */
@@ -1385,7 +1387,7 @@ function quickTogglePaid(aptId){
   if(goingToZero){
     delete state.paymentDates[currentMonth][aptId];
   } else {
-    state.paymentDates[currentMonth][aptId] = todayStr();
+    state.paymentDates[currentMonth][aptId] = collectDate;
   }
   persist();
   renderAll();
@@ -1426,7 +1428,10 @@ function tplCollect(){
   const groups = apartmentsByFloor();
   const visibleCommitIds = collectTabCommitmentIds();
   const selCount = visibleCommitIds.filter(id=>selectedCommitIds.has(id)).length;
-  let html = ``;
+  let html = `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <label style="font-size:12.5px;color:var(--ink-soft);">📅 تاريخ التحصيل (هيتسجّل بيه أي دفع جديد)</label>
+    <input type="date" id="collectDateInput" value="${collectDate}">
+  </div>`;
   if(visibleCommitIds.length>0){
     html += `<div style="display:flex; justify-content:flex-end; align-items:center; margin:8px 0; gap:8px; flex-wrap:wrap;">
       <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
@@ -1551,7 +1556,11 @@ function tplElevatorFundBlock(){
 function tplCommitmentsBlock(){
   const commitments = (state.commitments||[]).filter(c=>!c.aptId);
   const selCount = commitments.filter(c=>selectedCommitIds.has(c.id)).length;
-  let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px; gap:8px; flex-wrap:wrap;">
+  let html = `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <label style="font-size:12.5px;color:var(--ink-soft);">📅 تاريخ السداد (هيتسجّل بيه أي دفع جديد)</label>
+    <input type="date" id="commitDateInput" value="${collectDate}">
+  </div>`;
+  html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">تقرير الالتزامات العامة على العمارة (ديون وفواتير قديمة بدون شقة)</div>
       ${commitments.length>0 ? `
       <div style="display:flex; align-items:center; gap:8px;">
@@ -2043,6 +2052,10 @@ function bindCommitEditHandlers(){
 function bindTabEvents(){
   if(currentTab==='collect'){
     bindCommitEditHandlers();
+    const collectDateInput = document.getElementById('collectDateInput');
+    if(collectDateInput) collectDateInput.addEventListener('change', ()=>{
+      if(collectDateInput.value) collectDate = collectDateInput.value;
+    });
     document.querySelectorAll('.pay-amount').forEach(inp=>{
       inp.addEventListener('change', e=>{
         const aptId = e.target.dataset.apt;
@@ -2051,7 +2064,7 @@ function bindTabEvents(){
         if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
         state.payments[currentMonth][aptId] = val;
         if(val>0){
-          state.paymentDates[currentMonth][aptId] = todayStr();
+          state.paymentDates[currentMonth][aptId] = collectDate;
         } else {
           delete state.paymentDates[currentMonth][aptId];
         }
@@ -2072,7 +2085,7 @@ function bindTabEvents(){
         if(!state.commitmentPayments) state.commitmentPayments=[];
         state.commitmentPayments.push({
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
-          date: currentMonth+'-01', amount: val
+          date: collectDate, amount: val
         });
         persist(); renderAll();
       });
@@ -2270,6 +2283,10 @@ function bindTabEvents(){
         persist(); renderAll();
       });
     }
+    const commitDateInput = document.getElementById('commitDateInput');
+    if(commitDateInput) commitDateInput.addEventListener('change', ()=>{
+      if(commitDateInput.value) collectDate = commitDateInput.value;
+    });
     document.querySelectorAll('[data-commit-pay]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const cId = btn.dataset.commitPay;
@@ -2281,7 +2298,7 @@ function bindTabEvents(){
         if(!state.commitmentPayments) state.commitmentPayments=[];
         state.commitmentPayments.push({
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
-          date: currentMonth+'-01', amount: val
+          date: collectDate, amount: val
         });
         persist(); renderAll();
       });
