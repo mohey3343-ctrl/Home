@@ -516,6 +516,13 @@ function todayStr(){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
+// الشهر اللي نحسب عليه المتأخرات: أقل من (الشهر المعروض حاليًا في الداشبورد) و(الشهر الحقيقي النهارده)
+// عشان لو المستخدم نقل بالتاريخ لقدام (لشهر لسه ما جاش) المتأخرات متحسبش على شهور لسه ما جتش
+function arrearsAsOfMonth(){
+  const realMonth = todayStr().slice(0,7);
+  return currentMonth < realMonth ? currentMonth : realMonth;
+}
+
 let state = null;
 let currentTab = 'overview';
 let currentMonth = todayStr().slice(0,7); // YYYY-MM — يفتح دايمًا على الشهر الحالي فعليًا
@@ -1083,7 +1090,8 @@ function monthsRange(fromKey, toKey){
 }
 
 function computeArrears(){
-  const months = monthsRange(START_MONTH, currentMonth);
+  const asOf = arrearsAsOfMonth();
+  const months = monthsRange(START_MONTH, asOf);
   const perApt = {}; // aptId -> {apt, total, items:[{label, owed}]}
   state.apartments.forEach(apt=>{
     months.forEach(mk=>{
@@ -1097,7 +1105,7 @@ function computeArrears(){
       }
     });
     aptCommitments(apt.id).forEach(c=>{
-      const rem = commitmentRemaining(c, currentMonth);
+      const rem = commitmentRemaining(c, asOf);
       if(rem>0){
         if(!perApt[apt.id]) perApt[apt.id] = {apt, total:0, items:[]};
         perApt[apt.id].total += rem;
@@ -1111,7 +1119,8 @@ function computeArrears(){
 function settleArrearsForApt(aptId){
   const apt = state.apartments.find(a=>a.id===aptId);
   if(!apt) return;
-  const months = monthsRange(START_MONTH, currentMonth);
+  const asOf = arrearsAsOfMonth();
+  const months = monthsRange(START_MONTH, asOf);
   months.forEach(mk=>{
     if(!isOccupiedInMonth(apt, mk)) return;
     if(!state.payments[mk]) state.payments[mk] = {};
@@ -1123,7 +1132,7 @@ function settleArrearsForApt(aptId){
     }
   });
   aptCommitments(apt.id).forEach(c=>{
-    const rem = commitmentRemaining(c, currentMonth);
+    const rem = commitmentRemaining(c, asOf);
     if(rem>0){
       if(!state.commitmentPayments) state.commitmentPayments=[];
       state.commitmentPayments.push({
@@ -1151,7 +1160,7 @@ function editArrearOwed(aptId, key, newOwedRaw){
     const commitId = key.slice(2);
     const c = state.commitments.find(x=>x.id===commitId);
     if(!c) return;
-    const oldRem = commitmentRemaining(c, currentMonth);
+    const oldRem = commitmentRemaining(c, arrearsAsOfMonth());
     const delta = oldRem - newOwed;
     if(delta !== 0){
       if(!state.commitmentPayments) state.commitmentPayments = [];
