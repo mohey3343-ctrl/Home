@@ -858,8 +858,39 @@ function migrateState(){
   if(changed) persist();
 }
 
-/* الحفظ: مفيش كتابة قبل قراءة ناجحة، ومفيش كتابة لبيانات فاضية أو ناقصة. */
+/* الحفظ: مفيش كتابة قبل قراءة ناجحة، ومفيش كتابة لبيانات فاضية أو ناقصة.
+
+   ملحوظة عن التزامن: لو المستخدم عدّل كذا حاجة ورا بعض بسرعة (زي إنه يعدّي على
+   كذا حقل تحصيل ورا بعض)، كل تعديل كان بيبعت request منفصل لجوجل شيت، والشبكة
+   مش بتضمن إن الـ requests دي توصل وتتنفذ بنفس ترتيبها — فممكن تعديل أقدم يوصل
+   ويتنفذ بعد تعديل أحدث ويمسحه من غير ما حد يلاحظ. عشان كده الحفظ دلوقتي بيعدّي
+   من خلال "طابور": مفيش أكتر من request حفظ شغال في نفس اللحظة؛ لو تعديل جديد
+   حصل وإحنا لسه بنحفظ التعديل اللي قبله، بنستنى لحد ما الحفظ الحالي يخلص وبعدين
+   نبعت حفظة واحدة تانية بأحدث نسخة من الداتا (بدل ما نبعت request لكل تعديل). */
+let saveInFlight = false;
+let savePending = false;
+let pendingForce = false;
+
 async function persist(opts){
+  opts = opts || {};
+  if(opts.force) pendingForce = true;
+  if(saveInFlight){
+    savePending = true;
+    return true; // اتسجّل واتحفظ محليًا فعلاً (localStorage) — هيتبعت لجوجل شيت أول ما الحفظ الحالي يخلص
+  }
+  saveInFlight = true;
+  const forceThisRun = pendingForce;
+  pendingForce = false;
+  let result = await persistNow({force: forceThisRun});
+  saveInFlight = false;
+  if(savePending){
+    savePending = false;
+    result = await persist(); // فيه تعديل جديد اتراكم وإحنا بنحفظ — نحفظ بأحدث نسخة دلوقتي
+  }
+  return result;
+}
+
+async function persistNow(opts){
   opts = opts || {};
   if(!canWrite){
     setSyncStatus('⛔ الحفظ متوقف (' + (readOnlyReason || 'البيانات مش متحمّلة من جوجل شيت') + ')', true);
@@ -885,7 +916,7 @@ async function persist(opts){
         + '\n(القديم ' + (info.oldLength||'?') + ' حرف — الجديد ' + (info.newLength||'?') + ' حرف).'
         + '\nلو ده مش مقصود، اختار "إلغاء" والبيانات هتفضل زي ما هي.'
         + '\nتحب تكمّل الحفظ؟');
-      if(ok) return await persist({force:true});
+      if(ok) return await persistNow({force:true});
       lastSyncedRaw = prev;
       setSyncStatus('⛔ الحفظ اتلغى — البيانات في جوجل شيت زي ما هي', true);
       return false;
@@ -930,6 +961,15 @@ function importBackup(file){
 function fmt(n){
   n = Math.round(n);
   return n.toLocaleString('en-US');
+}
+
+/* أي نص بيكتبه المستخدم (اسم ساكن، ملاحظة، بيان...) ولازم يتحط جوه HTML لازم
+   يعدّي من هنا الأول، عشان علامة زي " أو < ماتكسرش شكل الصفحة أو الحقول. */
+function escapeHtml(str){
+  if(str===null || str===undefined) return '';
+  return String(str).replace(/[&<>"']/g, function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
 }
 
 function fileToAttachment(file){
@@ -1456,7 +1496,7 @@ function tplCollect(){
     html += `<div class="floor-group-title">${floor}</div><div class="card">`;
     groups[floor].forEach(apt=>{
       if(!apt.occupied){
-        html += `<div class="apt-row"><div class="apt-info"><div class="name">${apt.id} — شقة شاغرة</div></div><div class="vacant-tag">غير مأهولة</div></div>`;
+        html += `<div class="apt-row"><div class="apt-info"><div class="name">${escapeHtml(apt.id)} — شقة شاغرة</div></div><div class="vacant-tag">غير مأهولة</div></div>`;
         return;
       }
       const paid = (state.payments[currentMonth]||{})[apt.id]||0;
@@ -1464,8 +1504,8 @@ function tplCollect(){
       html += `
         <div class="apt-row">
           <div class="apt-info">
-            <div class="name">${apt.name||'—'}</div>
-            <div class="meta">شقة ${apt.id} · اشتراك <span class="num">${fmt(apt.subscription)}</span></div>
+            <div class="name">${escapeHtml(apt.name)||'—'}</div>
+            <div class="meta">شقة ${escapeHtml(apt.id)} · اشتراك <span class="num">${fmt(apt.subscription)}</span></div>
           </div>
           <div class="apt-actions">
             <input type="number" class="amount-input pay-amount" data-apt="${apt.id}" value="${paid||''}" placeholder="0">
@@ -1485,7 +1525,7 @@ function tplCollect(){
                 <option value="monthly" ${c.type==='monthly'?'selected':''}>شهري ثابت</option>
                 <option value="installment" ${c.type==='installment'?'selected':''}>قسط شهري لحد مبلغ معين</option>
               </select>
-              <input type="text" name="note" placeholder="البيان" value="${c.note||''}">
+              <input type="text" name="note" placeholder="البيان" value="${escapeHtml(c.note)}">
               <input type="number" name="amount" placeholder="المبلغ" value="${c.amount}" required>
               <input type="number" name="totalAmount" placeholder="الإجمالي المستهدف (للقسط فقط)" value="${c.totalAmount||''}">
               <input type="month" name="startMonth" value="${c.startMonth}">
@@ -1500,7 +1540,7 @@ function tplCollect(){
             <div class="apt-info" style="display:flex; align-items:flex-start; gap:6px;">
               <input type="checkbox" class="commit-select bulk-checkbox" data-commit-select="${c.id}" ${selectedCommitIds.has(c.id)?'checked':''} style="margin-top:3px;">
               <div>
-                <div class="name" style="font-size:13px;">↳ ${c.note||COMMITMENT_TYPES[c.type]}</div>
+                <div class="name" style="font-size:13px;">↳ ${escapeHtml(c.note)||COMMITMENT_TYPES[c.type]}</div>
                 <div class="meta">${COMMITMENT_TYPES[c.type]} · ${c.type==='once' ? 'متبقي '+fmt(rem) : 'مستحق لحد الشهر ده '+fmt(rem)}</div>
                 ${c.type==='installment' ? `<div class="meta" style="color:var(--ink-soft)">الباقي من الإجمالي: ${fmt(commitmentTotalRemaining(c))}</div>` : ''}
               </div>
@@ -1531,7 +1571,7 @@ function tplElevatorFundBlock(){
   } else {
     html += `<div class="note-strip">الرصيد ده مش خاص بمين دفع بالذات — هو ملك مشترك لكل الشقق المشتركة في الأسانسير حاليًا (${subscribers.length} شقة، سواء مأهولة أو لأ)، وبيتقسم بينهم بالتساوي.</div>`;
     subscribers.forEach(apt=>{
-      html += `<div class="tx-row"><div class="tx-main"><div class="note">${apt.name||apt.id} — شقة ${apt.id}${apt.occupied?'':' (غير مأهولة)'}</div></div>
+      html += `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(apt.name)||escapeHtml(apt.id)} — شقة ${escapeHtml(apt.id)}${apt.occupied?'':' (غير مأهولة)'}</div></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div class="num ${shareEach<0?'balance-neg':''}">${fmt(shareEach)}</div>
           <button type="button" class="pill pay" data-elevator-settle="${apt.id}" title="اخصم نصيبه من رصيد الأسانسير من المستحق عليه">خصم من المستحق عليه</button>
@@ -1599,7 +1639,7 @@ function tplCommitmentsBlock(){
               <option value="monthly" ${c.type==='monthly'?'selected':''}>شهري ثابت</option>
               <option value="installment" ${c.type==='installment'?'selected':''}>قسط شهري لحد مبلغ معين</option>
             </select>
-            <input type="text" name="note" placeholder="البيان" value="${c.note||''}">
+            <input type="text" name="note" placeholder="البيان" value="${escapeHtml(c.note)}">
             <input type="number" name="amount" placeholder="المبلغ" value="${c.amount}" required>
             <input type="number" name="totalAmount" placeholder="الإجمالي المستهدف (للقسط فقط)" value="${c.totalAmount||''}">
             <input type="month" name="startMonth" value="${c.startMonth}">
@@ -1619,7 +1659,7 @@ function tplCommitmentsBlock(){
         html += `<div class="tx-row" style="align-items:flex-start; flex-wrap:wrap;">
           <input type="checkbox" class="commit-select bulk-checkbox" data-commit-select="${c.id}" ${selectedCommitIds.has(c.id)?'checked':''}>
           <div class="tx-main" style="flex:1; min-width:150px;">
-            <div class="note">${c.fundType==='elevator'?'🛗 ':''}${commitmentAptLabel(c)} — ${c.note||COMMITMENT_TYPES[c.type]}</div>
+            <div class="note">${c.fundType==='elevator'?'🛗 ':''}${escapeHtml(commitmentAptLabel(c))} — ${escapeHtml(c.note)||COMMITMENT_TYPES[c.type]}</div>
             <div class="date">${statusTxt}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px; flex-wrap:wrap;">
@@ -1639,7 +1679,7 @@ function tplCommitmentsBlock(){
       <form id="commitForm" class="inline">
         <select name="aptId">
           <option value="">— بدون شقة (التزام عام على العمارة)</option>
-          ${state.apartments.filter(a=>a.occupied).map(a=>`<option value="${a.id}">${a.name||a.id} — شقة ${a.id}</option>`).join('')}
+          ${state.apartments.filter(a=>a.occupied).map(a=>`<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)||escapeHtml(a.id)} — شقة ${escapeHtml(a.id)}</option>`).join('')}
         </select>
         <select name="type">
           <option value="once">مرة واحدة / فاتورة قديمة</option>
@@ -1730,7 +1770,7 @@ function tplArrearsReport(){
               <td style="padding:10px 12px; position:sticky; right:0; background:${rowBg}; z-index:1; border-left:1px solid var(--line); font-weight:600; color:var(--ink); white-space:nowrap;">
                 <div style="display:flex; align-items:center; gap:6px;">
                   <input type="checkbox" class="arrear-select bulk-checkbox" data-arrear-select="${a.apt.id}" ${selectedArrearApts.has(a.apt.id)?'checked':''} style="accent-color:var(--lit);">
-                  <span>${a.apt.name||'—'} <span style="font-weight:500; font-size:11.5px; color:var(--ink-soft);">(${a.apt.floor||'—'})</span></span>
+                  <span>${escapeHtml(a.apt.name)||'—'} <span style="font-weight:500; font-size:11.5px; color:var(--ink-soft);">(${escapeHtml(a.apt.floor)||'—'})</span></span>
                 </div>
               </td>
               <!-- خانة لكل شهر -->
@@ -1858,8 +1898,8 @@ function tplExpenses(){
 }
 
 function expenseRowHtml(e){
-  const attach = e.attachment ? `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${e.attachment.name}" title="فتح المرفق: ${e.attachment.name}">📎</a>` : '';
-  return `<div class="tx-row"><div class="tx-main"><div class="note">${e.category} ${e.note?('— '+e.note):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attach}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+  const attach = e.attachment ? `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>` : '';
+  return `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(e.category)} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attach}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
 }
 
 function tplFund(){
@@ -1918,7 +1958,7 @@ function tplFund(){
     const dateEl = dateAttr
       ? `<input type="date" class="ledger-date-input" ${dateAttr} value="${le.date.slice(0,10)}" style="border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-soft); background:transparent;">`
       : `<div class="date">${le.date}</div>`;
-    html += `<div class="tx-row"><div class="tx-main"><div class="note">${le.note}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px"><div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
+    html += `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px"><div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
   });
   html += `</div>`;
 
@@ -1941,7 +1981,7 @@ function tplPlans(){
   state.plans.forEach(p=>{
     html += `<div class="plan-row ${p.done?'done':''}">
       <input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>
-      <div class="item">${p.item}</div>
+      <div class="item">${escapeHtml(p.item)}</div>
       <div class="num">${fmt(p.cost)}</div>
       <button class="del" data-del-plan="${p.id}">✕</button>
     </div>`;
@@ -1987,22 +2027,22 @@ function tplApts(){
     html += `<div class="apt-row" style="flex-wrap:wrap;">
       <div class="apt-info" style="flex:1; min-width:150px;">
         <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" data-apt-id="${a.id}" value="${a.id}" placeholder="رقم الشقة" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; width:70px; font-family:'IBM Plex Mono';">
-          <select data-apt-floor="${a.id}" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; flex:1;">
+          <input type="text" data-apt-id="${escapeHtml(a.id)}" value="${escapeHtml(a.id)}" placeholder="رقم الشقة" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; width:70px; font-family:'IBM Plex Mono';">
+          <select data-apt-floor="${escapeHtml(a.id)}" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; flex:1;">
             ${FLOOR_ORDER.map(f=>`<option value="${f}" ${f===a.floor?'selected':''}>${f}</option>`).join('')}
           </select>
         </div>
-        <input type="text" data-apt-name="${a.id}" value="${a.name}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;" ${a.occupied?'':'disabled'}>
+        <input type="text" data-apt-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;" ${a.occupied?'':'disabled'}>
       </div>
       <div class="apt-actions" style="gap:10px; flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
-          <input type="checkbox" data-apt-occupied="${a.id}" ${a.occupied?'checked':''}> مأهولة
+          <input type="checkbox" data-apt-occupied="${escapeHtml(a.id)}" ${a.occupied?'checked':''}> مأهولة
         </label>
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
-          <input type="checkbox" data-apt-elevator="${a.id}" ${a.elevator?'checked':''}> أسانسير
+          <input type="checkbox" data-apt-elevator="${escapeHtml(a.id)}" ${a.elevator?'checked':''}> أسانسير
         </label>
-        <input type="number" class="amount-input" data-apt-sub="${a.id}" value="${a.subscription}" style="width:74px" ${a.occupied?'':'disabled'}>
-        <button class="del" data-del-apt="${a.id}">✕</button>
+        <input type="number" class="amount-input" data-apt-sub="${escapeHtml(a.id)}" value="${a.subscription}" style="width:74px" ${a.occupied?'':'disabled'}>
+        <button class="del" data-del-apt="${escapeHtml(a.id)}">✕</button>
       </div>
     </div>`;
   });
@@ -2013,9 +2053,12 @@ function tplApts(){
     <div class="card">
       <form id="aptForm" class="inline">
         <input type="text" name="id" placeholder="رقم الشقة" required>
-        <input type="text" name="floor" placeholder="الدور" required>
+        <select name="floor" required>
+          <option value="" disabled selected>اختار الدور</option>
+          ${FLOOR_ORDER.map(f=>`<option value="${f}">${f}</option>`).join('')}
+        </select>
         <input type="text" name="name" placeholder="اسم الساكن">
-        <input type="number" name="subscription" placeholder="الاشتراك الشهري" required>
+        <input type="number" name="subscription" placeholder="الاشتراك الشهري" required min="1">
         <button type="submit">إضافة</button>
       </form>
     </div>`;
@@ -2044,10 +2087,15 @@ function bindCommitEditHandlers(){
       if(!unlocked) return;
       const c = state.commitments.find(x=>x.id===f.dataset.editCommitForm);
       const el = e.target;
-      c.type = el.type.value;
+      const newAmount = Number(el.amount.value)||0;
+      const newType = el.type.value;
+      const newTotalAmount = newType==='installment' ? (Number(el.totalAmount.value)||0) : null;
+      if(newAmount<=0){ alert('لازم المبلغ يكون أكبر من صفر'); return; }
+      if(newType==='installment' && newTotalAmount<=0){ alert('لازم تدخل الإجمالي المستهدف للقسط'); return; }
+      c.type = newType;
       c.note = el.note.value;
-      c.amount = Number(el.amount.value)||0;
-      c.totalAmount = c.type==='installment' ? (Number(el.totalAmount.value)||0) : null;
+      c.amount = newAmount;
+      c.totalAmount = newTotalAmount;
       c.startMonth = el.startMonth.value || c.startMonth;
       c.fundType = el.isElevator && el.isElevator.checked ? 'elevator' : 'general';
       editingCommitId = null;
@@ -2202,6 +2250,17 @@ function bindTabEvents(){
     });
     const exportBtn = document.getElementById('exportReportBtn');
     if(exportBtn) exportBtn.addEventListener('click', exportReportCSV);
+    document.querySelectorAll('[data-settle-apt]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(!unlocked) return;
+        const aptId = b.dataset.settleApt;
+        const apt = state.apartments.find(x=>x.id===aptId);
+        if(!confirm(`متأكد إنك عايز تعتبر ${apt?(apt.name||apt.id):aptId} متسدد بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
+        settleArrearsForApt(aptId);
+        selectedArrearApts.delete(aptId);
+        persist(); renderAll();
+      });
+    });
     document.querySelectorAll('[data-arrear-select]').forEach(cb=>{
       cb.addEventListener('change', ()=>{
         const id = cb.dataset.arrearSelect;
@@ -2236,14 +2295,18 @@ function bindTabEvents(){
       e.preventDefault();
       const f = e.target;
       const type = f.type.value;
+      const amount = Number(f.amount.value)||0;
+      const totalAmount = type==='installment' ? (Number(f.totalAmount.value)||0) : null;
+      if(amount<=0){ alert('لازم المبلغ يكون أكبر من صفر'); return; }
+      if(type==='installment' && totalAmount<=0){ alert('لازم تدخل الإجمالي المستهدف للقسط'); return; }
       if(!state.commitments) state.commitments=[];
       state.commitments.push({
         id:'c'+Date.now(),
         aptId: f.aptId.value || null,
         note: f.note.value,
         type,
-        amount: Number(f.amount.value)||0,
-        totalAmount: type==='installment' ? (Number(f.totalAmount.value)||0) : null,
+        amount,
+        totalAmount,
         startMonth: f.startMonth.value || currentMonth,
         fundType: f.isElevator && f.isElevator.checked ? 'elevator' : 'general'
       });
@@ -2352,12 +2415,14 @@ function bindTabEvents(){
     document.getElementById('expForm').addEventListener('submit', async e=>{
       e.preventDefault();
       const f = e.target;
+      const amount = Number(f.amount.value)||0;
+      if(amount<=0){ alert('لازم مبلغ المصروف يكون أكبر من صفر'); return; }
       const newExp = {
         id: 'e'+Date.now(),
         date: f.date.value,
         category: f.category.value,
         note: f.note.value,
-        amount: Number(f.amount.value)||0
+        amount
       };
       const file = f.attachment && f.attachment.files && f.attachment.files[0];
       if(file){
@@ -2503,7 +2568,9 @@ function bindTabEvents(){
     document.getElementById('planForm').addEventListener('submit', e=>{
       e.preventDefault();
       const f = e.target;
-      state.plans.push({id:'p'+Date.now(), item:f.item.value, cost:Number(f.cost.value)||0, done:false});
+      const cost = Number(f.cost.value)||0;
+      if(cost<=0){ alert('لازم تكلفة الخطة تكون أكبر من صفر'); return; }
+      state.plans.push({id:'p'+Date.now(), item:f.item.value, cost, done:false});
       persist(); renderAll();
     });
   }
@@ -2511,8 +2578,11 @@ function bindTabEvents(){
     document.getElementById('settingsForm').addEventListener('submit', e=>{
       e.preventDefault();
       const f = e.target;
-      state.settings.elevatorAmount = Number(f.elevatorAmount.value)||0;
-      state.settings.noElevatorAmount = Number(f.noElevatorAmount.value)||0;
+      const elevatorAmount = Number(f.elevatorAmount.value)||0;
+      const noElevatorAmount = Number(f.noElevatorAmount.value)||0;
+      if(elevatorAmount<=0 || noElevatorAmount<=0){ alert('لازم القيمتين يكونوا أكبر من صفر'); return; }
+      state.settings.elevatorAmount = elevatorAmount;
+      state.settings.noElevatorAmount = noElevatorAmount;
       persist(); renderAll();
     });
     const lockSettingsForm = document.getElementById('lockSettingsForm');
@@ -2593,7 +2663,7 @@ function bindTabEvents(){
     document.querySelectorAll('[data-apt-sub]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
         const a = state.apartments.find(x=>x.id===inp.dataset.aptSub);
-        a.subscription = Number(inp.value)||0;
+        a.subscription = Math.max(0, Number(inp.value)||0);
         persist(); renderAll();
       });
     });
@@ -2606,9 +2676,18 @@ function bindTabEvents(){
     document.getElementById('aptForm').addEventListener('submit', e=>{
       e.preventDefault();
       const f = e.target;
+      const newId = f.id.value.trim();
+      const subscription = Number(f.subscription.value) || 0;
+      if(!newId){ alert('لازم تكتب رقم شقة'); return; }
+      if(state.apartments.some(a=>a.id===newId)){
+        alert('رقم الشقة ده مستخدم بالفعل — اختار رقم تاني');
+        return;
+      }
+      if(!f.floor.value){ alert('لازم تختار الدور'); return; }
+      if(subscription<=0){ alert('لازم الاشتراك الشهري يكون أكبر من صفر'); return; }
       state.apartments.push({
-        id: f.id.value, floor: f.floor.value, name: f.name.value,
-        subscription: Number(f.subscription.value)||0, elevator:true, occupied:true,
+        id: newId, floor: f.floor.value, name: f.name.value,
+        subscription, elevator: f.floor.value !== 'الأرضي', occupied:true,
         occupancyPeriods: [{from: currentMonth, to: null}]
       });
       persist(); renderAll();
