@@ -407,7 +407,7 @@
     <button id="pinSubmit">فتح</button>
   </div>
   <div id="syncStatus" style="font-size:10.5px; text-align:center; color:#bfe0ff; margin:-4px 0 6px;">🔄 بيتزامن مع جوجل شيت...</div>
-  <div style="display:flex; gap:8px; justify-content:center; margin:0 0 10px;">
+  <div id="backupRow" style="display:none; gap:8px; justify-content:center; margin:0 0 10px;">
     <button id="btnExport" style="font-size:10.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10); color:#dceaff; font-family:inherit; cursor:pointer;">⬇️ نزّل نسخة احتياطية</button>
     <button id="btnImport" style="font-size:10.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10); color:#dceaff; font-family:inherit; cursor:pointer;">⬆️ استرجاع من ملف</button>
     <input type="file" id="importFile" accept=".json,application/json" style="display:none">
@@ -1447,6 +1447,9 @@ function renderAll(){
   renderHero();
   const c = document.getElementById('content');
   c.classList.toggle('locked', !unlocked);
+  // أزرار النسخة الاحتياطية/الاسترجاع ظاهرة بس في وضع التعديل (بعد الرمز السري)
+  const backupRow = document.getElementById('backupRow');
+  if(backupRow) backupRow.style.display = unlocked ? 'flex' : 'none';
   let banner = unlocked ? '' : `<div class="view-only-banner">👁 وضع العرض فقط</div>`;
   if(currentTab==='overview') c.innerHTML = banner + tplOverview();
   if(currentTab==='collect') c.innerHTML = banner + tplCollect();
