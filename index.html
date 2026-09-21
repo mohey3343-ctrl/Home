@@ -548,6 +548,27 @@ function shiftMonth(key, delta){
 /* غيّر الرابط ده لو عملت نشر (Deploy) جديد للسكريبت وطلع لك رابط مختلف */
 const REMOTE_DB_URL = 'https://script.google.com/macros/s/AKfycbz1_5VB0BEdJt6w0GiajPA2Rwdyx63CWSaYhZ2EYfu9EG038vZmsgDleAYxZrW1-Ch3aA/exec';
 
+/* رابط سكريبت رفع المرفقات على جوجل درايف (ملف Attachments.gs — نشر منفصل).
+   لو فاضي: المرفقات بتتحفظ جوه الشيت زي الأول (وده اللي بيخلّي الحفظ يفشل لما الحجم يكبر).
+   لو متعبّي: المرفق بيترفع على درايف وبيتحفظ في الشيت رابطه بس. */
+const ATTACH_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbxYa9M4dq4gIQ2xjpmd_jAOTwDL3jsQ3mNgVOKS_bdnwsW7Tj0wbvXZdMPuZt4EERtl/exec';
+
+async function uploadAttachmentToDrive(att){
+  const comma = att.dataUrl.indexOf(',');
+  const res = await fetch(ATTACH_UPLOAD_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // نص عادي عشان نتفادى preflight
+    body: JSON.stringify({action:'upload', name: att.name, type: att.type, data: att.dataUrl.slice(comma+1)})
+  });
+  const txt = await res.text();
+  let json = null;
+  try{ json = JSON.parse(txt); }catch(e){}
+  if(!json || json.ok !== true || !json.url){
+    throw new Error((json && json.error) || 'رد غير مفهوم من سكريبت المرفقات (راجع إن النشر Anyone)');
+  }
+  return {name: att.name, type: att.type, id: json.id, url: json.url};
+}
+
 /* ================== طبقة القراءة والحفظ — نسخة محميّة ==================
    اللي حصل قبل كده: لو القراءة من جوجل شيت فشلت لأي سبب (نت ضعيف، صلاحيات
    النشر، رد غير متوقع من السكريبت)، البرنامج كان بيفهم إن قاعدة البيانات فاضية،
@@ -1901,7 +1922,10 @@ function tplExpenses(){
 }
 
 function expenseRowHtml(e){
-  const attach = e.attachment ? `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>` : '';
+  // مرفق على درايف (url) بيتفتح في تبويب جديد، والمرفقات القديمة المحفوظة جوه الشيت (dataUrl) بتشتغل زي ما هي
+  const attach = e.attachment ? (e.attachment.url
+    ? `<a class="tx-attach" href="${escapeHtml(e.attachment.url)}" target="_blank" rel="noopener" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`
+    : `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`) : '';
   return `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(e.category)} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attach}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
 }
 
@@ -2438,6 +2462,18 @@ function bindTabEvents(){
             const approxBytes = Math.round((attachment.dataUrl.length - attachment.dataUrl.indexOf(',') - 1) * 0.75);
             if(approxBytes > 3*1024*1024){
               alert('المرفق لسه كبير بعد الضغط (أكبر من 3 ميجا) — جرّب صورة أوضح أقل أو ملف مختلف.');
+            } else if(ATTACH_UPLOAD_URL){
+              // المرفق بيترفع على جوجل درايف، والشيت بيتحفظ فيه الرابط بس
+              const submitBtn = f.querySelector('button[type="submit"], button:not([type])');
+              const oldLabel = submitBtn ? submitBtn.textContent : '';
+              if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '⏳ بيرفع المرفق...'; }
+              try{
+                newExp.attachment = await uploadAttachmentToDrive(attachment);
+              }catch(upErr){
+                console.error('attachment upload failed', upErr);
+                if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = oldLabel; }
+                if(!confirm('المرفق ما اترفعش (' + upErr.message + ').\nتحب تحفظ المصروف من غير مرفق؟ (إلغاء = ارجع وجرّب تاني)')) return;
+              }
             } else {
               newExp.attachment = attachment;
             }
