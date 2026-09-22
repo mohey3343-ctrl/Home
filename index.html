@@ -1923,10 +1923,45 @@ function tplExpenses(){
 
 function expenseRowHtml(e){
   // مرفق على درايف (url) بيتفتح في تبويب جديد، والمرفقات القديمة المحفوظة جوه الشيت (dataUrl) بتشتغل زي ما هي
+  // لو المصروف مسجّل من غير مرفق، بنعرض دبوس فاضي يقدر يختار له ملف بعدين (إضافة مرفق لاحقًا)
   const attach = e.attachment ? (e.attachment.url
     ? `<a class="tx-attach" href="${escapeHtml(e.attachment.url)}" target="_blank" rel="noopener" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`
-    : `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`) : '';
+    : `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`)
+    : (unlocked ? `<label class="tx-attach" title="إضافة مرفق" style="cursor:pointer; opacity:.55;">📎<input type="file" data-add-attach="${e.id}" accept="image/*,.pdf" style="display:none"></label>` : '');
   return `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(e.category)} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attach}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+}
+
+/* بيتأكد من حجم الملف، يضغطه لو صورة، ويرفعه على درايف لو فيه رابط رفع مضبوط.
+   بيرجّع: attachment object لو نجح، null لو اتقرّر نكمّل من غير مرفق،
+   undefined لو المستخدم عايز يلغي ويجرّب تاني (فشل الرفع ورفض "كمّل من غيره"). */
+async function resolveAttachmentFile(file){
+  const isImage = file.type && file.type.startsWith('image/');
+  if(!isImage && file.size > 3*1024*1024){
+    alert('حجم الملف كبير أوي (أكبر من 3 ميجا) — جرّب ملف أصغر.');
+    return null;
+  }
+  let attachment;
+  try{
+    attachment = await fileToAttachment(file);
+  }catch(err){
+    console.error('attachment read failed', err);
+    alert('مش قادر يقرا الملف ده.');
+    return null;
+  }
+  const approxBytes = Math.round((attachment.dataUrl.length - attachment.dataUrl.indexOf(',') - 1) * 0.75);
+  if(approxBytes > 3*1024*1024){
+    alert('المرفق لسه كبير بعد الضغط (أكبر من 3 ميجا) — جرّب صورة أوضح أقل أو ملف مختلف.');
+    return null;
+  }
+  if(ATTACH_UPLOAD_URL){
+    try{
+      return await uploadAttachmentToDrive(attachment);
+    }catch(upErr){
+      console.error('attachment upload failed', upErr);
+      return confirm('المرفق ما اترفعش (' + upErr.message + ').\nتحب تكمّل من غير مرفق؟ (إلغاء = ارجع وجرّب تاني)') ? null : undefined;
+    }
+  }
+  return attachment;
 }
 
 function tplFund(){
@@ -2453,32 +2488,13 @@ function bindTabEvents(){
       };
       const file = f.attachment && f.attachment.files && f.attachment.files[0];
       if(file){
-        const isImage = file.type && file.type.startsWith('image/');
-        if(!isImage && file.size > 3*1024*1024){
-          alert('حجم الملف كبير أوي (أكبر من 3 ميجا) — جرّب ملف أصغر.');
-        } else {
-          try{
-            const attachment = await fileToAttachment(file);
-            const approxBytes = Math.round((attachment.dataUrl.length - attachment.dataUrl.indexOf(',') - 1) * 0.75);
-            if(approxBytes > 3*1024*1024){
-              alert('المرفق لسه كبير بعد الضغط (أكبر من 3 ميجا) — جرّب صورة أوضح أقل أو ملف مختلف.');
-            } else if(ATTACH_UPLOAD_URL){
-              // المرفق بيترفع على جوجل درايف، والشيت بيتحفظ فيه الرابط بس
-              const submitBtn = f.querySelector('button[type="submit"], button:not([type])');
-              const oldLabel = submitBtn ? submitBtn.textContent : '';
-              if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '⏳ بيرفع المرفق...'; }
-              try{
-                newExp.attachment = await uploadAttachmentToDrive(attachment);
-              }catch(upErr){
-                console.error('attachment upload failed', upErr);
-                if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = oldLabel; }
-                if(!confirm('المرفق ما اترفعش (' + upErr.message + ').\nتحب تحفظ المصروف من غير مرفق؟ (إلغاء = ارجع وجرّب تاني)')) return;
-              }
-            } else {
-              newExp.attachment = attachment;
-            }
-          }catch(err){ console.error('attachment read failed', err); }
-        }
+        const submitBtn = f.querySelector('button[type="submit"], button:not([type])');
+        const oldLabel = submitBtn ? submitBtn.textContent : '';
+        if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '⏳ بيرفع المرفق...'; }
+        const result = await resolveAttachmentFile(file);
+        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = oldLabel; }
+        if(result === undefined) return; // فشل الرفع والمستخدم عايز يرجع يجرّب تاني — من غير حفظ المصروف
+        if(result) newExp.attachment = result;
       }
       state.expenses.push(newExp);
       persist(); renderAll();
@@ -2495,6 +2511,24 @@ function bindTabEvents(){
       b.addEventListener('click', ()=>{
         state.expenses = state.expenses.filter(e=>e.id!==b.dataset.delExp);
         persist(); renderAll();
+      });
+    });
+    /* إضافة مرفق لمصروف متسجّل من قبل من غير مرفق */
+    document.querySelectorAll('[data-add-attach]').forEach(inp=>{
+      inp.addEventListener('change', async ()=>{
+        const file = inp.files && inp.files[0];
+        if(!file) return;
+        const exp = state.expenses.find(x=>x.id===inp.dataset.addAttach);
+        if(!exp) return;
+        const label = inp.closest('label');
+        if(label){ label.style.opacity = '1'; label.textContent = '⏳'; }
+        inp.disabled = true;
+        const result = await resolveAttachmentFile(file);
+        if(result){
+          exp.attachment = result;
+          persist();
+        }
+        renderAll(); // بيرجّع شكل الدبوس لوضعه الطبيعي في الحالتين (نجاح أو تراجع)
       });
     });
   }
