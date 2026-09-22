@@ -1922,13 +1922,30 @@ function tplExpenses(){
 }
 
 function expenseRowHtml(e){
-  // مرفق على درايف (url) بيتفتح في تبويب جديد، والمرفقات القديمة المحفوظة جوه الشيت (dataUrl) بتشتغل زي ما هي
-  // لو المصروف مسجّل من غير مرفق، بنعرض دبوس فاضي يقدر يختار له ملف بعدين (إضافة مرفق لاحقًا)
-  const attach = e.attachment ? (e.attachment.url
-    ? `<a class="tx-attach" href="${escapeHtml(e.attachment.url)}" target="_blank" rel="noopener" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`
-    : `<a class="tx-attach" href="${e.attachment.dataUrl}" download="${escapeHtml(e.attachment.name)}" title="فتح المرفق: ${escapeHtml(e.attachment.name)}">📎</a>`)
-    : (unlocked ? `<label class="tx-attach" title="إضافة مرفق" style="cursor:pointer; opacity:.55;">📎<input type="file" data-add-attach="${e.id}" accept="image/*,.pdf" style="display:none"></label>` : '');
-  return `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(e.category)} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attach}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+  return `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(e.category)} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px">${attachCellHtml(e)}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+}
+
+/* دبوس المرفق: بيفتح المرفق الموجود (على درايف أو محفوظ جوه الشيت من زمان)،
+   أو لو مفيش مرفق بيعرض دبوس فاضي (في وضع التعديل بس) يقدر يضيف له مرفق بعدين.
+   بيتستخدم مع أي حاجة عندها id + attachment: مصروف، حركة صندوق يدوية، سداد التزام، صرف أسانسير. */
+function attachCellHtml(record){
+  if(!record) return '';
+  const att = record.attachment;
+  if(att){
+    return att.url
+      ? `<a class="tx-attach" href="${escapeHtml(att.url)}" target="_blank" rel="noopener" title="فتح المرفق: ${escapeHtml(att.name)}">📎</a>`
+      : `<a class="tx-attach" href="${att.dataUrl}" download="${escapeHtml(att.name)}" title="فتح المرفق: ${escapeHtml(att.name)}">📎</a>`;
+  }
+  return unlocked ? `<label class="tx-attach" title="إضافة مرفق" style="cursor:pointer; opacity:.55;">📎<input type="file" data-add-attach="${record.id}" accept="image/*,.pdf" style="display:none"></label>` : '';
+}
+
+/* بيدوّر على السجل (مصروف / حركة صندوق يدوية / سداد التزام / صرف أسانسير) بمعرّفه
+   عبر المجموعات الأربعة، عشان دبوس "إضافة مرفق" يشتغل من أي تبويب. */
+function findAttachableRecordById(id){
+  return state.expenses.find(x=>x.id===id)
+    || (state.fundLedger||[]).find(x=>x.id===id)
+    || (state.commitmentPayments||[]).find(x=>x.id===id)
+    || (state.elevatorSpends||[]).find(x=>x.id===id);
 }
 
 /* بيتأكد من حجم الملف، يضغطه لو صورة، ويرفعه على درايف لو فيه رابط رفع مضبوط.
@@ -1983,7 +2000,7 @@ function tplFund(){
   html += `<div class="section-title">دفتر الصندوق</div><div class="card">`;
   const ledgerEntries = [
     {date: monthsRange(START_MONTH, currentMonth)[0]+'-01', note:'الرصيد الافتتاحي', amount: state.settings.openingBalance, kind:'opening'},
-    ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id})),
+    ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id, record:f})),
   ];
   Object.entries(state.payments).forEach(([mk, obj])=>{
     Object.entries(obj).forEach(([aptId, amt])=>{
@@ -1998,13 +2015,13 @@ function tplFund(){
     const c = state.commitments.find(x=>x.id===cp.commitmentId);
     const isGeneral = c && !c.aptId;
     const amt = isGeneral ? -cp.amount : cp.amount;
-    ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id});
+    ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id, record:cp});
   });
   state.expenses.forEach(e=>{
-    ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id});
+    ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id, record:e});
   });
   (state.elevatorSpends||[]).forEach(sp=>{
-    ledgerEntries.push({date:sp.date, note:'🛗 صرف من رصيد الأسانسير — '+sp.note, amount:-sp.amount, kind:'elevatorSpend', id:sp.id});
+    ledgerEntries.push({date:sp.date, note:'🛗 صرف من رصيد الأسانسير — '+sp.note, amount:-sp.amount, kind:'elevatorSpend', id:sp.id, record:sp});
   });
   ledgerEntries.sort((a,b)=> a.date.localeCompare(b.date));
   if(ledgerEntries.length===0) html += `<div class="empty">مفيش حركات لسه</div>`;
@@ -2020,7 +2037,8 @@ function tplFund(){
     const dateEl = dateAttr
       ? `<input type="date" class="ledger-date-input" ${dateAttr} value="${le.date.slice(0,10)}" style="border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-soft); background:transparent;">`
       : `<div class="date">${le.date}</div>`;
-    html += `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px"><div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
+    const attachHtml = attachCellHtml(le.record);
+    html += `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px">${attachHtml}<div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
   });
   html += `</div>`;
 
@@ -2513,24 +2531,6 @@ function bindTabEvents(){
         persist(); renderAll();
       });
     });
-    /* إضافة مرفق لمصروف متسجّل من قبل من غير مرفق */
-    document.querySelectorAll('[data-add-attach]').forEach(inp=>{
-      inp.addEventListener('change', async ()=>{
-        const file = inp.files && inp.files[0];
-        if(!file) return;
-        const exp = state.expenses.find(x=>x.id===inp.dataset.addAttach);
-        if(!exp) return;
-        const label = inp.closest('label');
-        if(label){ label.style.opacity = '1'; label.textContent = '⏳'; }
-        inp.disabled = true;
-        const result = await resolveAttachmentFile(file);
-        if(result){
-          exp.attachment = result;
-          persist();
-        }
-        renderAll(); // بيرجّع شكل الدبوس لوضعه الطبيعي في الحالتين (نجاح أو تراجع)
-      });
-    });
   }
   if(currentTab==='fund'){
     document.getElementById('openingForm').addEventListener('submit', e=>{
@@ -2766,6 +2766,25 @@ function bindTabEvents(){
       persist(); renderAll();
     });
   }
+  /* إضافة مرفق لأي حاجة متسجّلة من قبل من غير مرفق (مصروف، حركة صندوق يدوية،
+     سداد التزام، صرف أسانسير) — الدبوس ده ممكن يظهر في أي تبويب فيه دفتر حركات. */
+  document.querySelectorAll('[data-add-attach]').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const file = inp.files && inp.files[0];
+      if(!file) return;
+      const record = findAttachableRecordById(inp.dataset.addAttach);
+      if(!record) return;
+      const label = inp.closest('label');
+      if(label){ label.style.opacity = '1'; label.textContent = '⏳'; }
+      inp.disabled = true;
+      const result = await resolveAttachmentFile(file);
+      if(result){
+        record.attachment = result;
+        persist();
+      }
+      renderAll(); // بيرجّع شكل الدبوس لوضعه الطبيعي في الحالتين (نجاح أو تراجع)
+    });
+  });
 }
 
 document.getElementById('tabbar').addEventListener('click', e=>{
