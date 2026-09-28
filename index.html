@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>التقارير المالية برج الاندلس</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -383,18 +385,108 @@
     font-size:12px; color:#1e4fa8; margin-bottom:12px;
   }
   .del{background:none; border:none; color:#a7b2c9; cursor:pointer; font-size:15px; padding:2px 6px;}
+  /* خانة البحث في الصندوق — شغّالة حتى في وضع العرض فقط */
+  .search-input{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 12px;
+    font-family:'IBM Plex Sans Arabic'; font-size:13.5px; background:var(--paper); color:var(--ink);
+  }
+  .search-input:focus{outline:none; border-color:var(--wall-2); background:#fff;}
+  #content.locked input.search-input{pointer-events:auto; opacity:1;}
+  .search-info{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}
+  .search-info:empty{display:none;}
   .arrear-amount-input{
     width:78px; text-align:center; border:1px solid var(--line); border-radius:8px;
     padding:5px 4px; font-family:'IBM Plex Mono'; font-size:12.5px; color:var(--bad); font-weight:600;
     background:#fff5f5;
   }
+
+  /* ================= Design system: ليل البرج (Night Tower) ================= */
+  :root{ --sidebar-w:0px; --night-card:#232048; --lit-edge:#eaa93f; --unpaid-win:#3b3870; --vacant-win:#28254f; --vacant-ink:#8f8ac6; --muted-on-night:#b8b3e6; --warn-on-night:#ffb5ab; --shadow-night:0 10px 26px rgba(10,8,30,.22); --shadow-card:0 2px 10px rgba(30,40,90,.05); }
+
+  /* Header */
+  .hero{ padding:16px 16px 18px; border-radius:0 0 26px 26px; box-shadow:0 10px 28px rgba(10,8,30,.28); }
+  .hero::before{ top:-140px; left:-60px; transform:none; width:280px; height:280px;
+    background:radial-gradient(circle, rgba(234,169,63,.22) 0%, rgba(234,169,63,0) 70%); }
+  .hero-top{ margin-bottom:10px; }
+  .hero-title{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:38px; height:38px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(165deg, var(--lit-glow), var(--lit-2)); box-shadow:0 0 18px rgba(234,169,63,.45); }
+  .brand-mark svg{ width:24px; height:24px; }
+  .brand-text{ display:flex; flex-direction:column; }
+  .brand-t1{ font-family:'El Messiri', sans-serif; font-size:20px; font-weight:700; line-height:1.2; color:#fff; }
+  .brand-t2{ font-family:'IBM Plex Sans Arabic', sans-serif; font-size:11.5px; font-weight:400; color:var(--muted-on-night); }
+  .month-nav{ gap:6px; }
+  .month-nav button:not(#lockBtn){ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); box-shadow:none;
+    width:30px; height:30px; font-size:15px; line-height:1; }
+  .month-label{ font-size:13px; min-width:92px; font-weight:600; }
+  #lockBtn:not(.revealed){ box-shadow:none; }
+
+  /* Flat icons (no 3D bevel) */
+  .icon3d, .icon3d.gold{ background:none; box-shadow:none; border:none; }
+
+  /* Overview: balance on night, KPIs on white, facade on night */
+  .overview-block{ background:none; box-shadow:none; padding:0; border-radius:0; overflow:visible; }
+  .overview-block::before{ display:none; }
+  .balance-hero{ overflow:hidden; text-align:start; border-radius:20px; padding:18px;
+    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%);
+    border:1px solid rgba(255,255,255,.1); box-shadow:var(--shadow-night); }
+  .balance-hero::before{ content:''; position:absolute; top:-90px; left:-50px; width:240px; height:240px; border-radius:50%;
+    background:radial-gradient(circle, rgba(234,169,63,.28) 0%, rgba(234,169,63,0) 70%); pointer-events:none; }
+  .balance-hero > *{ position:relative; }
+  .balance-hero .icon3d{ display:none; }
+  .balance-hero .lbl{ color:#c9c4ee; font-size:12.5px; }
+  .balance-hero .val{ font-size:38px; margin-top:2px; }
+
+  .stats{ gap:10px; }
+  .stat{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow-card); }
+  .stat .icon3d{ display:none; }
+  .stat .lbl{ color:var(--ink-soft); font-size:11.5px; }
+  .stat .val{ color:var(--ink); font-size:21px; }
+  .stat .val span{ color:var(--ink-soft) !important; }
+  .stat.balance-neg .val{ color:#d23c3c; }
+
+  .collection-progress{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow-card); }
+  .cp-head .lbl{ color:var(--ink-soft); }
+  .cp-head .pct{ color:var(--ink); }
+  .cp-track{ height:10px; border-radius:99px; background:#e6ebf5; box-shadow:none; }
+  .cp-fill{ border-radius:99px; background:linear-gradient(90deg, var(--lit-2), var(--lit-glow)); box-shadow:none; }
+  .cp-fill.cp-low{ background:linear-gradient(90deg, #e24a4a, #ff8a7a); }
+  .cp-sub{ color:var(--ink-soft); }
+
+  .facade{ background:var(--night-card); border:none; border-radius:18px; padding:12px 10px 10px; box-shadow:var(--shadow-night); gap:6px; }
+  .floor-label{ color:var(--muted-on-night); }
+  .windows{ gap:6px; }
+  .win{ border:1px solid transparent; }
+  .win.paid{ background:linear-gradient(165deg, var(--lit-glow), var(--lit)); border-color:rgba(255,255,255,.3);
+    box-shadow:0 0 14px rgba(234,169,63,.45); }
+  .win.partial{ background:var(--wall); border-inline-start:1px solid transparent; box-shadow:inset -3px 0 0 var(--lit-edge); }
+  .win.unpaid{ background:var(--unpaid-win); box-shadow:none; }
+  .win.partial .apt-status, .win.unpaid .apt-status{ color:var(--warn-on-night); }
+  .win.vacant{ background:var(--vacant-win); color:var(--vacant-ink); border:1px dashed var(--wall); box-shadow:none; }
+  .win.vacant .apt-status{ color:var(--vacant-ink); }
+
+  /* Tabs: bottom bar (scrolls sideways on narrow phones) */
+  .tabbar{ flex-direction:row; justify-content:safe center; align-items:stretch;
+    top:auto; bottom:0; left:0; right:0; width:auto; height:auto; gap:2px;
+    padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+    background:#fff; border-inline-start:none; border-top:1px solid var(--line);
+    box-shadow:0 -6px 20px rgba(30,40,90,.08); overflow-x:auto; overflow-y:hidden; }
+  .tabbar button{ width:auto; min-width:66px; flex-shrink:0; padding:4px 4px 2px; gap:3px; border-radius:12px; }
+  .tabbar button .icon3d{ width:44px; height:30px; border-radius:10px; color:#8a90a8; }
+  .tabbar button .icon3d svg{ width:22px; height:22px; }
+  .tabbar button .icon3d.gold{ background:#fdf1dc; color:var(--night); }
+  .tabbar button .tab-label{ font-size:10px; color:var(--ink-soft); white-space:nowrap; }
+  .tabbar button.active{ background:none; }
+  .tabbar button.active .tab-label{ color:var(--night); font-weight:700; }
+
+  .content{ padding:14px 14px 100px; padding-inline-end:14px; }
 </style>
 </head>
 <body>
 
 <div class="hero">
   <div class="hero-top">
-    <div class="hero-title">🏢 التقارير المالية برج الاندلس</div>
+    <div class="hero-title"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="#312d5e" aria-hidden="true"><rect x="7" y="4" width="10" height="17" rx="1.5"/><rect x="9.3" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="9.3" y="11" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="15" width="2" height="2" rx=".4" fill="#f6c977"/></svg></span><span class="brand-text"><span class="brand-t1">برج الأندلس</span><span class="brand-t2">التقارير المالية</span></span></div>
     <div class="month-nav">
       <button id="lockBtn" title="">🔒</button>
       <button id="prevMonth">‹</button>
@@ -415,15 +507,15 @@
 </div>
 
 <div class="tabbar" id="tabbar">
-  <button data-tab="overview" class="active"><span class="icon3d gold">📊</span><span class="tab-label">نظرة عامة</span></button>
-  <button data-tab="collect"><span class="icon3d">💰</span><span class="tab-label">التحصيل</span></button>
-  <button data-tab="balance"><span class="icon3d">👥</span><span class="tab-label">رصيد السكان</span></button>
-  <button data-tab="arrears"><span class="icon3d">⏳</span><span class="tab-label">متأخرات السكان</span></button>
-  <button data-tab="commitments"><span class="icon3d">📋</span><span class="tab-label">التزامات العمارة</span></button>
-  <button data-tab="expenses"><span class="icon3d">🧾</span><span class="tab-label">المصروفات</span></button>
-  <button data-tab="fund"><span class="icon3d">🏦</span><span class="tab-label">الصندوق</span></button>
-  <button data-tab="plans"><span class="icon3d">🗺️</span><span class="tab-label">خطط مستقبلية</span></button>
-  <button data-tab="apts"><span class="icon3d">🏠</span><span class="tab-label">الشقق</span></button>
+  <button data-tab="overview" class="active"><span class="icon3d gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="tab-label">نظرة عامة</span></button>
+  <button data-tab="collect"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="tab-label">التحصيل</span></button>
+  <button data-tab="balance"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.8.2 5 2.2 5 5.4"/></svg></span><span class="tab-label">رصيد السكان</span></button>
+  <button data-tab="arrears"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="tab-label">متأخرات السكان</span></button>
+  <button data-tab="commitments"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span><span class="tab-label">التزامات العمارة</span></button>
+  <button data-tab="expenses"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="tab-label">المصروفات</span></button>
+  <button data-tab="fund"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg></span><span class="tab-label">الصندوق</span></button>
+  <button data-tab="plans"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg></span><span class="tab-label">خطط مستقبلية</span></button>
+  <button data-tab="apts"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg></span><span class="tab-label">الشقق</span></button>
 </div>
 
 <div class="content" id="content"></div>
@@ -586,6 +678,7 @@ let lastSyncedRaw = null;
 let syncTimer = null;
 let canWrite = false;        // مفيش حفظ خالص قبل قراءة ناجحة
 let readOnlyReason = '';
+let booting = false;         // true = بنعرض نسخة الجهاز لحد ما القراءة من جوجل شيت تخلص
 
 function setSyncStatus(txt, isError){
   const el = document.getElementById('syncStatus');
@@ -701,7 +794,9 @@ async function remoteSet(key, value, force){
 
 /* ---------------- تحميل البيانات أول ما التطبيق يفتح ---------------- */
 async function loadState(){
-  setSyncStatus('🔄 بيقرأ البيانات من جوجل شيت...');
+  setSyncStatus(booting
+    ? '⚡ معروض من آخر نسخة على الجهاز — بيحدّث من جوجل شيت...'
+    : '🔄 بيقرأ البيانات من جوجل شيت...');
   const r = await remoteGet('data');
 
   // 1) قراءة ناجحة وفيها بيانات
@@ -815,7 +910,8 @@ function startSyncPolling(){
   });
 }
 
-function migrateState(){
+function migrateState(opts){
+  opts = opts || {};
   let changed = false;
   if(!state.settings){
     state.settings = { elevatorAmount:500, noElevatorAmount:450 };
@@ -876,7 +972,7 @@ function migrateState(){
       changed = true;
     }
   });
-  if(changed) persist();
+  if(changed && !opts.noSave) persist();
 }
 
 /* الحفظ: مفيش كتابة قبل قراءة ناجحة، ومفيش كتابة لبيانات فاضية أو ناقصة.
@@ -1189,7 +1285,7 @@ function settleArrearsForApt(aptId){
     const paid = state.payments[mk][apt.id] || 0;
     if(paid < apt.subscription){
       state.payments[mk][apt.id] = apt.subscription;
-      state.paymentDates[mk][apt.id] = todayStr();
+      state.paymentDates[mk][apt.id] = collectDate; // تاريخ التحصيل المختار، مش النهارده بالعافية
     }
   });
   aptCommitments(apt.id).forEach(c=>{
@@ -1198,7 +1294,7 @@ function settleArrearsForApt(aptId){
       if(!state.commitmentPayments) state.commitmentPayments=[];
       state.commitmentPayments.push({
         id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
-        commitmentId:c.id, aptId:c.aptId, date: currentMonth+'-01', amount: rem
+        commitmentId:c.id, aptId:c.aptId, date: collectDate, amount: rem
       });
     }
   });
@@ -1212,10 +1308,16 @@ function editArrearOwed(aptId, key, newOwedRaw){
   if(key.startsWith('m:')){
     // بند اشتراك شهر معيّن: المتأخر = الاشتراك - المدفوع، فتعديل المتأخر معناه تعديل المدفوع المقابل
     const mk = key.slice(2);
+    if(newOwed > apt.subscription){
+      // المتأخر مايزيدش عن الاشتراك، وإلا المدفوع هيتسجّل بالسالب وينقّص رصيد الصندوق
+      alert('المتأخر ماينفعش يبقى أكبر من الاشتراك الشهري (' + fmt(apt.subscription) + ' جنيه).\nلو فيه مبلغ زيادة على الساكن سجّله كالتزام/دين عليه.');
+      renderAll();
+      return;
+    }
     if(!state.payments[mk]) state.payments[mk] = {};
     if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
     state.payments[mk][apt.id] = apt.subscription - newOwed;
-    state.paymentDates[mk][apt.id] = todayStr();
+    state.paymentDates[mk][apt.id] = collectDate;
   } else if(key.startsWith('c:')){
     // بند التزام (دين/قسط): بنسجّل الفرق كسداد أو كإضافة على الالتزام عشان يظبط المتبقي على القيمة الجديدة
     const commitId = key.slice(2);
@@ -1227,7 +1329,7 @@ function editArrearOwed(aptId, key, newOwedRaw){
       if(!state.commitmentPayments) state.commitmentPayments = [];
       state.commitmentPayments.push({
         id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
-        commitmentId: c.id, aptId: c.aptId, date: todayStr(), amount: delta
+        commitmentId: c.id, aptId: c.aptId, date: collectDate, amount: delta
       });
     }
   }
@@ -1363,23 +1465,25 @@ function renderOverviewData(){
     wins.className='windows';
     groups[floor].forEach(apt=>{
       const st = statusFor(apt, currentMonth);
+      // مأهولة ولا لأ في الشهر المعروض (مش النهارده) — عشان الشهور القديمة تبان صح
+      const occInMonth = isOccupiedInMonth(apt, currentMonth);
       const w = document.createElement('div');
       w.className = 'win ' + st;
-      w.title = (apt.name||'شاغرة') + ' — ' + apt.id + (apt.occupied ? ' — مأهولة' : ' — شاغرة');
+      w.title = (apt.name||'شاغرة') + ' — ' + apt.id + (occInMonth ? ' — مأهولة' : ' — شاغرة');
       const dot = document.createElement('div');
-      dot.className = 'occ-dot ' + (apt.occupied ? 'occ-yes' : 'occ-no');
+      dot.className = 'occ-dot ' + (occInMonth ? 'occ-yes' : 'occ-no');
       w.appendChild(dot);
       const numEl = document.createElement('div');
       numEl.className = 'apt-num';
       numEl.textContent = apt.id;
       w.appendChild(numEl);
-      if(apt.occupied){
+      if(occInMonth){
         const nameEl = document.createElement('div');
         nameEl.className = 'apt-name';
         nameEl.textContent = apt.name || '';
         w.appendChild(nameEl);
       }
-      if(apt.occupied){
+      if(occInMonth){
         const subEl = document.createElement('div');
         subEl.className = 'apt-sub';
         subEl.textContent = fmt(apt.subscription) + ' ج';
@@ -1406,7 +1510,7 @@ function renderOverviewData(){
   const monthExpenses = computeMonthExpenses(currentMonth);
   const totalArrears = computeArrears().reduce((s,a)=>s+a.total,0);
   const totalApts = state.apartments.length;
-  const occupiedCount = state.apartments.filter(a=>a.occupied).length;
+  const occupiedCount = state.apartments.filter(a=>isOccupiedInMonth(a, currentMonth)).length;
   const vacantCount = totalApts - occupiedCount;
   const elevatorSubCount = state.apartments.filter(a=>a.elevator).length;
   const totalObligations = computeTotalObligations();
@@ -1420,7 +1524,7 @@ function renderOverviewData(){
   const stats = document.getElementById('stats');
   stats.innerHTML = `
     <div class="stat"><div class="stat-head"><span class="icon3d sm">📊</span><div class="lbl">المتوقع الشهر ده</div></div><div class="val num">${fmt(expected)}</div></div>
-    <div class="stat"><div class="stat-head"><span class="icon3d sm gold">✅</span><div class="lbl">المحصّل</div></div><div class="val num">${fmt(collected)} <span style="font-size:11px;color:#bdeed7">/ متبقي ${outstanding}</span></div></div>
+    <div class="stat"><div class="stat-head"><span class="icon3d sm gold">✅</span><div class="lbl">المحصّل</div></div><div class="val num">${fmt(collected)} <span style="font-size:11px;color:#bdeed7">/ متبقي ${fmt(outstanding)}</span></div></div>
     <div class="stat"><div class="stat-head"><span class="icon3d sm">💸</span><div class="lbl">مصروفات الشهر</div></div><div class="val num">${fmt(monthExpenses)}</div></div>
     <div class="stat ${totalArrears>0?'balance-neg':''}"><div class="stat-head"><span class="icon3d sm">⏳</span><div class="lbl">إجمالي المتأخرات</div></div><div class="val num">${fmt(totalArrears)}</div></div>
     <div class="stat"><div class="stat-head"><span class="icon3d sm">🏠</span><div class="lbl">الشقق</div></div><div class="val num">${totalApts} <span style="font-size:11px;color:#c7d7f5">(${occupiedCount} مأهولة / ${vacantCount} غير مأهولة)</span></div></div>
@@ -1466,6 +1570,10 @@ function quickTogglePaid(aptId){
 /* ---------------- RENDER: TABS ---------------- */
 function renderAll(){
   renderHero();
+  // لو التحديث التلقائي (كل 20 ثانية) رسم الشاشة وانت بتكتب في خانة البحث، نرجّع المؤشر مكانه
+  const focused = document.activeElement;
+  const keepSearchFocus = focused && focused.id === 'fundSearch';
+  const caret = keepSearchFocus ? focused.selectionStart : null;
   const c = document.getElementById('content');
   c.classList.toggle('locked', !unlocked);
   // أزرار النسخة الاحتياطية/الاسترجاع ظاهرة بس في وضع التعديل (بعد الرمز السري)
@@ -1483,6 +1591,10 @@ function renderAll(){
   if(currentTab==='apts') c.innerHTML = banner + tplApts();
   renderOverviewData();
   bindTabEvents();
+  if(keepSearchFocus){
+    const s = document.getElementById('fundSearch');
+    if(s){ s.focus(); try{ s.setSelectionRange(caret, caret); }catch(e){} }
+  }
 }
 
 function collectTabCommitmentIds(){
@@ -1981,9 +2093,50 @@ async function resolveAttachmentFile(file){
   return attachment;
 }
 
+/* ---------------- بحث الصندوق ---------------- */
+let fundSearchQuery = ''; // بيفضل محفوظ لما الشاشة تترسم تاني (تغيير الشهر، تحديث من الشيت...)
+
+/* بيوحّد الكتابة عشان "احمد" يلاقي "أحمد" و"مياه" يلاقي "ميّاه" و"٥٠٠" يلاقي "500" */
+function normalizeSearch(s){
+  return String(s||'').toLowerCase()
+    .replace(/[ً-ْـ]/g, '')          // تشكيل + تطويل
+    .replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+    .replace(/,/g, '');
+}
+
+function applyFundSearch(){
+  const list = document.getElementById('fundLedgerList');
+  if(!list) return;
+  const terms = normalizeSearch(fundSearchQuery).split(/\s+/).filter(Boolean);
+  let shown = 0, inSum = 0, outSum = 0;
+  list.querySelectorAll('.tx-row[data-q]').forEach(row=>{
+    const hit = terms.every(t => row.dataset.q.includes(t));
+    row.style.display = hit ? '' : 'none';
+    if(hit){
+      shown++;
+      const amt = Number(row.dataset.amt) || 0;
+      if(amt < 0) outSum += -amt; else inSum += amt;
+    }
+  });
+  const info = document.getElementById('fundSearchInfo');
+  if(info){
+    info.innerHTML = terms.length
+      ? (shown
+          ? `${shown} حركة — وارد <span class="num" style="color:var(--good)">+${fmt(inSum)}</span> · منصرف <span class="num" style="color:var(--bad)">-${fmt(outSum)}</span>`
+          : 'مفيش حركات بالكلام ده')
+      : '';
+  }
+}
+
 function tplFund(){
   const bal = computeFundBalance();
-  let html = `<div class="card" style="text-align:center;">
+  let html = `<div class="card">
+      <input type="search" id="fundSearch" class="search-input" placeholder="🔍 دوّر في حركات الصندوق (اسم، بيان، مبلغ، تاريخ)" value="${escapeHtml(fundSearchQuery)}" autocomplete="off">
+      <div class="search-info" id="fundSearchInfo"></div>
+    </div>`;
+
+  html += `<div class="card" style="text-align:center;">
       <div class="section-title" style="margin-top:0">الرصيد الحالي</div>
       <div class="num" style="font-size:28px">${fmt(bal)} <span style="font-size:13px;color:var(--ink-soft)">جنيه</span></div>
     </div>`;
@@ -1997,7 +2150,7 @@ function tplFund(){
       </form>
     </div>`;
 
-  html += `<div class="section-title">دفتر الصندوق</div><div class="card">`;
+  html += `<div class="section-title">دفتر الصندوق</div><div class="card" id="fundLedgerList">`;
   const ledgerEntries = [
     {date: monthsRange(START_MONTH, currentMonth)[0]+'-01', note:'الرصيد الافتتاحي', amount: state.settings.openingBalance, kind:'opening'},
     ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id, record:f})),
@@ -2038,7 +2191,8 @@ function tplFund(){
       ? `<input type="date" class="ledger-date-input" ${dateAttr} value="${le.date.slice(0,10)}" style="border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-soft); background:transparent;">`
       : `<div class="date">${le.date}</div>`;
     const attachHtml = attachCellHtml(le.record);
-    html += `<div class="tx-row"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px">${attachHtml}<div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
+    const searchText = normalizeSearch([le.note, le.date, le.aptId||'', Math.abs(le.amount)].join(' '));
+    html += `<div class="tx-row" data-q="${escapeHtml(searchText)}" data-amt="${le.amount}"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px">${attachHtml}<div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
   });
   html += `</div>`;
 
@@ -2533,6 +2687,12 @@ function bindTabEvents(){
     });
   }
   if(currentTab==='fund'){
+    // البحث بيخبّي/يظهر الصفوف بس من غير ما يرسم الصفحة تاني، عشان الكتابة ماتتقطعش
+    document.getElementById('fundSearch').addEventListener('input', e=>{
+      fundSearchQuery = e.target.value;
+      applyFundSearch();
+    });
+    applyFundSearch();
     document.getElementById('openingForm').addEventListener('submit', e=>{
       e.preventDefault();
       state.settings.openingBalance = Number(e.target.openingBalance.value)||0;
@@ -2841,6 +3001,11 @@ document.getElementById('pinInput').addEventListener('keydown', e=>{
   if(e.key==='Enter') tryUnlock();
 });
 function tryUnlock(){
+  if(booting){
+    // لسه بنعرض نسخة الجهاز — أي تعديل دلوقتي هيتمسح أول ما البيانات الجديدة توصل من جوجل شيت
+    alert('استنى ثواني لحد ما البيانات الجديدة توصل من جوجل شيت، وبعدين افتح التعديل.');
+    return;
+  }
   const val = document.getElementById('pinInput').value;
   if(val === state.settings.editPin){
     unlocked = true;
@@ -2895,8 +3060,21 @@ document.getElementById('importFile').addEventListener('change', function(ev){
   ev.target.value = '';
 });
 
+/* فتح سريع: جوجل شيت (Apps Script) بياخد من 3 لـ 10 ثواني عشان يرد، فبدل ما الشاشة
+   تفضل فاضية بنعرض فورًا آخر نسخة متحفظة على الجهاز (عرض فقط، مفيش حفظ)، وفي نفس
+   الوقت بنقرا من جوجل شيت، وأول ما يرد بنبدّل الشاشة بالبيانات الجديدة ونفتح الحفظ.
+   قواعد الحماية زي ما هي: canWrite مش بيبقى true غير بعد قراءة ناجحة من الشيت. */
 (async function init(){
+  const local = readLocalBackup();
+  const cached = local ? safeParse(local.raw) : null;
+  if(validState(cached)){
+    booting = true;
+    state = cached;
+    migrateState({noSave:true});
+    renderAll();
+  }
   const ok = await loadState();
+  booting = false;
   if(state) renderAll();          // لو القراءة فشلت خالص، شاشة التوقف هي اللي بتظهر
   if(ok) startSyncPolling();
 })();
