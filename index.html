@@ -604,6 +604,28 @@
   .pp-table .strong{ color:var(--night); font-weight:700; }
   .pp-table .est{ background:#fbf8f1; color:var(--ink-soft); }
   .pp-table .strong.est{ color:var(--night); }
+
+  /* ================= كشف الحساب + ساكن مشي/جديد ================= */
+  .pp-badge.ok{ background:#e6f6ef; color:#0b7a53; }
+  .pp-badge.bad{ background:#fdeaea; color:#b23434; }
+  .pp-field{ display:flex; flex-direction:column; gap:4px; margin:8px 0; font-size:12px; color:var(--ink-soft); font-weight:600; }
+  .pp-field.row{ flex-direction:row; align-items:center; gap:8px; color:var(--ink); }
+  .pp-field input[type=text], .pp-field input[type=month], .pp-field input[type=number]{
+    border:1px solid var(--line); border-radius:10px; padding:9px 10px; font-family:'IBM Plex Sans Arabic'; font-size:14px; color:var(--ink); background:#fff; }
+  .pp-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .pp-btn{ border:none; border-radius:10px; padding:9px 16px; font-family:'IBM Plex Sans Arabic'; font-size:13px; font-weight:700; cursor:pointer;
+    background:var(--night); color:#fff; }
+  .pp-btn.ghost{ background:var(--paper-2); color:var(--ink); }
+  .st-row{ flex-wrap:wrap; gap:6px; }
+  .st-row.sub{ padding:4px 0 4px; border-bottom:none; }
+  .st-edit{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+  .st-edit.add{ margin:4px 0 8px; }
+  .st-in{ width:72px; border:1px solid var(--line); border-radius:8px; padding:5px 6px; font-family:'IBM Plex Mono'; font-size:12.5px; text-align:center; }
+  .st-date{ border:1px solid var(--line); border-radius:8px; padding:4px 5px; font-family:'IBM Plex Mono'; font-size:11px; color:var(--ink-soft); max-width:128px; }
+  .st-mini{ border:1px solid var(--line); background:#fff; color:var(--night); border-radius:8px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'IBM Plex Sans Arabic'; }
+  .st-mini.del{ color:#b23434; }
+  .st-commit{ border-top:1px dashed var(--line); margin-top:4px; }
+  .st-link{ cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; }
 </style>
 </head>
 <body>
@@ -1079,6 +1101,28 @@ function migrateState(opts){
       a.occupancyPeriods = a.occupied ? [{from: START_MONTH, to: null}] : [];
       changed = true;
     }
+    // فترات السكن: نشيل المكرر ونرتّبها، وكل فترة تاخد بيانات ساكنها (اسم/اشتراك/أسانسير) ورقم ساكن (rid)
+    // عشان الشهور القديمة تفضل بقيمها حتى لو الساكن مشي أو الاشتراك اتغيّر.
+    const before = JSON.stringify(a.occupancyPeriods) + a.occupied;
+    const seen = new Set();
+    a.occupancyPeriods = a.occupancyPeriods
+      .filter(p=> p && p.from && (p.to==null || p.to > p.from)          // فترة فاضية (بدأت وخلصت في نفس الشهر) = مالهاش لازمة
+        && !seen.has(p.from + '|' + p.to) && seen.add(p.from + '|' + p.to))
+      .sort((x,y)=> x.from.localeCompare(y.from));
+    let prev = null;
+    a.occupancyPeriods.forEach(p=>{
+      if(p.to===undefined) p.to = null;
+      if(typeof p.name !== 'string') p.name = a.name || '';
+      if(typeof p.subscription !== 'number') p.subscription = Number(a.subscription)||0;
+      if(typeof p.elevator !== 'boolean') p.elevator = !!a.elevator;
+      if(!p.rid){
+        // فترة لاصقة أو متداخلة مع اللي قبلها بنفس الاسم = نفس الساكن
+        p.rid = (prev && prev.name===p.name && prev.to!==null && p.from <= prev.to) ? prev.rid : newRid();
+      }
+      prev = p;
+    });
+    a.occupied = a.occupancyPeriods.some(p=> p.to===null);
+    if(JSON.stringify(a.occupancyPeriods) + a.occupied !== before) changed = true;
   });
   if(!Array.isArray(state.commitments)){
     state.commitments = [];
@@ -1279,11 +1323,420 @@ function isOccupiedInMonth(apt, monthKey){
   return periods.some(p => monthKey >= p.from && (p.to===null || monthKey < p.to));
 }
 
+/* ---------------- السكان وفترات السكن ----------------
+   كل شقة ليها occupancyPeriods = فترات سكن. كل فترة:
+     {rid, from:'YYYY-MM', to:'YYYY-MM' أو null (to = أول شهر مش عليه اشتراك), name, subscription, elevator}
+   الفترات اللي ليها نفس rid = نفس الساكن (بتتقسم لما اشتراكه أو الأسانسير بتاعه يتغيّر من شهر معيّن).
+   الاشتراك والاسم والأسانسير في أي شهر بيتاخدوا من فترة الشهر ده — فلما ساكن يمشي وييجي غيره، فلوس
+   القديم ومتأخراته والتزاماته بتفضل باسمه، وتغيير اشتراك حد مابيغيّرش الشهور اللي فاتت.
+   apt.name / apt.subscription / apt.elevator = بيانات الساكن الحالي (أو آخر ساكن لو الشقة فاضية). */
+function periodFor(apt, mk){
+  return (apt.occupancyPeriods||[]).find(p=> mk >= p.from && (p.to===null || mk < p.to)) || null;
+}
+function openPeriod(apt){
+  return (apt.occupancyPeriods||[]).find(p=> p.to===null) || null;
+}
+function subscriptionFor(apt, mk){
+  const p = periodFor(apt, mk);
+  return p && typeof p.subscription==='number' ? p.subscription : (Number(apt.subscription)||0);
+}
+function residentNameFor(apt, mk){
+  const p = periodFor(apt, mk);
+  return p && typeof p.name==='string' ? p.name : (apt.name||'');
+}
+function elevatorFor(apt, mk){
+  const p = periodFor(apt, mk);
+  return p && typeof p.elevator==='boolean' ? p.elevator : !!apt.elevator;
+}
+function defaultSubscription(elevator){
+  return elevator ? (Number(state.settings.elevatorAmount)||0) : (Number(state.settings.noElevatorAmount)||0);
+}
+function newRid(){ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+/* السكان اللي سكنوا الشقة (الأقدم الأول) — كل ساكن ومعاه فتراته */
+function residentsOf(apt){
+  const map = new Map();
+  (apt.occupancyPeriods||[]).forEach(p=>{
+    const rid = p.rid || (apt.id + '_' + p.from);
+    if(!map.has(rid)) map.set(rid, {rid, apt, periods:[]});
+    map.get(rid).periods.push(p);
+  });
+  return [...map.values()].map(r=>{
+    r.periods.sort((a,b)=> a.from.localeCompare(b.from));
+    const last = r.periods[r.periods.length-1];
+    r.name = last.name || '';
+    r.from = r.periods[0].from;
+    r.to = last.to;                       // null = لسه ساكن
+    r.current = last.to === null;
+    return r;
+  }).sort((a,b)=> a.from.localeCompare(b.from));
+}
+function residentKey(r){ return r.apt.id + '@' + r.rid; }
+function findResident(key){
+  const i = key.indexOf('@');
+  const apt = state.apartments.find(a=> a.id===key.slice(0,i));
+  return apt ? (residentsOf(apt).find(r=> r.rid===key.slice(i+1)) || null) : null;
+}
+function residentOfPeriod(apt, p){
+  return p ? (residentsOf(apt).find(r=> r.periods.includes(p)) || null) : null;
+}
+function residentRangeText(r){
+  return 'من ' + monthLabel(r.from) + (r.to ? ' لـ ' + monthLabel(shiftMonth(r.to, -1)) : ' — لسه ساكن');
+}
+/* الشهور اللي الساكن كان عليه فيها اشتراك (من أول الحسابات لحد maxMonth) */
+function residentMonths(r, maxMonth){
+  const out = [];
+  r.periods.forEach(p=>{
+    const from = p.from > START_MONTH ? p.from : START_MONTH;
+    const last = p.to ? shiftMonth(p.to, -1) : maxMonth;
+    const to = last < maxMonth ? last : maxMonth;
+    if(from > to) return;
+    monthsRange(from, to).forEach(mk=>{ if(periodFor(r.apt, mk)===p && !out.includes(mk)) out.push(mk); });
+  });
+  return out.sort();
+}
+
+/* الالتزام الإضافي على شقة بيتبع الساكن اللي كان ساكن في شهر بدايته */
+function commitmentPeriod(c){
+  const apt = state.apartments.find(a=> a.id===c.aptId);
+  if(!apt) return null;
+  const ps = (apt.occupancyPeriods||[]).slice().sort((a,b)=> a.from.localeCompare(b.from));
+  return periodFor(apt, c.startMonth)
+    || ps.filter(p=> p.from <= c.startMonth).pop()
+    || openPeriod(apt) || ps[0] || null;
+}
+function commitmentResident(c){
+  const apt = state.apartments.find(a=> a.id===c.aptId);
+  return apt ? residentOfPeriod(apt, commitmentPeriod(c)) : null;
+}
+function residentCommitments(r){
+  return (state.commitments||[]).filter(c=> c.aptId===r.apt.id && (commitmentResident(c)||{}).rid===r.rid);
+}
+
+/* تغيير اشتراك/أسانسير الساكن الحالي: يا من شهر معيّن (الشهور اللي قبله زي ما هي)، يا على كل فترته */
+function applyResidentChange(apt, changes){
+  const p = openPeriod(apt);
+  if(!p){ Object.assign(apt, changes); return; }
+  const realMonth = todayStr().slice(0,7);
+  let fromMonth = null;
+  if(p.from < realMonth){
+    const fromNow = confirm('التغيير ده يبدأ من شهر ' + monthLabel(realMonth) + '؟\n\n'
+      + 'موافق ← من ' + monthLabel(realMonth) + ' وانت رايح (الشهور اللي فاتت زي ما هي)\n'
+      + 'إلغاء ← على كل الشهور من أول ما سكن');
+    if(fromNow) fromMonth = realMonth;
+  }
+  if(fromMonth){
+    p.to = fromMonth;
+    apt.occupancyPeriods.push(Object.assign({}, p, {from: fromMonth, to: null}, changes));
+  } else {
+    const r = residentOfPeriod(apt, p);
+    (r ? r.periods : [p]).forEach(x=> Object.assign(x, changes));
+  }
+  Object.assign(apt, changes);
+}
+
+/* ---------------- نوافذ البوب أب العامة ---------------- */
+function openPopup(id, innerHtml){
+  closePopup(id);
+  const ov = document.createElement('div');
+  ov.id = id;
+  ov.className = 'popup-overlay';
+  ov.innerHTML = `<div class="popup-box" role="dialog" aria-modal="true">${innerHtml}</div>`;
+  ov.addEventListener('click', ev=>{
+    if(ev.target === ov || ev.target.closest('.popup-close')) closePopup(id);
+  });
+  document.body.appendChild(ov);
+  return ov;
+}
+function closePopup(id){
+  const ov = document.getElementById(id);
+  if(ov) ov.remove();
+}
+function popupHead(title){
+  return `<div class="popup-head"><h3>${title}</h3><button class="popup-close" aria-label="إغلاق">✕</button></div>`;
+}
+
+/* ---------------- ساكن مشي / ساكن جديد ---------------- */
+function showMoveOut(aptId){
+  if(!unlocked){ alert('افتح وضع التعديل الأول'); return; }
+  const apt = state.apartments.find(a=> a.id===aptId);
+  const p = apt && openPeriod(apt);
+  if(!p) return;
+  const r = residentOfPeriod(apt, p);
+  const realMonth = todayStr().slice(0,7);
+  // لو لسه في أول الشهر، غالبًا الساكن مشي آخر الشهر اللي فات
+  let def = Number(todayStr().slice(8,10)) >= 15 ? realMonth : shiftMonth(realMonth, -1);
+  if(def < p.from) def = p.from;
+  const html = popupHead('🚪 ' + escapeHtml(r ? r.name || apt.id : apt.id) + ' مشي — شقة ' + escapeHtml(apt.id)) + `
+    <div class="pp-sec">
+      <label class="pp-field">آخر شهر عليه اشتراك
+        <input type="month" id="moLast" value="${def}">
+      </label>
+      <div class="pp-note">الاشتراك بيتحسب عليه لحد الشهر ده، والشقة بتبقى فاضية من الشهر اللي بعده. أي متأخرات أو التزامات عليه بتفضل متسجّلة باسمه في متأخرات السكان وكشف الحساب.</div>
+      <div class="pp-actions">
+        <button type="button" class="pp-btn" id="moConfirm">✔ تأكيد</button>
+        <button type="button" class="pp-btn ghost popup-close">إلغاء</button>
+      </div>
+    </div>`;
+  const ov = openPopup('movePopup', html);
+  ov.querySelector('#moConfirm').addEventListener('click', ()=>{
+    const last = ov.querySelector('#moLast').value;
+    if(!last){ alert('اختار آخر شهر'); return; }
+    const newTo = shiftMonth(last, 1);
+    // دفعات اشتراك متسجّلة بعد آخر شهر (مثلًا دفع مقدّم) — بتفضل في الصندوق، فننبّه عليها
+    const after = Object.keys(state.payments).filter(mk=> mk >= newTo && (state.payments[mk]||{})[apt.id] > 0);
+    if(after.length && !confirm('فيه دفعات اشتراك متسجّلة للشقة دي بعد ' + monthLabel(last) + ' (' + after.map(monthLabel).join('، ') + ').\n'
+      + 'هتفضل في الصندوق — لو محتاج ترجعها للساكن امسحها من الصندوق.\nتكمّل؟')) return;
+    if(newTo <= p.from){
+      if(!confirm('الشهر ده قبل ما يسكن (' + monthLabel(p.from) + ') — يعني مش هيتحسب عليه أي شهر. تكمّل؟')) return;
+      apt.occupancyPeriods = apt.occupancyPeriods.filter(x=> x !== p);
+    } else {
+      p.to = newTo;
+    }
+    // الالتزامات الشهرية/الأقساط اللي عليه بتقف عند آخر شهر ليه
+    if(r) residentCommitments(r).forEach(c=>{ if(c.type!=='once' && !c.endMonth) c.endMonth = last; });
+    apt.occupied = !!openPeriod(apt);
+    closePopup('movePopup');
+    persist(); renderAll();
+  });
+}
+
+function showMoveIn(aptId){
+  if(!unlocked){ alert('افتح وضع التعديل الأول'); return; }
+  const apt = state.apartments.find(a=> a.id===aptId);
+  if(!apt || openPeriod(apt)) return;
+  const realMonth = todayStr().slice(0,7);
+  const lastTo = (apt.occupancyPeriods||[]).map(p=> p.to).filter(Boolean).sort().pop();
+  let def = currentMonth > realMonth ? currentMonth : realMonth;
+  if(lastTo && def < lastTo) def = lastTo;
+  const elev = apt.floor !== 'الأرضي';
+  const html = popupHead('🏠 ساكن جديد — شقة ' + escapeHtml(apt.id)) + `
+    <div class="pp-sec">
+      <label class="pp-field">اسم الساكن
+        <input type="text" id="miName" placeholder="الاسم">
+      </label>
+      <label class="pp-field">أول شهر عليه اشتراك
+        <input type="month" id="miFrom" value="${def}">
+      </label>
+      <label class="pp-field row"><input type="checkbox" id="miElev" ${elev?'checked':''}> مشترك في الأسانسير</label>
+      <label class="pp-field">الاشتراك الشهري
+        <input type="number" id="miSub" min="0" value="${defaultSubscription(elev)}">
+      </label>
+      ${lastTo ? `<div class="pp-note">آخر ساكن كان لحد ${monthLabel(shiftMonth(lastTo,-1))} — الساكن الجديد لازم يبدأ بعده.</div>` : ''}
+      <div class="pp-actions">
+        <button type="button" class="pp-btn" id="miConfirm">✔ تسجيل الساكن</button>
+        <button type="button" class="pp-btn ghost popup-close">إلغاء</button>
+      </div>
+    </div>`;
+  const ov = openPopup('movePopup', html);
+  const elevCb = ov.querySelector('#miElev'), subIn = ov.querySelector('#miSub');
+  let subEdited = false;
+  subIn.addEventListener('input', ()=>{ subEdited = true; });
+  elevCb.addEventListener('change', ()=>{ if(!subEdited) subIn.value = defaultSubscription(elevCb.checked); });
+  ov.querySelector('#miConfirm').addEventListener('click', ()=>{
+    const name = ov.querySelector('#miName').value.trim();
+    const from = ov.querySelector('#miFrom').value;
+    const subscription = Math.max(0, Number(subIn.value)||0);
+    if(!name){ alert('اكتب اسم الساكن'); return; }
+    if(!from){ alert('اختار أول شهر'); return; }
+    if(lastTo && from < lastTo){ alert('الشهر ده متداخل مع الساكن اللي قبله (كان لحد ' + monthLabel(shiftMonth(lastTo,-1)) + ').'); return; }
+    if(subscription <= 0 && !confirm('الاشتراك صفر — تكمّل؟')) return;
+    if(!Array.isArray(apt.occupancyPeriods)) apt.occupancyPeriods = [];
+    apt.occupancyPeriods.push({rid: newRid(), from, to: null, name, subscription, elevator: elevCb.checked});
+    Object.assign(apt, {name, subscription, elevator: elevCb.checked, occupied: true});
+    closePopup('movePopup');
+    persist(); renderAll();
+  });
+}
+
+/* ---------------- كشف حساب الشقة (كل ساكن سكنها وفلوسه) ---------------- */
+let statementAptId = null;
+
+function showStatement(aptId){
+  statementAptId = aptId;
+  renderStatement();
+}
+function refreshStatement(){
+  if(statementAptId && document.getElementById('statementPopup')) renderStatement(true);
+}
+
+function renderStatement(keepScroll){
+  const apt = state.apartments.find(a=> a.id===statementAptId);
+  if(!apt){ closePopup('statementPopup'); statementAptId = null; return; }
+  const old = document.getElementById('statementPopup');
+  const scroll = keepScroll && old ? old.querySelector('.popup-box').scrollTop : 0;
+  const realMonth = todayStr().slice(0,7);
+  const maxMonth = currentMonth > realMonth ? currentMonth : realMonth;
+  const residents = residentsOf(apt).reverse();          // الحالي الأول
+  const edit = unlocked;
+  const cur = residents.find(r=> r.current);
+
+  let html = popupHead('📄 كشف حساب — شقة ' + escapeHtml(apt.id)) + `
+    <div class="pp-chips">
+      <span class="pp-chip">${escapeHtml(apt.floor||'')}</span>
+      <span class="pp-chip">${cur ? '<b>' + escapeHtml(cur.name||'—') + '</b> ساكن حاليًا' : 'الشقة فاضية دلوقتي'}</span>
+      ${residents.length > 1 || (residents.length && !cur) ? `<span class="pp-chip"><b class="num">${residents.length}</b> ساكن سكنوها</span>` : ''}
+    </div>`;
+
+  if(edit){
+    html += `<div class="pp-actions" style="padding:10px 14px 0;">
+      ${cur ? `<button type="button" class="pp-btn ghost" data-st-moveout="${escapeHtml(apt.id)}">🚪 الساكن مشي</button>`
+            : `<button type="button" class="pp-btn" data-st-movein="${escapeHtml(apt.id)}">🏠 ساكن جديد</button>`}
+    </div>`;
+  }
+  if(!residents.length){
+    html += `<div class="pp-sec"><div class="pp-foot">مفيش سكان متسجّلين للشقة دي لسه.</div></div>`;
+  }
+
+  residents.forEach(r=>{
+    const months = residentMonths(r, maxMonth);
+    const commits = residentCommitments(r);
+    let due = 0, paidSum = 0;
+    const subNow = r.periods[r.periods.length-1];
+    html += `<div class="pp-sec">
+      <div class="pp-sec-head">
+        <span class="pp-sec-title">${escapeHtml(r.name || 'ساكن بدون اسم')}${r.current ? '' : ' <span class="pp-badge soft">ساكن سابق</span>'}</span>
+        <span class="pp-split">${escapeHtml(residentRangeText(r))}</span>
+      </div>
+      <div class="pp-foot">الاشتراك ${fmt(subNow.subscription)} جنيه · ${subNow.elevator ? 'مشترك في الأسانسير' : 'مش مشترك في الأسانسير'}${r.periods.length > 1 ? ' (اتغيّر خلال السكن)' : ''}</div>
+      <div class="pp-subtitle">الاشتراكات الشهرية</div>`;
+    if(!months.length) html += `<div class="pp-foot">لسه مفيش شهور عليه.</div>`;
+    months.slice().reverse().forEach(mk=>{
+      const sub = subscriptionFor(apt, mk);
+      const paid = (state.payments[mk]||{})[apt.id] || 0;
+      const date = (state.paymentDates[mk]||{})[apt.id] || '';
+      due += sub; paidSum += paid;
+      const st = paid >= sub ? `<span class="pp-badge ok">مدفوع</span>` : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`;
+      html += `<div class="pp-row st-row">
+        <span class="k">${monthLabel(mk)}<small>${st}${date && !edit ? ' · ' + escapeHtml(date) : ''}</small></span>
+        ${edit ? `<span class="st-edit">
+            <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="المدفوع">
+            <input type="date" class="st-date" data-st-date="${mk}" value="${escapeHtml(date)}" aria-label="تاريخ الدفع">
+            ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع كامل">✔</button>` : ''}
+            ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح الدفعة">✕</button>` : ''}
+          </span>`
+        : `<span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>`}
+      </div>`;
+    });
+
+    if(commits.length){
+      html += `<div class="pp-subtitle">التزامات إضافية عليه</div>`;
+      commits.forEach(c=>{
+        const upto = r.current ? maxMonth : shiftMonth(r.to, -1);
+        const cDue = commitmentTotalDue(c, upto);
+        const pays = commitmentPayments(c);
+        const cPaid = pays.reduce((s,x)=> s+(Number(x.amount)||0), 0);
+        due += cDue; paidSum += cPaid;
+        html += `<div class="st-commit">
+          <div class="pp-row"><span class="k">${escapeHtml(c.note || COMMITMENT_TYPES[c.type])}<small>${escapeHtml(COMMITMENT_TYPES[c.type])} · من ${monthLabel(c.startMonth)}${c.endMonth ? ' لحد ' + monthLabel(c.endMonth) : ''}</small></span>
+            <span class="v num">${fmt(cPaid)}<small> / ${fmt(cDue)}</small></span></div>`;
+        pays.forEach(x=>{
+          html += `<div class="pp-row st-row sub"><span class="k"><small>دفعة</small></span>${edit
+            ? `<span class="st-edit">
+                <input type="number" min="0" class="st-in" data-st-cp-amt="${escapeHtml(x.id)}" value="${x.amount}">
+                <input type="date" class="st-date" data-st-cp-date="${escapeHtml(x.id)}" value="${escapeHtml(x.date||'')}">
+                <button type="button" class="st-mini del" data-st-cp-del="${escapeHtml(x.id)}" title="مسح الدفعة">✕</button>
+              </span>`
+            : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date||'')}</small></span>`}</div>`;
+        });
+        if(edit) html += `<div class="st-edit add">
+            <input type="number" min="0" class="st-in" data-st-cp-new="${escapeHtml(c.id)}" placeholder="${fmt(Math.max(0, cDue - cPaid))}">
+            <button type="button" class="st-mini" data-st-cp-add="${escapeHtml(c.id)}">+ دفعة</button>
+            <button type="button" class="st-mini del" data-st-commit-del="${escapeHtml(c.id)}" title="مسح الالتزام كله">🗑</button>
+          </div>`;
+        html += `</div>`;
+      });
+    }
+    const left = due - paidSum;
+    html += `<div class="pp-row total"><span class="k">المطلوب ${fmt(due)} · المدفوع ${fmt(paidSum)}</span><span class="v num" style="color:${left>0?'var(--bad)':'var(--good)'}">${left>0 ? 'باقي ' + fmt(left) : left<0 ? 'زيادة ' + fmt(-left) : 'خالص ✓'}</span></div>
+      </div>`;
+  });
+  if(edit) html += `<div class="pp-foot" style="padding:8px 16px 0;">أي دفعة جديدة من هنا بتتسجّل بتاريخ التحصيل المختار (${escapeHtml(collectDate)})، وتقدر تغيّر التاريخ من الخانة اللي جنبها.</div>`;
+
+  const ov = openPopup('statementPopup', html);
+  ov.querySelector('.popup-box').scrollTop = scroll;
+  ov.addEventListener('click', ev=>{ if(ev.target===ov || ev.target.closest('.popup-close')) statementAptId = null; });
+  bindStatementEvents(ov, apt);
+}
+
+function bindStatementEvents(ov, apt){
+  const done = ()=>{ persist(); renderAll(); };
+  const setPay = (mk, val, date)=>{
+    if(!state.payments[mk]) state.payments[mk] = {};
+    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
+    if(val > 0){
+      state.payments[mk][apt.id] = val;
+      state.paymentDates[mk][apt.id] = date || state.paymentDates[mk][apt.id] || collectDate;
+    } else {
+      delete state.payments[mk][apt.id];
+      delete state.paymentDates[mk][apt.id];
+    }
+  };
+  ov.querySelectorAll('[data-st-pay]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!unlocked) return;
+    setPay(inp.dataset.stPay, Math.max(0, Number(inp.value)||0)); done();
+  }));
+  ov.querySelectorAll('[data-st-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!unlocked || !inp.value) return;
+    const mk = inp.dataset.stDate;
+    if(!((state.payments[mk]||{})[apt.id] > 0)){ alert('سجّل المبلغ الأول'); renderStatement(true); return; }
+    state.paymentDates[mk][apt.id] = inp.value; done();
+  }));
+  ov.querySelectorAll('[data-st-full]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const mk = b.dataset.stFull;
+    setPay(mk, subscriptionFor(apt, mk), collectDate); done();
+  }));
+  ov.querySelectorAll('[data-st-clear]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    if(!confirm('تمسح دفعة ' + monthLabel(b.dataset.stClear) + '؟')) return;
+    setPay(b.dataset.stClear, 0); done();
+  }));
+  const findCp = id=> (state.commitmentPayments||[]).find(x=> x.id===id);
+  ov.querySelectorAll('[data-st-cp-amt]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!unlocked) return;
+    const x = findCp(inp.dataset.stCpAmt); if(!x) return;
+    const v = Number(inp.value)||0;
+    if(v <= 0){ alert('لو عايز تشيل الدفعة دوس ✕'); renderStatement(true); return; }
+    x.amount = v; done();
+  }));
+  ov.querySelectorAll('[data-st-cp-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!unlocked || !inp.value) return;
+    const x = findCp(inp.dataset.stCpDate); if(!x) return;
+    x.date = inp.value; done();
+  }));
+  ov.querySelectorAll('[data-st-cp-del]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    if(!confirm('تمسح الدفعة دي؟')) return;
+    state.commitmentPayments = (state.commitmentPayments||[]).filter(x=> x.id!==b.dataset.stCpDel); done();
+  }));
+  ov.querySelectorAll('[data-st-cp-add]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCpAdd); if(!c) return;
+    const inp = ov.querySelector(`[data-st-cp-new="${c.id}"]`);
+    const v = Number(inp && inp.value) || Number(inp && inp.placeholder.replace(/,/g,'')) || 0;
+    if(v <= 0){ alert('اكتب المبلغ'); return; }
+    if(!state.commitmentPayments) state.commitmentPayments = [];
+    state.commitmentPayments.push({id:'cp'+Date.now(), commitmentId:c.id, aptId:c.aptId, date:collectDate, amount:v});
+    done();
+  }));
+  ov.querySelectorAll('[data-st-commit-del]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    if(!confirm('تمسح الالتزام ده وكل دفعاته؟')) return;
+    const id = b.dataset.stCommitDel;
+    state.commitments = state.commitments.filter(c=> c.id!==id);
+    state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=> cp.commitmentId!==id);
+    done();
+  }));
+  ov.querySelectorAll('[data-st-moveout]').forEach(b=> b.addEventListener('click', ()=> showMoveOut(b.dataset.stMoveout)));
+  ov.querySelectorAll('[data-st-movein]').forEach(b=> b.addEventListener('click', ()=> showMoveIn(b.dataset.stMovein)));
+}
+
 function statusFor(apt, monthKey){
   if(!isOccupiedInMonth(apt, monthKey)) return 'vacant';
   const paid = (state.payments[monthKey]||{})[apt.id] || 0;
   if(paid<=0) return 'unpaid';
-  if(paid>=apt.subscription) return 'paid';
+  if(paid>=subscriptionFor(apt, monthKey)) return 'paid';
   return 'partial';
 }
 
@@ -1291,10 +1744,11 @@ function computeMonthTotals(monthKey){
   let expected=0, collected=0, outstanding=0;
   state.apartments.forEach(a=>{
     if(!isOccupiedInMonth(a, monthKey)) return;
-    expected += a.subscription;
+    const sub = subscriptionFor(a, monthKey);
+    expected += sub;
     const paid = (state.payments[monthKey]||{})[a.id] || 0;
     collected += paid;
-    if(paid < a.subscription) outstanding++;
+    if(paid < sub) outstanding++;
   });
   return {expected, collected, outstanding};
 }
@@ -1327,6 +1781,7 @@ const COMMITMENT_TYPES = {
 
 function commitmentTotalDue(c, uptoMonthKey){
   uptoMonthKey = uptoMonthKey || currentMonth;
+  if(c.endMonth && uptoMonthKey > c.endMonth) uptoMonthKey = c.endMonth; // الساكن مشي ← الالتزام الشهري وقف
   if(uptoMonthKey < c.startMonth) return 0;
   if(c.type==='once') return c.amount;
   const months = monthsRange(c.startMonth, uptoMonthKey).length;
@@ -1361,7 +1816,11 @@ function commitmentSuggestedAmount(c){
 }
 
 function aptCommitments(aptId){
-  return (state.commitments||[]).filter(c=>c.aptId===aptId && c.startMonth<=currentMonth);
+  // التزامات الساكن اللي ساكن في الشهر المعروض بس (التزامات السكان اللي مشيوا بتظهر في المتأخرات وكشف الحساب)
+  const apt = state.apartments.find(a=> a.id===aptId);
+  const r = apt ? residentOfPeriod(apt, periodFor(apt, currentMonth)) : null;
+  return (state.commitments||[]).filter(c=> c.aptId===aptId && c.startMonth<=currentMonth
+    && (!r || (commitmentResident(c)||{}).rid===r.rid));
 }
 
 function monthsRange(fromKey, toKey){
@@ -1376,49 +1835,50 @@ function monthsRange(fromKey, toKey){
   return months;
 }
 
+/* المتأخرات لكل ساكن لوحده (مش لكل شقة) — عشان متأخرات ساكن مشي ماتتنسبش للي جه بعده */
 function computeArrears(){
   const asOf = arrearsAsOfMonth();
-  const months = monthsRange(START_MONTH, asOf);
-  const perApt = {}; // aptId -> {apt, total, items:[{label, owed}]}
+  const rows = [];
   state.apartments.forEach(apt=>{
-    months.forEach(mk=>{
-      if(!isOccupiedInMonth(apt, mk)) return;
-      const paid = (state.payments[mk]||{})[apt.id] || 0;
-      const owed = apt.subscription - paid;
-      if(owed>0){
-        if(!perApt[apt.id]) perApt[apt.id] = {apt, total:0, items:[]};
-        perApt[apt.id].total += owed;
-        perApt[apt.id].items.push({label: monthLabel(mk), owed, mk});
-      }
-    });
-    aptCommitments(apt.id).forEach(c=>{
-      const rem = commitmentRemaining(c, asOf);
-      if(rem>0){
-        if(!perApt[apt.id]) perApt[apt.id] = {apt, total:0, items:[]};
-        perApt[apt.id].total += rem;
-        perApt[apt.id].items.push({label: 'دين: ' + (c.note||COMMITMENT_TYPES[c.type]), owed: rem, commitId: c.id});
-      }
+    residentsOf(apt).forEach(r=>{
+      const row = {key: residentKey(r), apt, resident: r, name: r.name, past: !r.current, total:0, items:[]};
+      residentMonths(r, asOf).forEach(mk=>{
+        const paid = (state.payments[mk]||{})[apt.id] || 0;
+        const owed = subscriptionFor(apt, mk) - paid;
+        if(owed>0){
+          row.total += owed;
+          row.items.push({label: monthLabel(mk), owed, mk});
+        }
+      });
+      residentCommitments(r).filter(c=> c.startMonth<=asOf).forEach(c=>{
+        const rem = commitmentRemaining(c, asOf);
+        if(rem>0){
+          row.total += rem;
+          row.items.push({label: 'دين: ' + (c.note||COMMITMENT_TYPES[c.type]), owed: rem, commitId: c.id});
+        }
+      });
+      if(row.items.length) rows.push(row);
     });
   });
-  return Object.values(perApt).sort((a,b)=> b.total - a.total);
+  return rows.sort((a,b)=> b.total - a.total);
 }
 
-function settleArrearsForApt(aptId){
-  const apt = state.apartments.find(a=>a.id===aptId);
-  if(!apt) return;
+function settleArrearsFor(key){
+  const r = findResident(key);
+  if(!r) return;
+  const apt = r.apt;
   const asOf = arrearsAsOfMonth();
-  const months = monthsRange(START_MONTH, asOf);
-  months.forEach(mk=>{
-    if(!isOccupiedInMonth(apt, mk)) return;
+  residentMonths(r, asOf).forEach(mk=>{
     if(!state.payments[mk]) state.payments[mk] = {};
     if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
     const paid = state.payments[mk][apt.id] || 0;
-    if(paid < apt.subscription){
-      state.payments[mk][apt.id] = apt.subscription;
+    const sub = subscriptionFor(apt, mk);
+    if(paid < sub){
+      state.payments[mk][apt.id] = sub;
       state.paymentDates[mk][apt.id] = collectDate; // تاريخ التحصيل المختار، مش النهارده بالعافية
     }
   });
-  aptCommitments(apt.id).forEach(c=>{
+  residentCommitments(r).filter(c=> c.startMonth<=asOf).forEach(c=>{
     const rem = commitmentRemaining(c, asOf);
     if(rem>0){
       if(!state.commitmentPayments) state.commitmentPayments=[];
@@ -1438,15 +1898,16 @@ function editArrearOwed(aptId, key, newOwedRaw){
   if(key.startsWith('m:')){
     // بند اشتراك شهر معيّن: المتأخر = الاشتراك - المدفوع، فتعديل المتأخر معناه تعديل المدفوع المقابل
     const mk = key.slice(2);
-    if(newOwed > apt.subscription){
+    const sub = subscriptionFor(apt, mk);
+    if(newOwed > sub){
       // المتأخر مايزيدش عن الاشتراك، وإلا المدفوع هيتسجّل بالسالب وينقّص رصيد الصندوق
-      alert('المتأخر ماينفعش يبقى أكبر من الاشتراك الشهري (' + fmt(apt.subscription) + ' جنيه).\nلو فيه مبلغ زيادة على الساكن سجّله كالتزام/دين عليه.');
+      alert('المتأخر ماينفعش يبقى أكبر من الاشتراك الشهري (' + fmt(sub) + ' جنيه).\nلو فيه مبلغ زيادة على الساكن سجّله كالتزام/دين عليه.');
       renderAll();
       return;
     }
     if(!state.payments[mk]) state.payments[mk] = {};
     if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-    state.payments[mk][apt.id] = apt.subscription - newOwed;
+    state.payments[mk][apt.id] = sub - newOwed;
     state.paymentDates[mk][apt.id] = collectDate;
   } else if(key.startsWith('c:')){
     // بند التزام (دين/قسط): بنسجّل الفرق كسداد أو كإضافة على الالتزام عشان يظبط المتبقي على القيمة الجديدة
@@ -1503,7 +1964,7 @@ function useElevatorShareForApt(aptId, amount){
     if(!state.payments[mk]) state.payments[mk] = {};
     if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
     const paid = state.payments[mk][apt.id] || 0;
-    const owed = apt.subscription - paid;
+    const owed = subscriptionFor(apt, mk) - paid;
     if(owed>0){
       const pay = Math.min(owed, remaining);
       state.payments[mk][apt.id] = paid + pay;
@@ -1533,7 +1994,7 @@ function useElevatorShareForApt(aptId, amount){
     state.elevatorSpends.push({
       id:'esp'+Date.now()+Math.random().toString(36).slice(2,6),
       date: currentMonth+'-01',
-      note: 'خصم نصيب '+(apt.name||apt.id)+' من رصيد الأسانسير في سداد المستحق عليه',
+      note: 'خصم نصيب '+(residentNameFor(apt, currentMonth)||apt.id)+' من رصيد الأسانسير في سداد المستحق عليه',
       amount: used
     });
   }
@@ -1548,7 +2009,8 @@ function computeTotalObligations(){
 function commitmentAptLabel(c){
   if(!c.aptId) return 'التزام عام (بدون شقة)';
   const apt = state.apartments.find(a=>a.id===c.aptId);
-  return apt ? (apt.name||apt.id) : c.aptId;
+  const r = commitmentResident(c);
+  return apt ? ((r && r.name) || apt.name || apt.id) : c.aptId;
 }
 
 function computeMonthExpenses(monthKey){
@@ -1879,7 +2341,7 @@ function computeKindMonth(kind, mk){
 function computeResidentShares(mk){
   const active = state.apartments.filter(a=> isOccupiedInMonth(a, mk));
   const n = active.length;
-  const m = active.filter(a=> a.elevator).length;
+  const m = active.filter(a=> elevatorFor(a, mk)).length;
   const k = n - m;
   const lines = expenseKinds().map(kind=>{
     const r = computeKindMonth(kind, mk);
@@ -2173,7 +2635,11 @@ function bindSettingsEvents(){
   });
 }
 
-document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeSharesPopup(); });
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  document.querySelectorAll('.popup-overlay').forEach(ov=> ov.remove());
+  statementAptId = null;
+});
 
 /* ---------------- RENDER: HERO (nav only, stays visible on every tab) ---------------- */
 function renderHero(){
@@ -2218,7 +2684,8 @@ function renderOverviewData(){
       const occInMonth = isOccupiedInMonth(apt, currentMonth);
       const w = document.createElement('div');
       w.className = 'win ' + st;
-      w.title = (apt.name||'شاغرة') + ' — ' + apt.id + (occInMonth ? ' — مأهولة' : ' — شاغرة');
+      const resName = residentNameFor(apt, currentMonth);
+      w.title = (occInMonth ? (resName||'—') : 'شاغرة') + ' — ' + apt.id + ' — اضغط لكشف الحساب';
       const dot = document.createElement('div');
       dot.className = 'occ-dot ' + (occInMonth ? 'occ-yes' : 'occ-no');
       w.appendChild(dot);
@@ -2229,13 +2696,13 @@ function renderOverviewData(){
       if(occInMonth){
         const nameEl = document.createElement('div');
         nameEl.className = 'apt-name';
-        nameEl.textContent = apt.name || '';
+        nameEl.textContent = resName || '';
         w.appendChild(nameEl);
       }
       if(occInMonth){
         const subEl = document.createElement('div');
         subEl.className = 'apt-sub';
-        subEl.textContent = fmt(apt.subscription) + ' ج';
+        subEl.textContent = fmt(subscriptionFor(apt, currentMonth)) + ' ج';
         w.appendChild(subEl);
       }
       const statusEl = document.createElement('div');
@@ -2245,9 +2712,8 @@ function renderOverviewData(){
         : st==='partial' ? 'دفع جزء'
         : 'لسه مدفعش';
       w.appendChild(statusEl);
-      if(st!=='vacant'){
-        w.addEventListener('click', ()=> quickTogglePaid(apt.id));
-      }
+      // الضغط على الشباك بيفتح كشف حساب الشقة (ومنه الدفع والتعديل)
+      w.addEventListener('click', ()=> showStatement(apt.id));
       wins.appendChild(w);
     });
     row.appendChild(wins);
@@ -2306,8 +2772,9 @@ function quickTogglePaid(aptId){
   if(!state.payments[currentMonth]) state.payments[currentMonth]={};
   if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
   const current = state.payments[currentMonth][aptId]||0;
-  const goingToZero = current>=apt.subscription;
-  state.payments[currentMonth][aptId] = goingToZero ? 0 : apt.subscription;
+  const sub = subscriptionFor(apt, currentMonth);
+  const goingToZero = current>=sub;
+  state.payments[currentMonth][aptId] = goingToZero ? 0 : sub;
   if(goingToZero){
     delete state.paymentDates[currentMonth][aptId];
   } else {
@@ -2342,6 +2809,7 @@ function renderAll(){
   if(currentTab==='settings') c.innerHTML = banner + tplSettings();
   renderOverviewData();
   bindTabEvents();
+  refreshStatement();
   if(keepSearchFocus){
     const s = document.getElementById('fundSearch');
     if(s){ s.focus(); try{ s.setSelectionRange(caret, caret); }catch(e){} }
@@ -2350,7 +2818,7 @@ function renderAll(){
 
 function collectTabCommitmentIds(){
   let ids = [];
-  (state.apartments||[]).filter(a=>a.occupied).forEach(apt=>{
+  (state.apartments||[]).filter(a=> isOccupiedInMonth(a, currentMonth)).forEach(apt=>{
     aptCommitments(apt.id).forEach(c=>{
       const rem = commitmentRemaining(c, currentMonth);
       if(c.type!=='monthly' && rem<=0) return;
@@ -2382,17 +2850,20 @@ function tplCollect(){
   FLOOR_ORDER.filter(f=>groups[f]).forEach(floor=>{
     html += `<div class="floor-group-title">${floor}</div><div class="card">`;
     groups[floor].forEach(apt=>{
-      if(!apt.occupied){
-        html += `<div class="apt-row"><div class="apt-info"><div class="name">${escapeHtml(apt.id)} — شقة شاغرة</div></div><div class="vacant-tag">غير مأهولة</div></div>`;
+      // الساكن اللي كان ساكن في الشهر المعروض (مش النهارده) — عشان تقدر تسجّل لساكن مشي فلوس شهر قديم
+      if(!isOccupiedInMonth(apt, currentMonth)){
+        html += `<div class="apt-row"><div class="apt-info"><div class="name st-link" data-open-statement="${escapeHtml(apt.id)}">${escapeHtml(apt.id)} — شقة شاغرة</div></div><div class="vacant-tag">غير مأهولة</div></div>`;
         return;
       }
+      const sub = subscriptionFor(apt, currentMonth);
       const paid = (state.payments[currentMonth]||{})[apt.id]||0;
-      const done = paid>=apt.subscription;
+      const done = paid>=sub;
+      const resP = periodFor(apt, currentMonth);
       html += `
         <div class="apt-row">
           <div class="apt-info">
-            <div class="name">${escapeHtml(apt.name)||'—'}</div>
-            <div class="meta">شقة ${escapeHtml(apt.id)} · اشتراك <span class="num">${fmt(apt.subscription)}</span></div>
+            <div class="name st-link" data-open-statement="${escapeHtml(apt.id)}">${escapeHtml(residentNameFor(apt, currentMonth))||'—'}${resP && resP.to ? ' <span class="pp-badge soft">ساكن سابق</span>' : ''}</div>
+            <div class="meta">شقة ${escapeHtml(apt.id)} · اشتراك <span class="num">${fmt(sub)}</span></div>
           </div>
           <div class="apt-actions">
             <input type="number" class="amount-input pay-amount" data-apt="${apt.id}" value="${paid||''}" placeholder="0">
@@ -2611,7 +3082,7 @@ function tplResidentsBalance(){
 
 function tplArrearsReport(){
   const arrears = computeArrears();
-  const selCount = arrears.filter(a=>selectedArrearApts.has(a.apt.id)).length;
+  const selCount = arrears.filter(a=>selectedArrearApts.has(a.key)).length;
   let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">مين لسه مدفعش (وأي شهور)</div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -2660,8 +3131,8 @@ function tplArrearsReport(){
               <!-- الاسم -->
               <td style="padding:10px 12px; position:sticky; right:0; background:${rowBg}; z-index:1; border-left:1px solid var(--line); font-weight:600; color:var(--ink); white-space:nowrap;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <input type="checkbox" class="arrear-select bulk-checkbox" data-arrear-select="${a.apt.id}" ${selectedArrearApts.has(a.apt.id)?'checked':''} style="accent-color:var(--lit);">
-                  <span>${escapeHtml(a.apt.name)||'—'} <span style="font-weight:500; font-size:11.5px; color:var(--ink-soft);">(${escapeHtml(a.apt.floor)||'—'})</span></span>
+                  <input type="checkbox" class="arrear-select bulk-checkbox" data-arrear-select="${escapeHtml(a.key)}" ${selectedArrearApts.has(a.key)?'checked':''} style="accent-color:var(--lit);">
+                  <span class="st-link" data-open-statement="${escapeHtml(a.apt.id)}">${escapeHtml(a.name)||'—'} <span style="font-weight:500; font-size:11.5px; color:var(--ink-soft);">(${escapeHtml(a.apt.id)}${a.past ? ' · ساكن سابق' : ''})</span></span>
                 </div>
               </td>
               <!-- خانة لكل شهر -->
@@ -2686,7 +3157,7 @@ function tplArrearsReport(){
               </td>
               <!-- تسوية -->
               <td style="padding:8px; text-align:center;">
-                <button type="button" class="del" data-settle-apt="${a.apt.id}" style="font-size:11px; padding:3px 8px; white-space:nowrap;">✔ سدّد</button>
+                <button type="button" class="del" data-settle-apt="${escapeHtml(a.key)}" style="font-size:11px; padding:3px 8px; white-space:nowrap;">✔ سدّد</button>
               </td>
             </tr>`;
           }).join('')}
@@ -2733,7 +3204,7 @@ function exportReportCSV(){
   rows.push([]);
   rows.push(['رقم الشقة','اسم الساكن','البنود المتأخرة','إجمالي المستحق']);
   arrears.forEach(a=>{
-    rows.push([a.apt.id, a.apt.name||'—', a.items.map(m=>m.label+' ('+m.owed+')').join(' / '), a.total]);
+    rows.push([a.apt.id, (a.name||'—') + (a.past ? ' (ساكن سابق)' : ''), a.items.map(m=>m.label+' ('+m.owed+')').join(' / '), a.total]);
   });
   const csv = '\uFEFF' + rows.map(r=> r.map(cell=>{
     const s = String(cell==null?'':cell);
@@ -2920,7 +3391,7 @@ function tplFund(){
       if(amt>0){
         const apt = state.apartments.find(a=>a.id===aptId);
         const payDate = (state.paymentDates[mk]||{})[aptId] || (mk+'-01');
-        ledgerEntries.push({date:payDate, note:'تحصيل من '+(apt?apt.name:aptId), amount:amt, kind:'payment', month:mk, aptId});
+        ledgerEntries.push({date:payDate, note:'تحصيل من '+((apt && residentNameFor(apt, mk)) || aptId)+' — '+monthLabel(mk), amount:amt, kind:'payment', month:mk, aptId});
       }
     });
   });
@@ -3026,17 +3497,21 @@ function tplApts(){
             ${FLOOR_ORDER.map(f=>`<option value="${f}" ${f===a.floor?'selected':''}>${f}</option>`).join('')}
           </select>
         </div>
-        <input type="text" data-apt-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;" ${a.occupied?'':'disabled'}>
+        ${a.occupied
+          ? `<input type="text" data-apt-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;">
+             <div class="meta" style="margin-top:4px;">ساكن من ${monthLabel((openPeriod(a)||{}).from || currentMonth)}</div>`
+          : `<div class="meta" style="margin-top:6px;">🔑 شاغرة${(()=>{ const rs = residentsOf(a); const last = rs[rs.length-1]; return last ? ' — آخر ساكن: ' + escapeHtml(last.name||'—') + ' (لحد ' + monthLabel(shiftMonth(last.to,-1)) + ')' : ''; })()}</div>`}
       </div>
-      <div class="apt-actions" style="gap:10px; flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
-          <input type="checkbox" data-apt-occupied="${escapeHtml(a.id)}" ${a.occupied?'checked':''}> مأهولة
-        </label>
+      <div class="apt-actions" style="gap:8px; flex-wrap:wrap;">
+        ${a.occupied ? `
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
           <input type="checkbox" data-apt-elevator="${escapeHtml(a.id)}" ${a.elevator?'checked':''}> أسانسير
         </label>
-        <input type="number" class="amount-input" data-apt-sub="${escapeHtml(a.id)}" value="${a.subscription}" style="width:74px" ${a.occupied?'':'disabled'}>
-        <button class="del" data-del-apt="${escapeHtml(a.id)}">✕</button>
+        <input type="number" class="amount-input" data-apt-sub="${escapeHtml(a.id)}" value="${a.subscription}" style="width:74px" title="الاشتراك الشهري">
+        <button type="button" class="pill pay" data-move-out="${escapeHtml(a.id)}" style="background:var(--paper-2); color:var(--ink);">🚪 الساكن مشي</button>`
+        : `<button type="button" class="pill pay" data-move-in="${escapeHtml(a.id)}">🏠 ساكن جديد</button>`}
+        <button type="button" class="pill" data-open-statement="${escapeHtml(a.id)}" style="background:var(--paper-2); color:var(--ink);">📄 كشف حساب</button>
+        <button class="del" data-del-apt="${escapeHtml(a.id)}" title="حذف الشقة">✕</button>
       </div>
     </div>`;
   });
@@ -3248,11 +3723,11 @@ function bindTabEvents(){
     document.querySelectorAll('[data-settle-apt]').forEach(b=>{
       b.addEventListener('click', ()=>{
         if(!unlocked) return;
-        const aptId = b.dataset.settleApt;
-        const apt = state.apartments.find(x=>x.id===aptId);
-        if(!confirm(`متأكد إنك عايز تعتبر ${apt?(apt.name||apt.id):aptId} متسدد بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
-        settleArrearsForApt(aptId);
-        selectedArrearApts.delete(aptId);
+        const key = b.dataset.settleApt;
+        const r = findResident(key);
+        if(!confirm(`متأكد إنك عايز تعتبر ${r ? (r.name||r.apt.id) : key} متسدد بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
+        settleArrearsFor(key);
+        selectedArrearApts.delete(key);
         persist(); renderAll();
       });
     });
@@ -3267,7 +3742,7 @@ function bindTabEvents(){
     if(selectAllArrears){
       selectAllArrears.addEventListener('change', ()=>{
         if(selectAllArrears.checked){
-          computeArrears().forEach(a=>selectedArrearApts.add(a.apt.id));
+          computeArrears().forEach(a=>selectedArrearApts.add(a.key));
         } else {
           selectedArrearApts.clear();
         }
@@ -3278,8 +3753,8 @@ function bindTabEvents(){
     if(delSelectedArrears){
       delSelectedArrears.addEventListener('click', ()=>{
         if(selectedArrearApts.size===0) return;
-        if(!confirm(`متأكد إنك عايز تعتبر ${selectedArrearApts.size} شقة متسددة بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
-        selectedArrearApts.forEach(aptId=> settleArrearsForApt(aptId));
+        if(!confirm(`متأكد إنك عايز تعتبر ${selectedArrearApts.size} ساكن متسددين بالكامل؟ ده هيسجّل المبالغ الناقصة كمدفوعة.`)) return;
+        selectedArrearApts.forEach(key=> settleArrearsFor(key));
         selectedArrearApts.clear();
         persist(); renderAll();
       });
@@ -3605,26 +4080,9 @@ function bindTabEvents(){
         persist(); renderAll();
       });
     }
-    document.querySelectorAll('[data-apt-occupied]').forEach(cb=>{
-      cb.addEventListener('change', ()=>{
-        const a = state.apartments.find(x=>x.id===cb.dataset.aptOccupied);
-        const wasOccupied = a.occupied;
-        a.occupied = cb.checked;
-        if(!Array.isArray(a.occupancyPeriods)) a.occupancyPeriods = [];
-        if(!a.occupied && wasOccupied){
-          // بقت شاغرة: نقفل الفترة المفتوحة عند بداية الشهر الجاي، عشان الشهر الحالي يفضل محسوب على الساكن (متأخراته/فلوسه متسحبش)
-          const openP = a.occupancyPeriods.find(p=>p.to===null);
-          if(openP) openP.to = shiftMonth(currentMonth, 1);
-        } else if(a.occupied && !wasOccupied){
-          // بقت مأهولة: الاشتراك هيتحسب من الشهر ده وما بعده بس، مش من الأول
-          a.occupancyPeriods.push({from: currentMonth, to: null});
-          if(a.subscription===0){
-            a.subscription = a.elevator ? state.settings.elevatorAmount : state.settings.noElevatorAmount;
-          }
-        }
-        persist(); renderAll();
-      });
-    });
+    // الساكن مشي / ساكن جديد: بيسألوا عن الشهر صراحةً بدل ما يعتمدوا على الشهر المعروض فوق
+    document.querySelectorAll('[data-move-out]').forEach(b=> b.addEventListener('click', ()=> showMoveOut(b.dataset.moveOut)));
+    document.querySelectorAll('[data-move-in]').forEach(b=> b.addEventListener('click', ()=> showMoveIn(b.dataset.moveIn)));
     document.querySelectorAll('[data-apt-floor]').forEach(sel=>{
       sel.addEventListener('change', ()=>{
         const a = state.apartments.find(x=>x.id===sel.dataset.aptFloor);
@@ -3657,6 +4115,9 @@ function bindTabEvents(){
     document.querySelectorAll('[data-apt-name]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
         const a = state.apartments.find(x=>x.id===inp.dataset.aptName);
+        // تصحيح اسم الساكن الحالي: بيتغيّر على كل فترات سكنه
+        const r = residentOfPeriod(a, openPeriod(a));
+        if(r) r.periods.forEach(p=> p.name = inp.value);
         a.name = inp.value;
         persist(); renderAll();
       });
@@ -3664,20 +4125,20 @@ function bindTabEvents(){
     document.querySelectorAll('[data-apt-elevator]').forEach(cb=>{
       cb.addEventListener('change', ()=>{
         const a = state.apartments.find(x=>x.id===cb.dataset.aptElevator);
-        a.elevator = cb.checked;
-        a.subscription = a.elevator ? state.settings.elevatorAmount : state.settings.noElevatorAmount;
+        applyResidentChange(a, {elevator: cb.checked, subscription: defaultSubscription(cb.checked)});
         persist(); renderAll();
       });
     });
     document.querySelectorAll('[data-apt-sub]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
         const a = state.apartments.find(x=>x.id===inp.dataset.aptSub);
-        a.subscription = Math.max(0, Number(inp.value)||0);
+        applyResidentChange(a, {subscription: Math.max(0, Number(inp.value)||0)});
         persist(); renderAll();
       });
     });
     document.querySelectorAll('[data-del-apt]').forEach(b=>{
       b.addEventListener('click', ()=>{
+        if(!confirm('تحذف شقة ' + b.dataset.delApt + ' خالص؟\nلو الساكن مشي بس، استخدم "الساكن مشي" بدل الحذف عشان حساباته تفضل.')) return;
         state.apartments = state.apartments.filter(a=>a.id!==b.dataset.delApt);
         persist(); renderAll();
       });
@@ -3694,15 +4155,17 @@ function bindTabEvents(){
       }
       if(!f.floor.value){ alert('لازم تختار الدور'); return; }
       if(subscription<=0){ alert('لازم الاشتراك الشهري يكون أكبر من صفر'); return; }
+      const elevator = f.floor.value !== 'الأرضي';
       state.apartments.push({
         id: newId, floor: f.floor.value, name: f.name.value,
-        subscription, elevator: f.floor.value !== 'الأرضي', occupied:true,
-        occupancyPeriods: [{from: currentMonth, to: null}]
+        subscription, elevator, occupied:true,
+        occupancyPeriods: [{rid: newRid(), from: currentMonth, to: null, name: f.name.value, subscription, elevator}]
       });
       persist(); renderAll();
     });
   }
   if(currentTab==='settings') bindSettingsEvents();
+  document.querySelectorAll('#content [data-open-statement]').forEach(el=> el.addEventListener('click', ()=> showStatement(el.dataset.openStatement)));
   document.querySelectorAll('[data-goto-settings]').forEach(el=> el.addEventListener('click', ()=>{
     const btn = document.querySelector('#tabbar button[data-tab="settings"]');
     if(btn){ btn.click(); window.scrollTo(0, 0); }
