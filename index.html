@@ -1865,7 +1865,7 @@ function showSharesPopup(){
       }
       if(r.extras.length) html += `<div class="pp-note">التزامات كهرباء على الشهر ده:</div>` + itemRows(r.extras);
     } else if(r.source==='fixed'){
-      html += `<div class="pp-note">مبلغ ثابت ${fmt(kind.fixedMonthly)} جنيه كل شهر. اتدفع منه لحد دلوقتي ${fmt(r.paid)} — الدفعات للمتابعة بس ومش بتغيّر النصيب.</div>` + itemRows(r.items);
+      html += `<div class="pp-note">مبلغ ثابت ${fmt(kind.fixedMonthly)} جنيه كل شهر. اتدفع منه لحد دلوقتي ${fmt(r.paid)} — الدفعات للمتابعة بس ومش بتغيّر النصيب.${r.paid > Number(kind.fixedMonthly) ? ' ⚠️ المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.' : ''}</div>` + itemRows(r.items);
     } else if(r.source==='none' && Number(kind.fixedMonthly) > 0){
       html += `<div class="pp-note">مبلغ ثابت شهريًا، بس بيبدأ من أول شهر اتسجّل فيه النوع ده (بعد الشهر ده).</div>`;
     } else {
@@ -1928,7 +1928,7 @@ function tplSettings(){
         ${k.method ? '' : `<label class="kind-pct" style="flex:1; min-width:170px;">ثابت شهريًا:<input type="number" min="0" class="kind-fixed" data-k-fixed="${escapeHtml(k.key)}" value="${Number(k.fixedMonthly)||''}" placeholder="اختياري"></label>`}
       </div>
       ${methodNote ? `<div class="kind-hint">${methodNote}</div>` : ''}
-      ${Number(k.fixedMonthly) > 0 && !k.method ? `<div class="kind-hint">💡 ثابت ${fmt(k.fixedMonthly)} كل شهر مهما اتدفع — الدفعات المتسجّلة للمتابعة بس.</div>` : ''}
+      ${Number(k.fixedMonthly) > 0 && !k.method ? `<div class="kind-hint">💡 ثابت ${fmt(k.fixedMonthly)} كل شهر مهما اتدفع — أي مصروف من النوع ده بيتعتبر دفعة من الثابت ومش بيزوّد النصيب. المصروفات الزيادة (إصلاحات مثلًا) اعمل لها نوع تاني من غير مبلغ ثابت.</div>` : ''}
     </div>`;
   });
   html += `</div>
