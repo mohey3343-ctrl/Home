@@ -274,6 +274,53 @@
   .cp-fill.cp-low{background:linear-gradient(90deg, #ff8a7a, #ffb199);}
   .cp-sub{display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:#c7d7f5;}
 
+  /* ---------- كارت نصيب الساكن من مصروفات الشهر ---------- */
+  .share-card{
+    background:linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:12px; padding:10px 12px 12px; margin-bottom:12px; cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+    transition:transform .12s ease;
+  }
+  .share-card:active{transform:scale(.98);}
+  .share-card .sc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .share-card .sc-head .lbl{color:#c9c4ee; font-size:12px;}
+  .share-card .sc-head .more{color:var(--lit-glow); font-size:11px; white-space:nowrap;}
+  .share-card .sc-tiles{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .share-card .sc-tile{background:rgba(255,255,255,.08); border-radius:10px; padding:8px 10px;}
+  .share-card .sc-tile .t{color:#c9c4ee; font-size:11px;}
+  .share-card .sc-tile .v{color:#fff; font-size:22px; margin-top:2px;}
+  .share-card .sc-tile .v small{font-size:11px; font-weight:400; color:#c7d7f5;}
+  .share-card .sc-sub{margin-top:8px; font-size:11px; color:#c7d7f5; display:flex; flex-wrap:wrap; gap:4px 12px;}
+
+  /* ---------- بوب أب التفاصيل ---------- */
+  .popup-overlay{
+    position:fixed; inset:0; z-index:9000; background:rgba(20,18,45,.62);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .popup-box{
+    background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:88vh; overflow-y:auto;
+    padding:14px 16px 16px; box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+  .popup-head h3{font-size:17px; color:var(--ink);}
+  .popup-close{background:var(--paper-2); border:none; border-radius:50%; width:30px; height:30px; font-size:14px; cursor:pointer; color:var(--ink-soft);}
+  .pp-sec{margin-top:14px;}
+  .pp-sec-title{font-size:13px; font-weight:700; color:var(--night); margin-bottom:4px;}
+  .pp-row{display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px solid var(--line); font-size:12.5px;}
+  .pp-row:last-child{border-bottom:none;}
+  .pp-row .k{color:var(--ink-soft);}
+  .pp-row.total{font-weight:700; color:var(--ink);}
+  .pp-row.total .k{color:var(--ink);}
+  .pp-row.muted{opacity:.5;}
+  .pp-note{font-size:11.5px; color:var(--ink-soft); line-height:1.7; margin-top:4px;}
+  .pp-grid{display:grid; grid-template-columns:1.3fr 1fr 1fr; font-size:12.5px; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .pp-grid > div{padding:6px 8px; border-bottom:1px solid var(--line);}
+  .pp-grid > div:nth-last-child(-n+3){border-bottom:none;}
+  .pp-grid .h{background:var(--paper-2); font-weight:700; font-size:11.5px; color:var(--ink-soft);}
+  .pp-grid .n{text-align:center; font-family:'IBM Plex Mono'; font-weight:600;}
+  .pp-grid .tot{background:#fff6e3; font-weight:700;}
+
   /* ---------- TABS: side dock ---------- */
   .tabbar{
     display:flex; flex-direction:column; align-items:center;
@@ -399,94 +446,13 @@
     padding:5px 4px; font-family:'IBM Plex Mono'; font-size:12.5px; color:var(--bad); font-weight:600;
     background:#fff5f5;
   }
-
-  /* ================= Design system: ليل البرج (Night Tower) ================= */
-  :root{ --sidebar-w:0px; --night-card:#232048; --lit-edge:#eaa93f; --unpaid-win:#3b3870; --vacant-win:#28254f; --vacant-ink:#8f8ac6; --muted-on-night:#b8b3e6; --warn-on-night:#ffb5ab; --shadow-night:0 10px 26px rgba(10,8,30,.22); --shadow-card:0 2px 10px rgba(30,40,90,.05); }
-
-  /* Header */
-  .hero{ padding:16px 16px 18px; border-radius:0 0 26px 26px; box-shadow:0 10px 28px rgba(10,8,30,.28); }
-  .hero::before{ top:-140px; left:-60px; transform:none; width:280px; height:280px;
-    background:radial-gradient(circle, rgba(234,169,63,.22) 0%, rgba(234,169,63,0) 70%); }
-  .hero-top{ margin-bottom:10px; }
-  .hero-title{ display:flex; align-items:center; gap:10px; }
-  .brand-mark{ width:38px; height:38px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    background:linear-gradient(165deg, var(--lit-glow), var(--lit-2)); box-shadow:0 0 18px rgba(234,169,63,.45); }
-  .brand-mark svg{ width:24px; height:24px; }
-  .brand-text{ display:flex; flex-direction:column; }
-  .brand-t1{ font-family:'El Messiri', sans-serif; font-size:20px; font-weight:700; line-height:1.2; color:#fff; }
-  .brand-t2{ font-family:'IBM Plex Sans Arabic', sans-serif; font-size:11.5px; font-weight:400; color:var(--muted-on-night); }
-  .month-nav{ gap:6px; }
-  .month-nav button:not(#lockBtn){ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); box-shadow:none;
-    width:30px; height:30px; font-size:15px; line-height:1; }
-  .month-label{ font-size:13px; min-width:92px; font-weight:600; }
-  #lockBtn:not(.revealed){ box-shadow:none; }
-
-  /* Flat icons (no 3D bevel) */
-  .icon3d, .icon3d.gold{ background:none; box-shadow:none; border:none; }
-
-  /* Overview: balance on night, KPIs on white, facade on night */
-  .overview-block{ background:none; box-shadow:none; padding:0; border-radius:0; overflow:visible; }
-  .overview-block::before{ display:none; }
-  .balance-hero{ overflow:hidden; text-align:start; border-radius:20px; padding:18px;
-    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%);
-    border:1px solid rgba(255,255,255,.1); box-shadow:var(--shadow-night); }
-  .balance-hero::before{ content:''; position:absolute; top:-90px; left:-50px; width:240px; height:240px; border-radius:50%;
-    background:radial-gradient(circle, rgba(234,169,63,.28) 0%, rgba(234,169,63,0) 70%); pointer-events:none; }
-  .balance-hero > *{ position:relative; }
-  .balance-hero .icon3d{ display:none; }
-  .balance-hero .lbl{ color:#c9c4ee; font-size:12.5px; }
-  .balance-hero .val{ font-size:38px; margin-top:2px; }
-
-  .stats{ gap:10px; }
-  .stat{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow-card); }
-  .stat .icon3d{ display:none; }
-  .stat .lbl{ color:var(--ink-soft); font-size:11.5px; }
-  .stat .val{ color:var(--ink); font-size:21px; }
-  .stat .val span{ color:var(--ink-soft) !important; }
-  .stat.balance-neg .val{ color:#d23c3c; }
-
-  .collection-progress{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow-card); }
-  .cp-head .lbl{ color:var(--ink-soft); }
-  .cp-head .pct{ color:var(--ink); }
-  .cp-track{ height:10px; border-radius:99px; background:#e6ebf5; box-shadow:none; }
-  .cp-fill{ border-radius:99px; background:linear-gradient(90deg, var(--lit-2), var(--lit-glow)); box-shadow:none; }
-  .cp-fill.cp-low{ background:linear-gradient(90deg, #e24a4a, #ff8a7a); }
-  .cp-sub{ color:var(--ink-soft); }
-
-  .facade{ background:var(--night-card); border:none; border-radius:18px; padding:12px 10px 10px; box-shadow:var(--shadow-night); gap:6px; }
-  .floor-label{ color:var(--muted-on-night); }
-  .windows{ gap:6px; }
-  .win{ border:1px solid transparent; }
-  .win.paid{ background:linear-gradient(165deg, var(--lit-glow), var(--lit)); border-color:rgba(255,255,255,.3);
-    box-shadow:0 0 14px rgba(234,169,63,.45); }
-  .win.partial{ background:var(--wall); border-inline-start:1px solid transparent; box-shadow:inset -3px 0 0 var(--lit-edge); }
-  .win.unpaid{ background:var(--unpaid-win); box-shadow:none; }
-  .win.partial .apt-status, .win.unpaid .apt-status{ color:var(--warn-on-night); }
-  .win.vacant{ background:var(--vacant-win); color:var(--vacant-ink); border:1px dashed var(--wall); box-shadow:none; }
-  .win.vacant .apt-status{ color:var(--vacant-ink); }
-
-  /* Tabs: bottom bar (scrolls sideways on narrow phones) */
-  .tabbar{ flex-direction:row; justify-content:safe center; align-items:stretch;
-    top:auto; bottom:0; left:0; right:0; width:auto; height:auto; gap:2px;
-    padding:8px 6px calc(10px + env(safe-area-inset-bottom));
-    background:#fff; border-inline-start:none; border-top:1px solid var(--line);
-    box-shadow:0 -6px 20px rgba(30,40,90,.08); overflow-x:auto; overflow-y:hidden; }
-  .tabbar button{ width:auto; min-width:66px; flex-shrink:0; padding:4px 4px 2px; gap:3px; border-radius:12px; }
-  .tabbar button .icon3d{ width:44px; height:30px; border-radius:10px; color:#8a90a8; }
-  .tabbar button .icon3d svg{ width:22px; height:22px; }
-  .tabbar button .icon3d.gold{ background:#fdf1dc; color:var(--night); }
-  .tabbar button .tab-label{ font-size:10px; color:var(--ink-soft); white-space:nowrap; }
-  .tabbar button.active{ background:none; }
-  .tabbar button.active .tab-label{ color:var(--night); font-weight:700; }
-
-  .content{ padding:14px 14px 100px; padding-inline-end:14px; }
 </style>
 </head>
 <body>
 
 <div class="hero">
   <div class="hero-top">
-    <div class="hero-title"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="#312d5e" aria-hidden="true"><rect x="7" y="4" width="10" height="17" rx="1.5"/><rect x="9.3" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="9.3" y="11" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="15" width="2" height="2" rx=".4" fill="#f6c977"/></svg></span><span class="brand-text"><span class="brand-t1">برج الأندلس</span><span class="brand-t2">التقارير المالية</span></span></div>
+    <div class="hero-title">🏢 التقارير المالية برج الاندلس</div>
     <div class="month-nav">
       <button id="lockBtn" title="">🔒</button>
       <button id="prevMonth">‹</button>
@@ -507,15 +473,15 @@
 </div>
 
 <div class="tabbar" id="tabbar">
-  <button data-tab="overview" class="active"><span class="icon3d gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="tab-label">نظرة عامة</span></button>
-  <button data-tab="collect"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="tab-label">التحصيل</span></button>
-  <button data-tab="balance"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.8.2 5 2.2 5 5.4"/></svg></span><span class="tab-label">رصيد السكان</span></button>
-  <button data-tab="arrears"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="tab-label">متأخرات السكان</span></button>
-  <button data-tab="commitments"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span><span class="tab-label">التزامات العمارة</span></button>
-  <button data-tab="expenses"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="tab-label">المصروفات</span></button>
-  <button data-tab="fund"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg></span><span class="tab-label">الصندوق</span></button>
-  <button data-tab="plans"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg></span><span class="tab-label">خطط مستقبلية</span></button>
-  <button data-tab="apts"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg></span><span class="tab-label">الشقق</span></button>
+  <button data-tab="overview" class="active"><span class="icon3d gold">📊</span><span class="tab-label">نظرة عامة</span></button>
+  <button data-tab="collect"><span class="icon3d">💰</span><span class="tab-label">التحصيل</span></button>
+  <button data-tab="balance"><span class="icon3d">👥</span><span class="tab-label">رصيد السكان</span></button>
+  <button data-tab="arrears"><span class="icon3d">⏳</span><span class="tab-label">متأخرات السكان</span></button>
+  <button data-tab="commitments"><span class="icon3d">📋</span><span class="tab-label">التزامات العمارة</span></button>
+  <button data-tab="expenses"><span class="icon3d">🧾</span><span class="tab-label">المصروفات</span></button>
+  <button data-tab="fund"><span class="icon3d">🏦</span><span class="tab-label">الصندوق</span></button>
+  <button data-tab="plans"><span class="icon3d">🗺️</span><span class="tab-label">خطط مستقبلية</span></button>
+  <button data-tab="apts"><span class="icon3d">🏠</span><span class="tab-label">الشقق</span></button>
 </div>
 
 <div class="content" id="content"></div>
@@ -1427,6 +1393,318 @@ function computeMonthExpenses(monthKey){
     .reduce((s,e)=>s+e.amount,0);
 }
 
+/* ---------------- نصيب الساكن من مصروفات الشهر ----------------
+   - المياه: فواتير المياه اللي تاريخها في الشهر ÷ كل السكان النشطين (المأهولين في الشهر ده).
+   - الكهرباء: بندفعها كل ما الكارت يخلص، فبنحسب متوسط اليوم:
+       المصروف من أول شحنة لحد آخر شحنة ÷ عدد الأيام بينهم × عدد أيام الشهر.
+       آخر شحنة مش داخلة في الجمع لأنها لسه بتتصرف (فلوسها للأيام اللي بعدها).
+     70% منها على كل السكان النشطين، و30% على المشتركين في الأسانسير بس.
+   - أي مصروف تاني في الشهر: على كل السكان النشطين. */
+const ELEC_ALL_PCT = 0.70;
+const ELEC_ELEVATOR_PCT = 0.30;
+
+function textKind(text){
+  const c = normalizeSearch(text);
+  if(c.includes('صيان')) return 'other';            // صيانة مواسير/موتور المياه مثلًا = مصروف عادي
+  if(c.includes('كهرب')) return 'electricity';
+  if(c.includes('مياه') || c.includes('ميه')) return 'water';
+  if(c.includes('السلم') || (c.includes('سلم') && /(نظاف|تنظيف|مسح|غسيل)/.test(c))) return 'stairs';
+  return 'other';
+}
+function expenseKind(e){ return textKind(e.category); }
+
+/* نظافة السلم: ثابتة 1200 في الشهر (300 كل أسبوع × 4)، مهما كان عدد الدفعات اللي اتسجّلت.
+   الدفعات المتسجّلة في الشهر بتظهر في التفاصيل بس للمتابعة، ومش بتغيّر النصيب.
+   بتبدأ من أول شهر اتسجّل فيه مصروف نظافة سلم، عشان الشهور اللي قبلها ماتتحمّلش حاجة ماحصلتش. */
+const STAIRS_MONTHLY = 1200;
+
+function computeMonthStairs(mk){
+  const all = state.expenses.filter(e=> e.date && expenseKind(e)==='stairs');
+  const items = all.filter(e=> e.date.slice(0,7)===mk);
+  const paid = items.reduce((s,e)=>s+(Number(e.amount)||0), 0);
+  const firstMonth = all.map(e=> e.date.slice(0,7)).sort()[0];
+  if(firstMonth && mk >= firstMonth) return {source:'fixed', items, paid, total: STAIRS_MONTHLY};
+  return {source:'none', items, paid, total: 0};
+}
+
+/* فواتير المياه: الإيصال بييجي فبيتسجّل كالتزام عام على العمارة (البيان فيه "مياه"،
+   وشهر البداية = شهر الفاتورة) لحد ما يتدفع من زرار "سداد". الترتيب:
+   1) مصروف مياه متسجّل في الشهر ده ← هو ده.
+   2) مفيش ← التزام المياه بتاع الشهر: لو اتدفع بالكامل ناخد المدفوع فعلًا، ولو لسه ناخد قيمة الإيصال.
+   3) مفيش ولا ده ← آخر فاتورة مياه قبل الشهر ده كتقدير لحد ما الإيصال ييجي. */
+function waterCommitments(){
+  return (state.commitments||[]).filter(c=> !c.aptId && textKind(c.note)==='water');
+}
+
+/* شهر فاتورة المياه: من البيان لو مكتوب فيه اسم الشهر ("فاتورة مياه شهر يوليه" أو "شهر 7")،
+   وإلا من "شهر البداية". السنة = الأقرب لشهر التسجيل (فاتورة ديسمبر متسجّلة في يناير = ديسمبر اللي فات). */
+const NOTE_MONTHS = [['يناير'],['فبراير'],['مارس'],['ابريل'],['مايو'],['يونيو','يونيه'],['يوليو','يوليه'],['اغسطس'],['سبتمبر'],['اكتوبر'],['نوفمبر'],['ديسمبر']];
+
+function monthFromNote(note, refMonth){
+  const t = normalizeSearch(note);
+  let num = null;
+  NOTE_MONTHS.forEach((names,i)=>{ if(num===null && names.some(n=> t.includes(n))) num = i+1; });
+  if(num===null){
+    const m = t.match(/شهر\s*(\d{1,2})(?!\d)/);
+    if(m && Number(m[1])>=1 && Number(m[1])<=12) num = Number(m[1]);
+  }
+  if(num===null || !refMonth) return null;
+  const [ry, rm] = refMonth.split('-').map(Number);
+  let best = null, bestDiff = Infinity;
+  [ry-1, ry, ry+1].forEach(y=>{
+    const diff = Math.abs((y*12 + num) - (ry*12 + rm));
+    if(diff < bestDiff){ bestDiff = diff; best = monthKey(y, num); }
+  });
+  return best;
+}
+
+function waterBillMonth(c){
+  return monthFromNote(c.note, c.startMonth) || c.startMonth;
+}
+
+/* التواريخ اللي بتظهر تحت كل التزام: شهره، شهر فاتورة المياه (لو التزام مياه)، وكل دفعة بتاريخها */
+function commitmentDatesHtml(c){
+  const parts = [];
+  if(c.startMonth) parts.push('📅 ' + (c.type==='once' ? 'الشهر: ' : 'بداية من: ') + monthLabel(c.startMonth));
+  if(!c.aptId && textKind(c.note)==='water'){
+    const bm = waterBillMonth(c);
+    if(bm) parts.push('💧 محسوبة على مياه ' + monthLabel(bm));
+  }
+  const pays = (state.commitmentPayments||[]).filter(cp=> cp.commitmentId===c.id)
+    .sort((a,b)=> String(a.date||'').localeCompare(String(b.date||'')));
+  const payTxt = pays.length
+    ? '💳 ' + pays.map(p=> fmt(p.amount) + ' يوم ' + (p.date||'—')).join(' · ')
+    : '💳 لسه مفيش دفع';
+  return `<div class="date">${escapeHtml(parts.join(' · '))}</div><div class="date">${escapeHtml(payTxt)}</div>`;
+}
+
+function waterForExactMonth(mk){
+  const exp = state.expenses.filter(e=> e.date && e.date.slice(0,7)===mk && expenseKind(e)==='water');
+  if(exp.length){
+    return {source:'expenses', items: exp.map(e=>({
+      label: e.date + ' — ' + e.category + (e.note ? ' · ' + e.note : ''),
+      amount: Number(e.amount)||0, status: ''
+    }))};
+  }
+  const commits = waterCommitments().filter(c=> c.type==='monthly' ? c.startMonth<=mk : waterBillMonth(c)===mk);
+  if(commits.length){
+    return {source:'commitment', items: commits.map(c=>{
+      const bill = Number(c.amount)||0;
+      if(c.type==='monthly') return {label: c.note, amount: bill, status: 'التزام شهري ثابت'};
+      const pays = (state.commitmentPayments||[]).filter(cp=> cp.commitmentId===c.id);
+      const paid = pays.reduce((s,cp)=> s+(Number(cp.amount)||0), 0);
+      const lastPay = pays.map(cp=>cp.date).sort().pop();
+      return paid >= bill
+        ? {label: c.note, amount: paid, status: '✓ اتدفع ' + fmt(paid) + (lastPay ? ' يوم ' + lastPay : '')}
+        : {label: c.note, amount: bill, status: '⏳ لسه علينا — الإيصال ' + fmt(bill) + (paid ? ' (اتدفع منه ' + fmt(paid) + ')' : '')};
+    })};
+  }
+  return null;
+}
+
+function computeMonthWater(mk){
+  const withTotal = (r, extra)=> Object.assign({}, r, extra||{}, {total: r.items.reduce((s,x)=>s+x.amount, 0)});
+  const exact = waterForExactMonth(mk);
+  if(exact) return withTotal(exact);
+  // آخر شهر قبل الشهر ده فيه فاتورة مياه (مصروف أو التزام)
+  const months = state.expenses.filter(e=> e.date && expenseKind(e)==='water').map(e=> e.date.slice(0,7))
+    .concat(waterCommitments().map(c=> waterBillMonth(c)))
+    .filter(m=> m && m < mk).sort();
+  const prev = months.pop();
+  if(prev){
+    const est = waterForExactMonth(prev);
+    if(est) return withTotal(est, {source:'estimate', fromSource: est.source, fromMonth: prev});
+  }
+  return {source:'none', items: [], total: 0};
+}
+
+function daysInMonthOf(mk){
+  const [y,m] = mk.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+function daysBetween(fromDate, toDate){
+  const a = Date.UTC(...fromDate.split('-').map((v,i)=> i===1 ? Number(v)-1 : Number(v)));
+  const b = Date.UTC(...toDate.split('-').map((v,i)=> i===1 ? Number(v)-1 : Number(v)));
+  return Math.round((b - a) / 86400000);
+}
+
+function computeMonthElectricity(mk){
+  const dim = daysInMonthOf(mk);
+  const charges = state.expenses
+    .filter(e=> e.date && expenseKind(e)==='electricity')
+    .map(e=>({id:e.id, date:e.date.slice(0,10), amount:Number(e.amount)||0, note:e.note||e.category}))
+    .sort((a,b)=> a.date.localeCompare(b.date));
+  if(charges.length >= 2){
+    const first = charges[0].date;
+    const last = charges[charges.length-1].date;
+    const days = daysBetween(first, last);
+    if(days > 0){
+      const consumed = charges.filter(c=> c.date < last).reduce((s,c)=>s+c.amount, 0);
+      const rate = consumed / days;
+      return {method:'average', charges, first, last, days, consumed, rate, daysInMonth:dim, monthAmount: rate*dim};
+    }
+  }
+  // مفيش شحنتين بتاريخين مختلفين لسه — بنستخدم شحنات الكهرباء اللي اتدفعت فعلًا في الشهر ده
+  const inMonth = charges.filter(c=> c.date.slice(0,7)===mk);
+  return {method:'actual', charges: inMonth, daysInMonth:dim, monthAmount: inMonth.reduce((s,c)=>s+c.amount,0)};
+}
+
+function computeResidentShares(mk){
+  const active = state.apartments.filter(a=> isOccupiedInMonth(a, mk));
+  const activeElev = active.filter(a=> a.elevator);
+  const n = active.length, m = activeElev.length;
+  const monthExp = state.expenses.filter(e=> e.date && e.date.slice(0,7)===mk);
+  const water = computeMonthWater(mk);
+  const other = monthExp.filter(e=> expenseKind(e)==='other');
+  const waterTotal = water.total;
+  const otherTotal = other.reduce((s,e)=>s+(Number(e.amount)||0), 0);
+  const elec = computeMonthElectricity(mk);
+  const elecAllTotal = elec.monthAmount * ELEC_ALL_PCT;
+  const elecElevTotal = elec.monthAmount * ELEC_ELEVATOR_PCT;
+  // لو مفيش ولا مشترك أسانسير نشط، الـ 30% بتتوزع على الكل عشان الفاتورة تتغطى
+  const elevSpill = m ? 0 : elecElevTotal;
+  const per = {
+    water: n ? waterTotal / n : 0,
+    elecAll: n ? (elecAllTotal + elevSpill) / n : 0,
+    elecElev: m ? elecElevTotal / m : 0,
+    other: n ? otherTotal / n : 0,
+  };
+  const stairs = computeMonthStairs(mk);
+  per.stairs = n ? stairs.total / n : 0;
+  const nonSubscriber = per.water + per.elecAll + per.stairs + per.other;
+  const subscriber = nonSubscriber + per.elecElev;
+  return {mk, n, m, water, stairs, other, waterTotal, otherTotal, elec, elecAllTotal, elecElevTotal, elevSpill, per, subscriber, nonSubscriber};
+}
+
+function fmt1(n){
+  return (Math.round(n*10)/10).toLocaleString('en-US', {maximumFractionDigits:1});
+}
+function fmt2(n){
+  return (Math.round(n*100)/100).toLocaleString('en-US', {maximumFractionDigits:2});
+}
+
+function renderShareCard(){
+  const el = document.getElementById('shareCard');
+  if(!el) return;
+  const s = computeResidentShares(currentMonth);
+  el.innerHTML = `
+    <div class="sc-head">
+      <div class="lbl">🧮 نصيب الساكن من مصروفات ${monthLabel(currentMonth)}</div>
+      <div class="more">التفاصيل ›</div>
+    </div>
+    <div class="sc-tiles">
+      <div class="sc-tile"><div class="t">🛗 مشترك في الأسانسير</div><div class="v num">${fmt(s.subscriber)} <small>جنيه</small></div></div>
+      <div class="sc-tile"><div class="t">🚶 مش مشترك</div><div class="v num">${fmt(s.nonSubscriber)} <small>جنيه</small></div></div>
+    </div>
+    <div class="sc-sub">
+      <span>💧 مياه ${fmt(s.waterTotal)}${s.water.source==='estimate' ? ' (تقدير)' : s.water.source==='commitment' && s.water.items.some(x=>x.status.startsWith('⏳')) ? ' (لسه علينا)' : ''}</span>
+      <span>⚡ كهرباء ${fmt(s.elec.monthAmount)}</span>
+      <span>🧹 سلم ${fmt(s.stairs.total)}</span>
+      <span>🧾 تانية ${fmt(s.otherTotal)}</span>
+      <span>👥 ${s.n} ساكن (${s.m} أسانسير)</span>
+    </div>`;
+  el.onclick = showSharesPopup;
+  el.onkeydown = e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showSharesPopup(); } };
+}
+
+function waterSourceNote(w, mk){
+  const txt = {
+    expenses: 'من المصروفات المتسجّلة في الشهر ده.',
+    commitment: 'من التزام المياه بتاع الشهر ده (الإيصال) — لو اتدفع بالكامل بيتحسب المدفوع فعلًا، ولو لسه بيتحسب مبلغ الإيصال.',
+    estimate: 'لسه مفيش فاتورة مياه لـ' + monthLabel(mk) + '، فده تقدير من آخر فاتورة (' + (w.fromMonth ? monthLabel(w.fromMonth) : '') + ') لحد ما الإيصال ييجي وتسجّله كالتزام.',
+    none: 'مفيش فاتورة مياه متسجّلة لسه — سجّل الإيصال كالتزام عام على العمارة والبيان فيه "مياه".'
+  }[w.source];
+  return `<div class="pp-note">${escapeHtml(txt)}</div>`;
+}
+
+function closeSharesPopup(){
+  const ov = document.getElementById('sharesPopup');
+  if(ov) ov.remove();
+}
+
+function showSharesPopup(){
+  const s = computeResidentShares(currentMonth);
+  const e = s.elec;
+  const row = (k, v, cls)=> `<div class="pp-row ${cls||''}"><span class="k">${k}</span><span class="num">${v}</span></div>`;
+  const expRows = list => list.length
+    ? list.map(x=> row(escapeHtml(x.date) + ' — ' + escapeHtml(x.category) + (x.note ? ' · ' + escapeHtml(x.note) : ''), fmt(x.amount))).join('')
+    : `<div class="pp-note">مفيش حاجة متسجّلة في الشهر ده.</div>`;
+
+  let html = `<div class="popup-head"><h3>🧮 نصيب الساكن — ${monthLabel(s.mk)}</h3><button class="popup-close" aria-label="إغلاق">✕</button></div>
+    <div class="pp-note">👥 السكان النشطين في الشهر ده: <b>${s.n}</b> — منهم <b>${s.m}</b> مشتركين في الأسانسير.</div>
+
+    <div class="pp-sec">
+      <div class="pp-sec-title">الخلاصة (نصيب الساكن الواحد)</div>
+      <div class="pp-grid">
+        <div class="h">البند</div><div class="h n">🛗 مشترك</div><div class="h n">🚶 مش مشترك</div>
+        <div>💧 مياه</div><div class="n">${fmt1(s.per.water)}</div><div class="n">${fmt1(s.per.water)}</div>
+        <div>⚡ كهرباء 70% (على الكل)</div><div class="n">${fmt1(s.per.elecAll)}</div><div class="n">${fmt1(s.per.elecAll)}</div>
+        <div>⚡ كهرباء 30% (الأسانسير)</div><div class="n">${fmt1(s.per.elecElev)}</div><div class="n">—</div>
+        <div>🧹 نظافة السلم</div><div class="n">${fmt1(s.per.stairs)}</div><div class="n">${fmt1(s.per.stairs)}</div>
+        <div>🧾 مصروفات تانية</div><div class="n">${fmt1(s.per.other)}</div><div class="n">${fmt1(s.per.other)}</div>
+        <div class="tot">الإجمالي</div><div class="n tot">${fmt(s.subscriber)}</div><div class="n tot">${fmt(s.nonSubscriber)}</div>
+      </div>
+    </div>
+
+    <div class="pp-sec">
+      <div class="pp-sec-title">💧 المياه</div>
+      ${waterSourceNote(s.water, s.mk)}
+      ${s.water.items.map(x=> `<div class="pp-row"><span class="k">${escapeHtml(x.label)}${x.status ? `<br><small>${escapeHtml(x.status)}</small>` : ''}</span><span class="num">${fmt(x.amount)}</span></div>`).join('')}
+      ${row('الإجمالي ÷ ' + s.n + ' ساكن', fmt(s.waterTotal) + ' ÷ ' + s.n + ' = ' + fmt1(s.per.water), 'total')}
+    </div>
+
+    <div class="pp-sec">
+      <div class="pp-sec-title">⚡ الكهرباء</div>`;
+
+  if(e.method === 'average'){
+    html += e.charges.map(c=> row(
+      escapeHtml(c.date) + ' — ' + escapeHtml(c.note) + (c.date===e.last ? ' (آخر شحنة — لسه بتتصرف، مش داخلة)' : ''),
+      fmt(c.amount), c.date===e.last ? 'muted' : '')).join('');
+    html += row('من أول شحنة ' + e.first + ' لآخر شحنة ' + e.last, e.days + ' يوم')
+      + row('اللي اتصرف فعلًا في المدة دي', fmt(e.consumed))
+      + row('متوسط اليوم', fmt(e.consumed) + ' ÷ ' + e.days + ' = ' + fmt2(e.rate))
+      + row('كهرباء ' + monthLabel(s.mk) + ' (' + e.daysInMonth + ' يوم)', fmt2(e.rate) + ' × ' + e.daysInMonth + ' = ' + fmt(e.monthAmount), 'total');
+  } else {
+    html += `<div class="pp-note">لسه مفيش شحنتين كهرباء بتاريخين مختلفين عشان نحسب متوسط اليوم، فبنستخدم الشحنات اللي اتدفعت فعلًا في الشهر ده.</div>`;
+    html += e.charges.map(c=> row(escapeHtml(c.date) + ' — ' + escapeHtml(c.note), fmt(c.amount))).join('');
+    html += row('كهرباء ' + monthLabel(s.mk), fmt(e.monthAmount), 'total');
+  }
+  html += row('70% على كل السكان', fmt(s.elecAllTotal) + ' ÷ ' + s.n + ' = ' + fmt1(s.n ? s.elecAllTotal / s.n : 0))
+    + (s.m
+        ? row('30% على مشتركين الأسانسير', fmt(s.elecElevTotal) + ' ÷ ' + s.m + ' = ' + fmt1(s.per.elecElev))
+        : `<div class="pp-note">مفيش مشتركين أسانسير نشطين، فالـ 30% (${fmt(s.elecElevTotal)}) اتوزعت على كل السكان.</div>`);
+  const stairsNote = s.stairs.source==='fixed'
+    ? 'ثابتة ' + fmt(STAIRS_MONTHLY) + ' جنيه في الشهر (300 كل أسبوع × 4). اتدفع منها لحد دلوقتي ' + fmt(s.stairs.paid) + ' — الدفعات دي للمتابعة بس ومش بتغيّر النصيب.'
+    : 'مفيش نظافة سلم في الشهر ده (بدأت بعده).';
+  html += `</div>
+
+    <div class="pp-sec">
+      <div class="pp-sec-title">🧹 نظافة السلم</div>
+      <div class="pp-note">${escapeHtml(stairsNote)}</div>
+      ${s.stairs.items.length ? expRows(s.stairs.items) : ''}
+      ${row('الإجمالي ÷ ' + s.n + ' ساكن', fmt(s.stairs.total) + ' ÷ ' + s.n + ' = ' + fmt1(s.per.stairs), 'total')}
+    </div>
+
+    <div class="pp-sec">
+      <div class="pp-sec-title">🧾 مصروفات تانية</div>
+      ${expRows(s.other)}
+      ${row('الإجمالي ÷ ' + s.n + ' ساكن', fmt(s.otherTotal) + ' ÷ ' + s.n + ' = ' + fmt1(s.per.other), 'total')}
+    </div>`;
+
+  closeSharesPopup();
+  const ov = document.createElement('div');
+  ov.id = 'sharesPopup';
+  ov.className = 'popup-overlay';
+  ov.innerHTML = `<div class="popup-box" role="dialog" aria-modal="true">${html}</div>`;
+  ov.addEventListener('click', ev=>{
+    if(ev.target === ov || ev.target.closest('.popup-close')) closeSharesPopup();
+  });
+  document.body.appendChild(ov);
+}
+
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeSharesPopup(); });
+
 /* ---------------- RENDER: HERO (nav only, stays visible on every tab) ---------------- */
 function renderHero(){
   document.getElementById('monthLabel').textContent = monthLabel(currentMonth);
@@ -1443,6 +1721,7 @@ function tplOverview(){
       <div class="balance-hero" id="balanceHero"></div>
       <div class="stats" id="stats"></div>
       <div class="collection-progress" id="collectionProgress"></div>
+      <div class="share-card" id="shareCard" role="button" tabindex="0"></div>
       <div class="facade" id="facade"></div>
     </div>
   `;
@@ -1547,6 +1826,7 @@ function renderOverviewData(){
       <div class="cp-sub"><span>محصّل: ${fmt(collected)}</span><span>من المتوقع: ${fmt(expected)}</span></div>
     `;
   }
+  renderShareCard();
 }
 
 function quickTogglePaid(aptId){
@@ -1679,6 +1959,7 @@ function tplCollect(){
                 <div class="name" style="font-size:13px;">↳ ${escapeHtml(c.note)||COMMITMENT_TYPES[c.type]}</div>
                 <div class="meta">${COMMITMENT_TYPES[c.type]} · ${c.type==='once' ? 'متبقي '+fmt(rem) : 'مستحق لحد الشهر ده '+fmt(rem)}</div>
                 ${c.type==='installment' ? `<div class="meta" style="color:var(--ink-soft)">الباقي من الإجمالي: ${fmt(commitmentTotalRemaining(c))}</div>` : ''}
+                <div class="meta">${commitmentDatesHtml(c)}</div>
               </div>
             </div>
             <div class="apt-actions">
@@ -1797,6 +2078,7 @@ function tplCommitmentsBlock(){
           <div class="tx-main" style="flex:1; min-width:150px;">
             <div class="note">${c.fundType==='elevator'?'🛗 ':''}${escapeHtml(commitmentAptLabel(c))} — ${escapeHtml(c.note)||COMMITMENT_TYPES[c.type]}</div>
             <div class="date">${statusTxt}</div>
+            ${commitmentDatesHtml(c)}
           </div>
           <div style="display:flex;align-items:center;gap:6px; flex-wrap:wrap;">
             ${rem>0||c.type==='monthly' ? `
