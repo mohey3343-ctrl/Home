@@ -467,13 +467,150 @@
     padding:5px 4px; font-family:'IBM Plex Mono'; font-size:12.5px; color:var(--bad); font-weight:600;
     background:#fff5f5;
   }
+
+  /* ================= Design system: ليل البرج (Night Tower) ================= */
+  :root{ --sidebar-w:0px; --night-card:#232048; --lit-edge:#eaa93f; --unpaid-win:#3b3870; --vacant-win:#28254f; --vacant-ink:#8f8ac6; --muted-on-night:#b8b3e6; --warn-on-night:#ffb5ab; --shadow-night:0 10px 26px rgba(10,8,30,.22); --shadow-card:0 2px 10px rgba(30,40,90,.05); }
+
+  /* Header */
+  .hero{ padding:16px 16px 18px; border-radius:0 0 26px 26px; box-shadow:0 10px 28px rgba(10,8,30,.28); }
+  .hero::before{ top:-140px; left:-60px; transform:none; width:280px; height:280px;
+    background:radial-gradient(circle, rgba(234,169,63,.22) 0%, rgba(234,169,63,0) 70%); }
+  .hero-top{ margin-bottom:10px; }
+  .hero-title{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:38px; height:38px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(165deg, var(--lit-glow), var(--lit-2)); box-shadow:0 0 18px rgba(234,169,63,.45); }
+  .brand-mark svg{ width:24px; height:24px; }
+  .brand-text{ display:flex; flex-direction:column; }
+  .brand-t1{ font-family:'El Messiri', sans-serif; font-size:20px; font-weight:700; line-height:1.2; color:#fff; }
+  .brand-t2{ font-family:'IBM Plex Sans Arabic', sans-serif; font-size:11.5px; font-weight:400; color:var(--muted-on-night); }
+  .month-nav{ gap:6px; }
+  .month-nav button:not(#lockBtn){ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); box-shadow:none;
+    width:30px; height:30px; font-size:15px; line-height:1; }
+  .month-label{ font-size:13px; min-width:92px; font-weight:600; }
+  #lockBtn:not(.revealed){ box-shadow:none; }
+
+  /* Flat icons (no 3D bevel) */
+  .icon3d, .icon3d.gold{ background:none; box-shadow:none; border:none; }
+
+  /* Overview: balance on night, KPIs on white, facade on night */
+  .overview-block{ background:none; box-shadow:none; padding:0; border-radius:0; overflow:visible; }
+  .overview-block::before{ display:none; }
+  .balance-hero{ overflow:hidden; text-align:start; border-radius:20px; padding:18px;
+    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%);
+    border:1px solid rgba(255,255,255,.1); box-shadow:var(--shadow-night); }
+  .balance-hero::before{ content:''; position:absolute; top:-90px; left:-50px; width:240px; height:240px; border-radius:50%;
+    background:radial-gradient(circle, rgba(234,169,63,.28) 0%, rgba(234,169,63,0) 70%); pointer-events:none; }
+  .balance-hero > *{ position:relative; }
+  .balance-hero .icon3d{ display:none; }
+  .balance-hero .lbl{ color:#c9c4ee; font-size:12.5px; }
+  .balance-hero .val{ font-size:38px; margin-top:2px; }
+
+  .stats{ gap:10px; }
+  .stat{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow-card); }
+  .stat .icon3d{ display:none; }
+  .stat .lbl{ color:var(--ink-soft); font-size:11.5px; }
+  .stat .val{ color:var(--ink); font-size:21px; }
+  .stat .val span{ color:var(--ink-soft) !important; }
+  .stat.balance-neg .val{ color:#d23c3c; }
+
+  .collection-progress{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow-card); }
+  .cp-head .lbl{ color:var(--ink-soft); }
+  .cp-head .pct{ color:var(--ink); }
+  .cp-track{ height:10px; border-radius:99px; background:#e6ebf5; box-shadow:none; }
+  .cp-fill{ border-radius:99px; background:linear-gradient(90deg, var(--lit-2), var(--lit-glow)); box-shadow:none; }
+  .cp-fill.cp-low{ background:linear-gradient(90deg, #e24a4a, #ff8a7a); }
+  .cp-sub{ color:var(--ink-soft); }
+
+  .share-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow-card); }
+  .share-card .sc-head .lbl{ color:var(--ink-soft); }
+  .share-card .sc-head .more{ color:var(--night); font-weight:600; }
+  .share-card .sc-tile{ background:var(--paper); border:1px solid var(--line); }
+  .share-card .sc-tile .t{ color:var(--ink-soft); }
+  .share-card .sc-tile .v{ color:var(--ink); font-size:20px; }
+  .share-card .sc-tile .v small, .share-card .sc-sub{ color:var(--ink-soft); }
+
+  .facade{ background:var(--night-card); border:none; border-radius:18px; padding:12px 10px 10px; box-shadow:var(--shadow-night); gap:6px; }
+  .floor-label{ color:var(--muted-on-night); }
+  .windows{ gap:6px; }
+  .win{ border:1px solid transparent; }
+  .win.paid{ background:linear-gradient(165deg, var(--lit-glow), var(--lit)); border-color:rgba(255,255,255,.3);
+    box-shadow:0 0 14px rgba(234,169,63,.45); }
+  .win.partial{ background:var(--wall); border-inline-start:1px solid transparent; box-shadow:inset -3px 0 0 var(--lit-edge); }
+  .win.unpaid{ background:var(--unpaid-win); box-shadow:none; }
+  .win.partial .apt-status, .win.unpaid .apt-status{ color:var(--warn-on-night); }
+  .win.vacant{ background:var(--vacant-win); color:var(--vacant-ink); border:1px dashed var(--wall); box-shadow:none; }
+  .win.vacant .apt-status{ color:var(--vacant-ink); }
+
+  /* Tabs: bottom bar (scrolls sideways on narrow phones) */
+  .tabbar{ flex-direction:row; justify-content:safe center; align-items:stretch;
+    top:auto; bottom:0; left:0; right:0; width:auto; height:auto; gap:2px;
+    padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+    background:#fff; border-inline-start:none; border-top:1px solid var(--line);
+    box-shadow:0 -6px 20px rgba(30,40,90,.08); overflow-x:auto; overflow-y:hidden; }
+  .tabbar button{ width:auto; min-width:66px; flex-shrink:0; padding:4px 4px 2px; gap:3px; border-radius:12px; }
+  .tabbar button .icon3d{ width:44px; height:30px; border-radius:10px; color:#8a90a8; }
+  .tabbar button .icon3d svg{ width:22px; height:22px; }
+  .tabbar button .icon3d.gold{ background:#fdf1dc; color:var(--night); }
+  .tabbar button .tab-label{ font-size:10px; color:var(--ink-soft); white-space:nowrap; }
+  .tabbar button.active{ background:none; }
+  .tabbar button.active .tab-label{ color:var(--night); font-weight:700; }
+
+  .content{ padding:14px 14px 100px; padding-inline-end:14px; }
+
+  /* ================= بوب أب نصيب الساكن (ليل البرج) ================= */
+  .popup-box{ padding:0 0 14px; background:var(--paper); border-radius:18px; }
+  .popup-head{ position:sticky; top:0; z-index:2; margin:0; padding:14px 16px 12px;
+    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%); border-radius:18px 18px 0 0; }
+  .popup-head h3{ color:#fff; font-size:17px; }
+  .popup-close{ background:rgba(255,255,255,.12); color:#fff; }
+  .pp-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:12px 14px 0; }
+  .pp-chip{ font-size:11.5px; color:var(--ink-soft); background:#fff; border:1px solid var(--line); border-radius:99px; padding:3px 10px; }
+  .pp-chip b{ color:var(--ink); }
+  .pp-summary{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 14px 0; }
+  .pp-sum-tile{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; }
+  .pp-sum-tile span{ font-size:11.5px; color:var(--ink-soft); }
+  .pp-sum-tile b{ font-size:24px; color:var(--ink); line-height:1.2; margin-top:2px; }
+  .pp-sum-tile small{ font-size:10.5px; color:var(--ink-soft); }
+  .pp-sec{ margin:10px 14px 0; background:#fff; border:1px solid var(--line); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow-card); }
+  .pp-sec-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+    padding-bottom:8px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+  .pp-sec-title{ font-size:14px; font-weight:700; color:var(--night); margin:0; }
+  .pp-split{ font-size:10.5px; color:var(--night); background:#fdf1dc; border-radius:99px; padding:2px 9px; white-space:nowrap; }
+  .pp-subtitle{ font-size:12px; font-weight:700; color:var(--ink); margin:10px 0 2px; }
+  .pp-note{ font-size:12px; color:var(--ink-soft); line-height:1.7; margin:2px 0 6px; }
+  .pp-note.warn{ color:#9a4a00; background:#fff4e0; border-radius:8px; padding:6px 8px; }
+  .pp-foot{ font-size:11px; color:var(--ink-soft); line-height:1.6; margin-top:6px; }
+  .pp-row{ align-items:center; padding:8px 0; font-size:13px; }
+  .pp-row .k{ display:flex; flex-direction:column; gap:2px; color:var(--ink); min-width:0; }
+  .pp-row .k small{ font-size:11px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .pp-row .v{ white-space:nowrap; font-size:14px; color:var(--ink); }
+  .pp-row .v small{ font-size:10.5px; color:var(--ink-soft); font-family:'IBM Plex Sans Arabic'; font-weight:400; }
+  .pp-row.total{ margin-top:4px; padding:9px 10px; background:var(--paper); border:none; border-radius:10px; }
+  .pp-row.total .v{ font-size:16px; }
+  .pp-row.split .k{ color:var(--ink-soft); }
+  .pp-row.split .v{ color:var(--night); }
+  .pp-badge{ display:inline-block; font-size:10.5px; font-weight:600; border-radius:99px; padding:1px 8px; line-height:1.6; font-family:'IBM Plex Sans Arabic'; }
+  .pp-badge.warn{ background:#fff1e0; color:#9a4a00; }
+  .pp-badge.soft{ background:var(--paper-2); color:var(--ink-soft); }
+  .pp-grid{ grid-template-columns:1.4fr 1fr 1fr; border-radius:10px; }
+  .pp-grid .h{ background:var(--paper); color:var(--ink-soft); }
+  .pp-grid .tot{ background:#fdf1dc; color:var(--ink); }
+  .pp-table{ display:grid; grid-template-columns:1.35fr 1fr .8fr 1fr 1fr; font-size:12px; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:4px 0 8px; }
+  .pp-table > div{ padding:7px 6px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+  .pp-table > div:nth-last-child(-n+5){ border-bottom:none; }
+  .pp-table .h{ background:var(--paper); color:var(--ink-soft); font-weight:700; font-size:11px; }
+  .pp-table .n{ justify-content:center; font-family:'IBM Plex Mono'; font-weight:600; text-align:center; }
+  .pp-table .n small{ font-family:'IBM Plex Sans Arabic'; font-weight:400; font-size:10px; color:var(--ink-soft); }
+  .pp-table .strong{ color:var(--night); font-weight:700; }
+  .pp-table .est{ background:#fbf8f1; color:var(--ink-soft); }
+  .pp-table .strong.est{ color:var(--night); }
 </style>
 </head>
 <body>
 
 <div class="hero">
   <div class="hero-top">
-    <div class="hero-title">🏢 التقارير المالية برج الاندلس</div>
+    <div class="hero-title"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="#312d5e" aria-hidden="true"><rect x="7" y="4" width="10" height="17" rx="1.5"/><rect x="9.3" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="7" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="9.3" y="11" width="2" height="2" rx=".4" fill="#f6c977"/><rect x="12.7" y="15" width="2" height="2" rx=".4" fill="#f6c977"/></svg></span><span class="brand-text"><span class="brand-t1">برج الأندلس</span><span class="brand-t2">التقارير المالية</span></span></div>
     <div class="month-nav">
       <button id="lockBtn" title="">🔒</button>
       <button id="prevMonth">‹</button>
@@ -494,16 +631,16 @@
 </div>
 
 <div class="tabbar" id="tabbar">
-  <button data-tab="overview" class="active"><span class="icon3d gold">📊</span><span class="tab-label">نظرة عامة</span></button>
-  <button data-tab="collect"><span class="icon3d">💰</span><span class="tab-label">التحصيل</span></button>
-  <button data-tab="balance"><span class="icon3d">👥</span><span class="tab-label">رصيد السكان</span></button>
-  <button data-tab="arrears"><span class="icon3d">⏳</span><span class="tab-label">متأخرات السكان</span></button>
-  <button data-tab="commitments"><span class="icon3d">📋</span><span class="tab-label">التزامات العمارة</span></button>
-  <button data-tab="expenses"><span class="icon3d">🧾</span><span class="tab-label">المصروفات</span></button>
-  <button data-tab="fund"><span class="icon3d">🏦</span><span class="tab-label">الصندوق</span></button>
-  <button data-tab="plans"><span class="icon3d">🗺️</span><span class="tab-label">خطط مستقبلية</span></button>
-  <button data-tab="apts"><span class="icon3d">🏠</span><span class="tab-label">الشقق</span></button>
-  <button data-tab="settings"><span class="icon3d">⚙️</span><span class="tab-label">الإعدادات</span></button>
+  <button data-tab="overview" class="active"><span class="icon3d gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="tab-label">نظرة عامة</span></button>
+  <button data-tab="collect"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="tab-label">التحصيل</span></button>
+  <button data-tab="balance"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.8.2 5 2.2 5 5.4"/></svg></span><span class="tab-label">رصيد السكان</span></button>
+  <button data-tab="arrears"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="tab-label">متأخرات السكان</span></button>
+  <button data-tab="commitments"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span><span class="tab-label">التزامات العمارة</span></button>
+  <button data-tab="expenses"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span><span class="tab-label">المصروفات</span></button>
+  <button data-tab="fund"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg></span><span class="tab-label">الصندوق</span></button>
+  <button data-tab="plans"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg></span><span class="tab-label">خطط مستقبلية</span></button>
+  <button data-tab="apts"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg></span><span class="tab-label">الشقق</span></button>
+  <button data-tab="settings"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span><span class="tab-label">الإعدادات</span></button>
 </div>
 
 <div class="content" id="content"></div>
@@ -1823,62 +1960,90 @@ function closeSharesPopup(){
 
 function showSharesPopup(){
   const s = computeResidentShares(currentMonth);
-  const row = (k, v, cls)=> `<div class="pp-row ${cls||''}"><span class="k">${k}</span><span class="num">${v}</span></div>`;
-  const itemRows = list => list.map(x=> `<div class="pp-row"><span class="k">${escapeHtml(x.date)} — ${escapeHtml(x.title)}${x.sub ? `<br><small>${escapeHtml(x.sub)}</small>` : ''}</span><span class="num">${fmt(x.amount)}</span></div>`).join('');
+  const eq = t=> `<bdi dir="ltr">${t}</bdi>`;
+  const row = (k, v, cls, sub)=> `<div class="pp-row ${cls||''}"><span class="k">${k}${sub ? `<small>${sub}</small>` : ''}</span><span class="v num">${v}</span></div>`;
+  const badge = (t, cls)=> `<span class="pp-badge ${cls||''}">${t}</span>`;
+  const itemRows = list => list.map(x=>{
+    const sub = String(x.sub||'');
+    const pending = sub.startsWith('⏳');
+    const subHtml = sub ? (pending ? badge(escapeHtml(sub.replace(/^⏳\s*/, '')), 'warn') : escapeHtml(sub)) : '';
+    return `<div class="pp-row"><span class="k">${escapeHtml(x.title)}<small>${escapeHtml(x.date)}${subHtml ? ' ' + subHtml : ''}</small></span><span class="v num">${fmt(x.amount)}</span></div>`;
+  }).join('');
   const shown = s.lines.filter(l=> l.total > 0 || (l.r.items && l.r.items.length) || l.kind.method);
 
-  let html = `<div class="popup-head"><h3>🧮 نصيب الساكن — ${monthLabel(s.mk)}</h3><button class="popup-close" aria-label="إغلاق">✕</button></div>
-    <div class="pp-note">👥 السكان النشطين في الشهر ده: <b>${s.n}</b> — منهم <b>${s.m}</b> مشتركين في الأسانسير و<b>${s.k}</b> مش مشتركين.</div>
+  let html = `<div class="popup-head"><h3>نصيب الساكن — ${monthLabel(s.mk)}</h3><button class="popup-close" aria-label="إغلاق">✕</button></div>
+    <div class="pp-chips">
+      <span class="pp-chip"><b class="num">${s.n}</b> ساكن نشط</span>
+      <span class="pp-chip"><b class="num">${s.m}</b> مشترك أسانسير</span>
+      <span class="pp-chip"><b class="num">${s.k}</b> مش مشترك</span>
+    </div>
+
+    <div class="pp-summary">
+      <div class="pp-sum-tile"><span>🛗 مشترك في الأسانسير</span><b class="num">${fmt(s.subscriber)}</b><small>جنيه للشقة</small></div>
+      <div class="pp-sum-tile"><span>🚶 مش مشترك</span><b class="num">${fmt(s.nonSubscriber)}</b><small>جنيه للشقة</small></div>
+    </div>
 
     <div class="pp-sec">
-      <div class="pp-sec-title">الخلاصة (نصيب الساكن الواحد)</div>
+      <div class="pp-sec-head"><span class="pp-sec-title">التفصيل حسب البند</span></div>
       <div class="pp-grid">
-        <div class="h">البند</div><div class="h n">🛗 مشترك</div><div class="h n">🚶 مش مشترك</div>
+        <div class="h">البند</div><div class="h n">مشترك</div><div class="h n">مش مشترك</div>
         ${shown.filter(l=> l.total > 0).map(l=> `<div>${escapeHtml(kindName(l.kind.key))}</div><div class="n">${l.sub ? fmt1(l.sub) : '—'}</div><div class="n">${l.non ? fmt1(l.non) : '—'}</div>`).join('')}
         <div class="tot">الإجمالي</div><div class="n tot">${fmt(s.subscriber)}</div><div class="n tot">${fmt(s.nonSubscriber)}</div>
       </div>
-      <div class="pp-note">طريقة تقسيم كل نوع بتتغيّر من تبويب ⚙️ الإعدادات.</div>
+      <div class="pp-foot">طريقة تقسيم كل بند بتتغيّر من تبويب الإعدادات.</div>
     </div>`;
 
   shown.forEach(l=>{
     const kind = l.kind, r = l.r;
-    html += `<div class="pp-sec"><div class="pp-sec-title">${escapeHtml(kindName(kind.key))} <small style="font-weight:400;color:var(--ink-soft)">— ${escapeHtml(splitText(kind))}</small></div>`;
+    html += `<div class="pp-sec">
+      <div class="pp-sec-head"><span class="pp-sec-title">${escapeHtml(kindName(kind.key))}</span><span class="pp-split">${escapeHtml(splitText(kind))}</span></div>`;
     if(kind.method==='water'){
       html += waterSourceNote(r, s.mk) + itemRows(r.items);
     } else if(kind.method==='electricity'){
       if(r.method==='periods'){
-        html += `<div class="pp-note">كل شحنة بتتوزع على الأيام من تاريخها لحد الشحنة اللي بعدها، والشهر بياخد الأيام اللي وقعت جواه.</div>`;
-        html += r.periods.map(p=> row(
-          shortDate(p.from) + ' ← ' + shortDate(p.to) + ': ' + fmt(p.amount) + ' ÷ ' + p.days + ' يوم = ' + fmt1(p.rate) + ' في اليوم'
-            + (p.inMonth < p.days ? ` <small>(منهم ${p.inMonth} يوم في الشهر)</small>` : ''),
-          fmt(p.share))).join('');
-        if(r.openDays > 0) html += row(
-          'من ' + shortDate(r.last) + ' (آخر شحنة ' + fmt(r.lastAmount) + ' — لسه شغالة): تقدير ' + fmt2(r.avgRate) + ' × ' + r.openDays + ' يوم',
-          fmt(r.estimate) + ' (تقدير)');
-        if(r.beforeFirst > 0) html += `<div class="pp-note">${r.beforeFirst} يوم في الشهر قبل أول شحنة متسجّلة (${shortDate(r.first)}) مش محسوبين.</div>`;
-        html += row('كهرباء الكارت في ' + monthLabel(s.mk),
-          (r.estimate > 0 && r.actual > 0 ? fmt(r.actual) + ' فعلي + ' + fmt(r.estimate) + ' تقدير = ' : '') + fmt(r.cardAmount), 'total');
-        if(r.estimate > 0) html += `<div class="pp-note">التقدير = متوسط اليوم (كل الشحنات من أول شحنة لآخر شحنة ÷ الأيام بينهم) — وبيتظبط لوحده أول ما تسجّل الشحنة الجاية.</div>`;
+        html += `<div class="pp-note">كل شحنة بتتوزع على الأيام لحد الشحنة اللي بعدها، والشهر بياخد الأيام اللي وقعت جواه بس.</div>`;
+        html += `<div class="pp-table">
+          <div class="h">الفترة</div><div class="h n">الشحنة</div><div class="h n">الأيام</div><div class="h n">في اليوم</div><div class="h n">على الشهر</div>`;
+        html += r.periods.map(p=> `
+          <div>${shortDate(p.from)} ← ${shortDate(p.to)}</div>
+          <div class="n">${fmt(p.amount)}</div>
+          <div class="n">${p.inMonth < p.days ? `${p.inMonth}<small> من ${p.days}</small>` : p.days}</div>
+          <div class="n">${fmt1(p.rate)}</div>
+          <div class="n strong">${fmt(p.share)}</div>`).join('');
+        if(r.openDays > 0) html += `
+          <div class="est">من ${shortDate(r.last)} ${badge('لسه شغالة','soft')}</div>
+          <div class="n est">${fmt(r.lastAmount)}</div>
+          <div class="n est">${r.openDays}</div>
+          <div class="n est">≈ ${fmt2(r.avgRate)}</div>
+          <div class="n strong est">${fmt(r.estimate)}</div>`;
+        html += `</div>`;
+        if(r.beforeFirst > 0) html += `<div class="pp-foot">${r.beforeFirst} يوم في الشهر قبل أول شحنة متسجّلة (${shortDate(r.first)}) مش محسوبين.</div>`;
+        html += row('كهرباء الكارت في ' + monthLabel(s.mk), fmt(r.cardAmount), 'total',
+          (r.estimate > 0 && r.actual > 0) ? `${fmt(r.actual)} فعلي + ${fmt(r.estimate)} تقدير` : '');
+        if(r.estimate > 0) html += `<div class="pp-foot">التقدير = متوسط استهلاك اليوم من أول شحنة لآخر شحنة، وبيتظبط لوحده أول ما تسجّل الشحنة الجاية.</div>`;
       } else {
         html += `<div class="pp-note">لسه مفيش شحنتين بتاريخين مختلفين عشان نحسب متوسط اليوم، فبنستخدم الشحنات اللي اتدفعت فعلًا في الشهر ده.</div>`;
-        html += r.charges.map(c=> row(escapeHtml(c.date) + ' — ' + escapeHtml(c.note), fmt(c.amount))).join('');
+        html += r.charges.map(c=> row(escapeHtml(c.note), fmt(c.amount), '', escapeHtml(c.date))).join('');
       }
-      if(r.extras.length) html += `<div class="pp-note">التزامات كهرباء على الشهر ده:</div>` + itemRows(r.extras);
+      if(r.extras.length) html += `<div class="pp-subtitle">التزامات كهرباء على الشهر ده</div>` + itemRows(r.extras);
     } else if(r.source==='fixed'){
-      html += `<div class="pp-note">مبلغ ثابت ${fmt(kind.fixedMonthly)} جنيه كل شهر. اتدفع منه لحد دلوقتي ${fmt(r.paid)} — الدفعات للمتابعة بس ومش بتغيّر النصيب.${r.paid > Number(kind.fixedMonthly) ? ' ⚠️ المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.' : ''}</div>` + itemRows(r.items);
+      html += `<div class="pp-note">مبلغ ثابت <b class="num">${fmt(kind.fixedMonthly)}</b> جنيه كل شهر. اتدفع منه لحد دلوقتي <b class="num">${fmt(r.paid)}</b> — الدفعات للمتابعة بس ومش بتغيّر النصيب.</div>`
+        + (r.paid > Number(kind.fixedMonthly) ? `<div class="pp-note warn">المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.</div>` : '')
+        + itemRows(r.items);
     } else if(r.source==='none' && Number(kind.fixedMonthly) > 0){
       html += `<div class="pp-note">مبلغ ثابت شهريًا، بس بيبدأ من أول شهر اتسجّل فيه النوع ده (بعد الشهر ده).</div>`;
     } else {
       html += itemRows(r.items);
     }
     if(l.total <= 0){
-      if(!(r.source==='none' && Number(kind.fixedMonthly) > 0) && kind.method!=='water') html += `<div class="pp-note">مفيش حاجة متسجّلة في الشهر ده.</div>`;
+      if(!(r.source==='none' && Number(kind.fixedMonthly) > 0) && kind.method!=='water') html += `<div class="pp-foot">مفيش حاجة متسجّلة في الشهر ده.</div>`;
     } else {
-      html += row('الإجمالي', fmt(l.total), 'total');
-      if(l.allPart) html += row('على كل السكان', fmt(l.allPart) + ' ÷ ' + s.n + ' = ' + fmt1(l.perAll));
-      if(l.elevPart) html += row('على مشتركين الأسانسير', fmt(l.elevPart) + ' ÷ ' + s.m + ' = ' + fmt1(l.perElev));
-      if(l.nonPart) html += row('على غير المشتركين', fmt(l.nonPart) + ' ÷ ' + s.k + ' = ' + fmt1(l.perNon));
-      if(l.spilled) html += `<div class="pp-note">مفيش حد في المجموعة المحددة الشهر ده، فـ ${fmt(l.spilled)} اتوزعت على كل السكان.</div>`;
+      if(!(kind.method==='electricity' && r.method==='periods' && !r.extras.length)) html += row('الإجمالي', fmt(l.total), 'total');
+      const split = (label, part, cnt, per)=> row(label, `${fmt1(per)}<small> للشقة</small>`, 'split', `${fmt(part)} جنيه ÷ ${cnt} شقة`);
+      if(l.allPart) html += split('على كل السكان', l.allPart, s.n, l.perAll);
+      if(l.elevPart) html += split('على مشتركين الأسانسير', l.elevPart, s.m, l.perElev);
+      if(l.nonPart) html += split('على غير المشتركين', l.nonPart, s.k, l.perNon);
+      if(l.spilled) html += `<div class="pp-foot">مفيش حد في المجموعة المحددة الشهر ده، فـ ${fmt(l.spilled)} اتوزعت على كل السكان.</div>`;
     }
     html += `</div>`;
   });
