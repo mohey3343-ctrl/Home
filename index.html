@@ -1431,8 +1431,8 @@ function computeMonthExpenses(monthKey){
    والدفعات المتسجّلة بتظهر للمتابعة بس.
    نوعين ليهم حساب خاص (method):
      water        مصروف المياه في الشهر، وإلا التزام الإيصال (بشهر الفاتورة)، وإلا تقدير من آخر فاتورة.
-     electricity  بندفع كل ما الكارت يخلص: متوسط اليوم من أول شحنة لآخر شحنة × أيام الشهر
-                  (آخر شحنة مش داخلة لأنها لسه بتتصرف). */
+     electricity  بندفع كل ما الكارت يخلص: كل شحنة بتتوزع على الأيام لحد الشحنة اللي بعدها،
+                  والأيام بعد آخر شحنة بتتقدّر بمتوسط اليوم (شوف computeMonthElectricity). */
 const DEFAULT_EXPENSE_KINDS = [
   {key:'water',       label:'مياه',             icon:'💧', split:'all', method:'water'},
   {key:'electricity', label:'كهرباء',           icon:'⚡', split:'mixed', allPct:70, method:'electricity'},
@@ -1541,8 +1541,15 @@ function tplKindReview(){
           <div class="tx-main" style="flex:1; min-width:0;"><div class="note">${escapeHtml(r.text)}</div><div class="date">${escapeHtml(r.date)} · ${fmt(r.amount)}</div></div>
           ${kindSelectHtml(`data-review-kind="${r.type}|${escapeHtml(r.id)}"`, r.guess)}
         </div>`).join('')}
-      <div style="margin-top:10px;"><button type="button" class="pill pay" id="saveKindReview">✔ احفظ التصنيفات</button></div>
+      <div style="margin-top:10px;"><button type="button" class="pill pay" id="saveKindReview">✔ احفظ التصنيفات</button>${unlocked ? '' : ' <span class="kind-used">(افتح وضع التعديل الأول)</span>'}</div>
     </div>`;
+}
+
+/* سطر صغير في المصروفات والالتزامات بيودّي على المراجعة في الإعدادات (بيختفي لما كله يتصنّف) */
+function tplKindReviewHint(){
+  const count = unclassifiedRecords().length;
+  if(!count) return '';
+  return `<div class="note-strip" data-goto-settings style="cursor:pointer;">🏷 فيه ${count} مصروف/التزام قديم محتاج يتصنّف — اضغط هنا للمراجعة في ⚙️ الإعدادات ›</div>`;
 }
 
 /* ---- شهر الالتزام اللي بيتحسب عليه: من البيان لو فيه اسم شهر ("فاتورة مياه شهر يوليه" أو "شهر 7")، وإلا "شهر البداية" ----
@@ -1660,12 +1667,28 @@ function daysBetween(fromDate, toDate){
   const b = Date.UTC(...toDate.split('-').map((v,i)=> i===1 ? Number(v)-1 : Number(v)));
   return Math.round((b - a) / 86400000);
 }
+function shortDate(d){ return Number(d.slice(8,10)) + '/' + Number(d.slice(5,7)); }
+
+/* كهرباء الكارت في الشهر: كل شحنة بتتوزع بالتساوي على الأيام من تاريخها لحد الشحنة اللي بعدها،
+   والشهر بياخد الأيام اللي وقعت جواه (فعلي). الأيام من آخر شحنة لآخر الشهر لسه مالهاش شحنة بعدها،
+   فبتتحسب بمتوسط اليوم (كل الشحنات من أول شحنة لآخر شحنة ÷ الأيام بينهم) كتقدير لحد ما تتسجّل الشحنة الجاية.
+   الأيام اللي قبل أول شحنة متسجّلة مش محسوبة. الشهر بيبقى نهائي أول ما تتسجّل شحنة بعد آخره. */
 function computeMonthElectricity(key, mk){
   const dim = daysInMonthOf(mk);
-  const charges = state.expenses
-    .filter(e=> e.date && expenseKind(e)===key)
-    .map(e=>({id:e.id, date:e.date.slice(0,10), amount:Number(e.amount)||0, note:e.note||e.category}))
-    .sort((a,b)=> a.date.localeCompare(b.date));
+  const mStart = mk + '-01';
+  const mEnd = shiftMonth(mk, 1) + '-01';     // أول يوم في الشهر اللي بعده (مش داخل)
+  const overlap = (from, to)=>{               // عدد أيام [from, to) اللي جوه الشهر
+    const s = from > mStart ? from : mStart;
+    const e = to < mEnd ? to : mEnd;
+    return s < e ? daysBetween(s, e) : 0;
+  };
+  // الشحنات بتاريخها (شحنتين في نفس اليوم = شحنة واحدة)
+  const byDate = {};
+  state.expenses.filter(e=> e.date && expenseKind(e)===key).forEach(e=>{
+    const d = e.date.slice(0,10);
+    byDate[d] = (byDate[d]||0) + (Number(e.amount)||0);
+  });
+  const charges = Object.keys(byDate).sort().map(d=> ({date:d, amount:byDate[d]}));
   // فواتير/التزامات كهرباء قديمة على العمارة بتتضاف على الشهر بتاعها
   const extras = shareCommitments().filter(c=> commitKind(c)===key)
     .map(c=> ({c, amt: commitmentAmountForMonth(c, mk)})).filter(x=> x.amt > 0)
@@ -1673,16 +1696,22 @@ function computeMonthElectricity(key, mk){
   const extraTotal = extras.reduce((s,x)=> s+x.amount, 0);
   let r;
   if(charges.length >= 2){
-    const first = charges[0].date;
-    const last = charges[charges.length-1].date;
-    const days = daysBetween(first, last);
-    if(days > 0){
-      const consumed = charges.filter(c=> c.date < last).reduce((s,c)=> s+c.amount, 0);
-      const rate = consumed / days;
-      r = {method:'average', charges, first, last, days, consumed, rate, daysInMonth:dim, cardAmount: rate*dim};
+    const periods = [];
+    for(let i=0; i<charges.length-1; i++){
+      const from = charges[i].date, to = charges[i+1].date;
+      const days = daysBetween(from, to);
+      const inMonth = overlap(from, to);
+      if(inMonth > 0) periods.push({from, to, amount:charges[i].amount, days, rate:charges[i].amount/days, inMonth, share:charges[i].amount*inMonth/days});
     }
-  }
-  if(!r){
+    const first = charges[0].date, last = charges[charges.length-1].date;
+    const closedTotal = charges.slice(0,-1).reduce((s,c)=> s+c.amount, 0);
+    const avgRate = closedTotal / daysBetween(first, last);
+    const openDays = overlap(last, '9999-12-31');
+    const actual = periods.reduce((s,p)=> s+p.share, 0);
+    const estimate = avgRate * openDays;
+    r = {method:'periods', periods, first, last, lastAmount:charges[charges.length-1].amount, avgRate, openDays,
+         actual, estimate, beforeFirst: overlap('0000-01-01', first), daysInMonth:dim, cardAmount: actual + estimate};
+  } else {
     // مفيش شحنتين بتاريخين مختلفين لسه ← الشحنات اللي اتدفعت فعلًا في الشهر ده
     const inMonth = charges.filter(c=> c.date.slice(0,7)===mk);
     r = {method:'actual', charges: inMonth, daysInMonth:dim, cardAmount: inMonth.reduce((s,c)=> s+c.amount, 0)};
@@ -1750,6 +1779,7 @@ function fmt2(n){
 
 function lineTag(l){
   if(l.kind.method==='water' && l.r.source==='estimate') return ' (تقدير)';
+  if(l.kind.method==='electricity' && l.r.estimate > 0) return ' (فيها تقدير)';
   if(l.r.items && l.r.items.some(x=> String(x.sub).startsWith('⏳'))) return ' (لسه علينا)';
   return '';
 }
@@ -1816,14 +1846,19 @@ function showSharesPopup(){
     if(kind.method==='water'){
       html += waterSourceNote(r, s.mk) + itemRows(r.items);
     } else if(kind.method==='electricity'){
-      if(r.method==='average'){
-        html += r.charges.map(c=> row(
-          escapeHtml(c.date) + ' — ' + escapeHtml(c.note) + (c.date===r.last ? ' (آخر شحنة — لسه بتتصرف، مش داخلة)' : ''),
-          fmt(c.amount), c.date===r.last ? 'muted' : '')).join('');
-        html += row('من أول شحنة ' + r.first + ' لآخر شحنة ' + r.last, r.days + ' يوم')
-          + row('اللي اتصرف فعلًا في المدة دي', fmt(r.consumed))
-          + row('متوسط اليوم', fmt(r.consumed) + ' ÷ ' + r.days + ' = ' + fmt2(r.rate))
-          + row('الكارت في ' + monthLabel(s.mk) + ' (' + r.daysInMonth + ' يوم)', fmt2(r.rate) + ' × ' + r.daysInMonth + ' = ' + fmt(r.cardAmount), 'total');
+      if(r.method==='periods'){
+        html += `<div class="pp-note">كل شحنة بتتوزع على الأيام من تاريخها لحد الشحنة اللي بعدها، والشهر بياخد الأيام اللي وقعت جواه.</div>`;
+        html += r.periods.map(p=> row(
+          shortDate(p.from) + ' ← ' + shortDate(p.to) + ': ' + fmt(p.amount) + ' ÷ ' + p.days + ' يوم = ' + fmt1(p.rate) + ' في اليوم'
+            + (p.inMonth < p.days ? ` <small>(منهم ${p.inMonth} يوم في الشهر)</small>` : ''),
+          fmt(p.share))).join('');
+        if(r.openDays > 0) html += row(
+          'من ' + shortDate(r.last) + ' (آخر شحنة ' + fmt(r.lastAmount) + ' — لسه شغالة): تقدير ' + fmt2(r.avgRate) + ' × ' + r.openDays + ' يوم',
+          fmt(r.estimate) + ' (تقدير)');
+        if(r.beforeFirst > 0) html += `<div class="pp-note">${r.beforeFirst} يوم في الشهر قبل أول شحنة متسجّلة (${shortDate(r.first)}) مش محسوبين.</div>`;
+        html += row('كهرباء الكارت في ' + monthLabel(s.mk),
+          (r.estimate > 0 && r.actual > 0 ? fmt(r.actual) + ' فعلي + ' + fmt(r.estimate) + ' تقدير = ' : '') + fmt(r.cardAmount), 'total');
+        if(r.estimate > 0) html += `<div class="pp-note">التقدير = متوسط اليوم (كل الشحنات من أول شحنة لآخر شحنة ÷ الأيام بينهم) — وبيتظبط لوحده أول ما تسجّل الشحنة الجاية.</div>`;
       } else {
         html += `<div class="pp-note">لسه مفيش شحنتين بتاريخين مختلفين عشان نحسب متوسط اليوم، فبنستخدم الشحنات اللي اتدفعت فعلًا في الشهر ده.</div>`;
         html += r.charges.map(c=> row(escapeHtml(c.date) + ' — ' + escapeHtml(c.note), fmt(c.amount))).join('');
@@ -1871,14 +1906,14 @@ function splitSelectHtml(attrs, selected){
 }
 
 function tplSettings(){
-  let html = `<div class="section-title">🏷 أنواع المصروفات وطريقة التقسيم</div>
+  let html = tplKindReview() + `<div class="section-title">🏷 أنواع المصروفات وطريقة التقسيم</div>
     <div class="note-strip">كل مصروف أو التزام عام على العمارة بتختار له نوع من دول، وكارت "نصيب الساكن" بيقسم كل نوع بالطريقة اللي تحددها هنا. التعديل بيتحفظ على طول (في وضع التعديل).</div>
     <div class="card">`;
   expenseKinds().forEach(k=>{
     const used = kindUsageCount(k.key);
     const locked = LOCKED_KINDS.includes(k.key);
     const methodNote = k.method==='water' ? '💡 حساب خاص: مصروف المياه في الشهر، وإلا التزام الإيصال، وإلا تقدير من آخر فاتورة.'
-      : k.method==='electricity' ? '💡 حساب خاص: متوسط اليوم من أول شحنة لآخر شحنة × أيام الشهر.'
+      : k.method==='electricity' ? '💡 حساب خاص: كل شحنة بتتوزع على الأيام لحد الشحنة اللي بعدها، والأيام اللي لسه مالهاش شحنة بعدها بتتقدّر بمتوسط اليوم.'
       : '';
     html += `<div class="kind-row">
       <div class="kind-top">
@@ -2293,7 +2328,7 @@ function tplElevatorFundBlock(){
 function tplCommitmentsBlock(){
   const commitments = (state.commitments||[]).filter(c=>!c.aptId);
   const selCount = commitments.filter(c=>selectedCommitIds.has(c.id)).length;
-  let html = tplKindReview() + `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+  let html = tplKindReviewHint() + `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <label style="font-size:12.5px;color:var(--ink-soft);">📅 تاريخ السداد (هيتسجّل بيه أي دفع جديد)</label>
     <input type="date" id="commitDateInput" value="${collectDate}">
   </div>`;
@@ -2553,7 +2588,7 @@ function exportReportCSV(){
 function tplExpenses(){
   const monthExp = state.expenses.filter(e=>e.date.slice(0,7)===currentMonth);
   const others = state.expenses.filter(e=>e.date.slice(0,7)!==currentMonth);
-  let html = tplKindReview() + `<div class="section-title">مصروفات ${monthLabel(currentMonth)}</div><div class="card">`;
+  let html = tplKindReviewHint() + `<div class="section-title">مصروفات ${monthLabel(currentMonth)}</div><div class="card">`;
   if(monthExp.length===0) html += `<div class="empty">لسه مفيش مصروفات مسجّلة الشهر ده</div>`;
   monthExp.forEach(e=>{
     html += expenseRowHtml(e);
@@ -3503,6 +3538,10 @@ function bindTabEvents(){
     });
   }
   if(currentTab==='settings') bindSettingsEvents();
+  document.querySelectorAll('[data-goto-settings]').forEach(el=> el.addEventListener('click', ()=>{
+    const btn = document.querySelector('#tabbar button[data-tab="settings"]');
+    if(btn){ btn.click(); window.scrollTo(0, 0); }
+  }));
   /* زرار "احفظ التصنيفات" في مراجعة الحاجات القديمة (بيظهر في المصروفات والالتزامات) */
   const saveKindReview = document.getElementById('saveKindReview');
   if(saveKindReview) saveKindReview.addEventListener('click', ()=>{
