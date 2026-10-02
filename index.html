@@ -626,6 +626,36 @@
   .st-mini.del{ color:#b23434; }
   .st-commit{ border-top:1px dashed var(--line); margin-top:4px; }
   .st-link{ cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; }
+
+  /* ================= تقرير المتأخرات PDF (بيظهر في الطباعة بس) ================= */
+  #printArea{ display:none; }
+  @media print{
+    @page{ size:A4; margin:12mm; }
+    body.printing{ background:#fff !important; }
+    body.printing > *:not(#printArea){ display:none !important; }
+    body.printing #printArea{ display:block !important; color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+  .pr-head{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding:14px 16px; margin-bottom:12px;
+    background:linear-gradient(175deg, var(--night) 0%, var(--night-2) 100%); color:#fff; border-radius:14px; }
+  .pr-title{ font-family:'El Messiri', sans-serif; font-size:20px; font-weight:700; }
+  .pr-meta{ font-size:11.5px; color:#c9c4ee; margin-top:2px; }
+  .pr-total{ display:flex; flex-direction:column; align-items:flex-end; background:rgba(255,255,255,.1); border-radius:10px; padding:8px 14px; }
+  .pr-total span{ font-size:11px; color:#c9c4ee; }
+  .pr-total b{ font-size:22px; color:var(--lit-glow); }
+  .pr-total small{ font-size:10.5px; color:#c9c4ee; }
+  .pr-table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+  .pr-table th{ background:var(--paper-2); color:var(--ink-soft); font-weight:700; text-align:right; padding:7px 8px; border-bottom:2px solid var(--line); }
+  .pr-table td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .pr-table tr{ page-break-inside:avoid; }
+  .pr-table .c{ text-align:center; }
+  .pr-table tfoot td{ background:#fdf1dc; font-weight:700; border-bottom:none; }
+  .pr-sub{ font-size:10px; color:var(--ink-soft); font-weight:400; }
+  .pr-chip{ display:inline-block; background:#fdeaea; color:#9b2c2c; border-radius:6px; padding:1px 6px; margin:1px 0; white-space:nowrap; font-size:10.5px; }
+  .pr-chip b{ font-family:'IBM Plex Mono'; }
+  .pr-foot{ font-size:10px; color:var(--ink-soft); margin-top:8px; }
+  .pdf-host{ position:fixed; top:0; left:-10000px; width:760px; padding:16px; background:#fff; color:var(--ink);
+    direction:rtl; font-family:'IBM Plex Sans Arabic', sans-serif; }
 </style>
 </head>
 <body>
@@ -666,6 +696,7 @@
 </div>
 
 <div class="content" id="content"></div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script>
 const STORE_KEY = 'building-finances-v1';
@@ -3095,6 +3126,8 @@ function tplArrearsReport(){
           ✔ اعتبار المحدد متسدد${selCount>0?' ('+selCount+')':''}
         </button>` : ''}
         <button class="export-btn" id="exportReportBtn">⬇ تنزيل Excel</button>
+        <button class="export-btn" id="exportPdfBtn" style="background:var(--lit-2);">⬇ تنزيل PDF</button>
+        <button class="export-btn" id="sharePdfBtn" style="background:#25a35a;">📤 مشاركة</button>
       </div>
     </div>`;
   if(arrears.length===0){
@@ -3191,6 +3224,172 @@ function tplArrearsReport(){
 
 function tplBuildingCommitments(){
   return tplCommitmentsBlock();
+}
+
+/* تقرير المتأخرات: HTML واحد بيستعمله "تنزيل PDF" (طباعة المتصفح) و"مشاركة" (ملف PDF بيتعمل في البرنامج). */
+function arrearsReportHtml(){
+  const arrears = computeArrears();
+  if(!arrears.length) return null;
+  const asOf = arrearsAsOfMonth();
+  const total = arrears.reduce((s,a)=> s+a.total, 0);
+  const debtsTotal = arrears.reduce((s,a)=> s + a.items.filter(m=> m.commitId).reduce((x,m)=> x+m.owed, 0), 0);
+  const rows = arrears.map((a, i)=>{
+    const months = a.items.filter(m=> m.mk).sort((x,y)=> x.mk.localeCompare(y.mk));
+    const debts = a.items.filter(m=> m.commitId);
+    const monthsTxt = months.map(m=> `<span class="pr-chip">${escapeHtml(m.label)} <b>${fmt(m.owed)}</b></span>`).join(' ');
+    const debtsTxt = debts.map(m=> `<span class="pr-chip">${escapeHtml(m.label.replace(/^دين:\s*/, ''))} <b>${fmt(m.owed)}</b></span>`).join(' ');
+    return `<tr>
+      <td class="c">${i+1}</td>
+      <td><b>${escapeHtml(a.name||'—')}</b>${a.past ? '<div class="pr-sub">ساكن سابق</div>' : ''}</td>
+      <td class="c num">${escapeHtml(a.apt.id)}<div class="pr-sub">${escapeHtml(a.apt.floor||'')}</div></td>
+      <td>${monthsTxt || '—'}</td>
+      <td>${debtsTxt || '—'}</td>
+      <td class="c num"><b>${fmt(a.total)}</b></td>
+    </tr>`;
+  }).join('');
+  const now = new Date();
+  const printed = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  const html = `
+    <div class="pr-head">
+      <div>
+        <div class="pr-title">برج الأندلس — متأخرات السكان</div>
+        <div class="pr-meta">لحد شهر ${monthLabel(asOf)} · اتطلع يوم ${printed}</div>
+      </div>
+      <div class="pr-total"><span>إجمالي المتأخرات</span><b class="num">${fmt(total)}</b><small>جنيه · ${arrears.length} ساكن</small></div>
+    </div>
+    <table class="pr-table">
+      <thead><tr><th class="c">#</th><th>الساكن</th><th class="c">الشقة</th><th>الشهور المتأخرة</th><th>ديون / التزامات</th><th class="c">الإجمالي</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="4">الإجمالي الكلي</td><td class="c num">${debtsTotal ? fmt(debtsTotal) : '—'}</td><td class="c num">${fmt(total)}</td></tr></tfoot>
+    </table>
+    <div class="pr-foot">المبالغ بالجنيه. المتأخر = الاشتراك الشهري ناقص المدفوع، لحد ${monthLabel(asOf)}.</div>`;
+  return {html, asOf, total, count: arrears.length};
+}
+
+/* تنزيل PDF: بنرسم التقرير في #printArea ونفتح شاشة الطباعة — ومنها "حفظ كـ PDF".
+   الطباعة من المتصفح بتطلع العربي واتجاهه مظبوط على الموبايل والكمبيوتر من غير مكتبات. */
+function exportArrearsPDF(){
+  const rep = arrearsReportHtml();
+  if(!rep){ alert('مفيش متأخرات — كله متسدد 🎉'); return; }
+  const asOf = rep.asOf;
+  document.getElementById('printArea').innerHTML = rep.html;
+  const oldTitle = document.title;
+  document.title = 'متأخرات-السكان-' + asOf;           // ده اسم ملف الـ PDF المقترح
+  document.body.classList.add('printing');
+  const cleanup = ()=>{
+    document.body.classList.remove('printing');
+    document.title = oldTitle;
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(()=>{ window.print(); setTimeout(cleanup, 1500); }, 50);
+}
+
+/* المكتبات بتتحمّل أول مرة تدوس "مشاركة" بس، عشان فتح البرنامج يفضل سريع */
+const PDF_LIBS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+];
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    if(document.querySelector(`script[data-lib="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src; s.dataset.lib = src;
+    s.onload = resolve;
+    s.onerror = ()=>{ s.remove(); reject(new Error('مش قادر يحمّل أداة الـ PDF — اتأكد من النت')); };
+    document.head.appendChild(s);
+  });
+}
+
+/* بيصوّر التقرير (نفس شكل الطباعة) ويحطه في صفحات A4 — التصوير بيحافظ على العربي واتجاهه زي ما هو على الشاشة */
+async function buildArrearsPdfFile(rep){
+  for(const src of PDF_LIBS) await loadScript(src);
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  const host = document.createElement('div');
+  host.className = 'pdf-host';
+  host.innerHTML = rep.html;
+  document.body.appendChild(host);
+  try{
+    const scale = 2;
+    // نهايات الصفوف (بالبكسل في الصورة) عشان الصفحة تتقطع بين صفين، مش في نص صف
+    const top = host.getBoundingClientRect().top;
+    const breaks = [...host.querySelectorAll('.pr-head, tr, .pr-foot')]
+      .map(el=> Math.round((el.getBoundingClientRect().bottom - top) * scale));
+    const canvas = await window.html2canvas(host, {scale, backgroundColor: '#ffffff', useCORS: true, logging: false});
+    const pdf = new window.jspdf.jsPDF({unit: 'pt', format: 'a4', compress: true});
+    const pageW = pdf.internal.pageSize.getWidth(), pageH = pdf.internal.pageSize.getHeight(), m = 24;
+    const ratio = (pageW - 2*m) / canvas.width;
+    const sliceH = Math.floor((pageH - 2*m) / ratio);        // ارتفاع الصفحة بالبكسل في الصورة
+    for(let y = 0, page = 0; y < canvas.height; page++){
+      let end = Math.min(y + sliceH, canvas.height);
+      if(end < canvas.height){
+        const fit = breaks.filter(b=> b > y && b <= end).pop();
+        if(fit) end = fit;
+      }
+      const h = end - y;
+      const part = document.createElement('canvas');
+      part.width = canvas.width; part.height = h;
+      const ctx = part.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, part.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      if(page) pdf.addPage();
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', m, m, pageW - 2*m, h * ratio);
+      y = end;
+    }
+    return new File([pdf.output('blob')], 'متأخرات-السكان-' + rep.asOf + '.pdf', {type: 'application/pdf'});
+  } finally {
+    host.remove();
+  }
+}
+
+function downloadFile(file){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file);
+  a.download = file.name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+async function shareArrearsPDF(btn){
+  const rep = arrearsReportHtml();
+  if(!rep){ alert('مفيش متأخرات — كله متسدد 🎉'); return; }
+  const label = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ بيجهّز الملف...'; }
+  let file;
+  try{
+    file = await buildArrearsPdfFile(rep);
+  }catch(e){
+    console.error('pdf build failed', e);
+    alert('الملف ما اتعملش: ' + e.message);
+    return;
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = label; }
+  }
+  const data = {files: [file], title: 'متأخرات السكان', text: 'متأخرات السكان — برج الأندلس — لحد ' + monthLabel(rep.asOf) + ' (الإجمالي ' + fmt(rep.total) + ' جنيه)'};
+  if(!(navigator.canShare && navigator.canShare({files: [file]}))){
+    // الجهاز ده مابيدعمش مشاركة الملفات من المتصفح ← بننزّل الملف وتبعته انت
+    downloadFile(file);
+    alert('المتصفح ده مابيدعمش المشاركة المباشرة — نزّلتلك الملف، ابعته من الواتساب.');
+    return;
+  }
+  try{
+    await navigator.share(data);
+  }catch(e){
+    if(e && e.name === 'AbortError') return;                 // قفلت شاشة المشاركة بنفسك
+    // تجهيز الملف خد وقت فالموبايل رفض يفتح المشاركة لوحده ← دوسة كمان وبس
+    const ov = openPopup('sharePopup', popupHead('📤 الملف جاهز') + `
+      <div class="pp-sec">
+        <div class="pp-note">${escapeHtml(file.name)} — دوس الزرار عشان تختار الجروب.</div>
+        <div class="pp-actions"><button type="button" class="pp-btn" id="shareNow">📤 مشاركة</button>
+        <button type="button" class="pp-btn ghost" id="shareDownload">⬇ تنزيل بدل كده</button></div>
+      </div>`);
+    ov.querySelector('#shareNow').addEventListener('click', async ()=>{
+      try{ await navigator.share(data); closePopup('sharePopup'); }
+      catch(err){ if(!err || err.name !== 'AbortError'){ downloadFile(file); closePopup('sharePopup'); } }
+    });
+    ov.querySelector('#shareDownload').addEventListener('click', ()=>{ downloadFile(file); closePopup('sharePopup'); });
+  }
 }
 
 function exportReportCSV(){
@@ -3720,6 +3919,10 @@ function bindTabEvents(){
     });
     const exportBtn = document.getElementById('exportReportBtn');
     if(exportBtn) exportBtn.addEventListener('click', exportReportCSV);
+    const pdfBtn = document.getElementById('exportPdfBtn');
+    if(pdfBtn) pdfBtn.addEventListener('click', exportArrearsPDF);
+    const shareBtn = document.getElementById('sharePdfBtn');
+    if(shareBtn) shareBtn.addEventListener('click', ()=> shareArrearsPDF(shareBtn));
     document.querySelectorAll('[data-settle-apt]').forEach(b=>{
       b.addEventListener('click', ()=>{
         if(!unlocked) return;
