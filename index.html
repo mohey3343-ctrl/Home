@@ -654,6 +654,12 @@
   .pr-chip{ display:inline-block; background:#fdeaea; color:#9b2c2c; border-radius:6px; padding:1px 6px; margin:1px 0; white-space:nowrap; font-size:10.5px; }
   .pr-chip b{ font-family:'IBM Plex Mono'; }
   .pr-foot{ font-size:10px; color:var(--ink-soft); margin-top:8px; }
+  .pr-table th.c{ text-align:center; white-space:nowrap; }
+  .pr-table td.owed, .pr-table .owed{ color:#b23434; font-weight:600; }
+  .pr-table .nil{ color:#c3c9d6; }
+  .pr-table tfoot td.grand{ color:var(--night); font-size:13px; }
+  .pr-table tfoot tr.cnt td{ background:#fff8ea; font-weight:400; color:var(--ink-soft); font-size:10.5px; }
+  .pdf-host.wide{ width:1100px; }
   .pdf-host{ position:fixed; top:0; left:-10000px; width:760px; padding:16px; background:#fff; color:var(--ink);
     direction:rtl; font-family:'IBM Plex Sans Arabic', sans-serif; }
 </style>
@@ -3232,18 +3238,24 @@ function arrearsReportHtml(){
   if(!arrears.length) return null;
   const asOf = arrearsAsOfMonth();
   const total = arrears.reduce((s,a)=> s+a.total, 0);
-  const debtsTotal = arrears.reduce((s,a)=> s + a.items.filter(m=> m.commitId).reduce((x,m)=> x+m.owed, 0), 0);
+  // عمود لكل شهر فيه متأخرات (الأقدم الأول)، وعمود للديون/الالتزامات لو فيه
+  const monthKeys = [...new Set(arrears.flatMap(a=> a.items.filter(m=> m.mk).map(m=> m.mk)))].sort();
+  const debtOf = a=> a.items.filter(m=> m.commitId).reduce((x,m)=> x+m.owed, 0);
+  const hasDebts = arrears.some(a=> debtOf(a) > 0);
+  const debtsTotal = arrears.reduce((s,a)=> s + debtOf(a), 0);
+  const monthTotals = monthKeys.map(mk=> arrears.reduce((s,a)=> s + ((a.items.find(m=> m.mk===mk)||{}).owed||0), 0));
+  const monthCounts = monthKeys.map(mk=> arrears.filter(a=> a.items.some(m=> m.mk===mk)).length);
   const rows = arrears.map((a, i)=>{
-    const months = a.items.filter(m=> m.mk).sort((x,y)=> x.mk.localeCompare(y.mk));
     const debts = a.items.filter(m=> m.commitId);
-    const monthsTxt = months.map(m=> `<span class="pr-chip">${escapeHtml(m.label)} <b>${fmt(m.owed)}</b></span>`).join(' ');
-    const debtsTxt = debts.map(m=> `<span class="pr-chip">${escapeHtml(m.label.replace(/^دين:\s*/, ''))} <b>${fmt(m.owed)}</b></span>`).join(' ');
     return `<tr>
       <td class="c">${i+1}</td>
       <td><b>${escapeHtml(a.name||'—')}</b>${a.past ? '<div class="pr-sub">ساكن سابق</div>' : ''}</td>
       <td class="c num">${escapeHtml(a.apt.id)}<div class="pr-sub">${escapeHtml(a.apt.floor||'')}</div></td>
-      <td>${monthsTxt || '—'}</td>
-      <td>${debtsTxt || '—'}</td>
+      ${monthKeys.map(mk=>{
+        const it = a.items.find(m=> m.mk===mk);
+        return it ? `<td class="c num owed">${fmt(it.owed)}</td>` : `<td class="c nil">—</td>`;
+      }).join('')}
+      ${hasDebts ? `<td class="c">${debts.length ? `<span class="num owed">${fmt(debtOf(a))}</span><div class="pr-sub">${debts.map(m=> escapeHtml(m.label.replace(/^دين:\s*/, ''))).join('، ')}</div>` : '<span class="nil">—</span>'}</td>` : ''}
       <td class="c num"><b>${fmt(a.total)}</b></td>
     </tr>`;
   }).join('');
@@ -3258,12 +3270,27 @@ function arrearsReportHtml(){
       <div class="pr-total"><span>إجمالي المتأخرات</span><b class="num">${fmt(total)}</b><small>جنيه · ${arrears.length} ساكن</small></div>
     </div>
     <table class="pr-table">
-      <thead><tr><th class="c">#</th><th>الساكن</th><th class="c">الشقة</th><th>الشهور المتأخرة</th><th>ديون / التزامات</th><th class="c">الإجمالي</th></tr></thead>
+      <thead><tr>
+        <th class="c">#</th><th>الساكن</th><th class="c">الشقة</th>
+        ${monthKeys.map(mk=> `<th class="c">${monthLabel(mk)}</th>`).join('')}
+        ${hasDebts ? '<th class="c">ديون / التزامات</th>' : ''}
+        <th class="c">الإجمالي</th>
+      </tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><td colspan="4">الإجمالي الكلي</td><td class="c num">${debtsTotal ? fmt(debtsTotal) : '—'}</td><td class="c num">${fmt(total)}</td></tr></tfoot>
+      <tfoot>
+        <tr><td colspan="3">إجمالي الشهر</td>
+          ${monthTotals.map(v=> `<td class="c num">${fmt(v)}</td>`).join('')}
+          ${hasDebts ? `<td class="c num">${fmt(debtsTotal)}</td>` : ''}
+          <td class="c num grand">${fmt(total)}</td></tr>
+        <tr class="cnt"><td colspan="3">عدد المتأخرين</td>
+          ${monthCounts.map(v=> `<td class="c">${v}</td>`).join('')}
+          ${hasDebts ? `<td class="c">${arrears.filter(a=> debtOf(a) > 0).length}</td>` : ''}
+          <td class="c">${arrears.length}</td></tr>
+      </tfoot>
     </table>
     <div class="pr-foot">المبالغ بالجنيه. المتأخر = الاشتراك الشهري ناقص المدفوع، لحد ${monthLabel(asOf)}.</div>`;
-  return {html, asOf, total, count: arrears.length};
+  // لو الشهور كتير الصفحة بتتقلب بالعرض عشان الأعمدة تفضل مقروءة
+  return {html, asOf, total, count: arrears.length, landscape: monthKeys.length + (hasDebts ? 1 : 0) > 6};
 }
 
 /* تنزيل PDF: بنرسم التقرير في #printArea ونفتح شاشة الطباعة — ومنها "حفظ كـ PDF".
@@ -3273,12 +3300,19 @@ function exportArrearsPDF(){
   if(!rep){ alert('مفيش متأخرات — كله متسدد 🎉'); return; }
   const asOf = rep.asOf;
   document.getElementById('printArea').innerHTML = rep.html;
+  let pageStyle = null;
+  if(rep.landscape){
+    pageStyle = document.createElement('style');
+    pageStyle.textContent = '@media print{ @page{ size:A4 landscape; margin:10mm; } }';
+    document.head.appendChild(pageStyle);
+  }
   const oldTitle = document.title;
   document.title = 'متأخرات-السكان-' + asOf;           // ده اسم ملف الـ PDF المقترح
   document.body.classList.add('printing');
   const cleanup = ()=>{
     document.body.classList.remove('printing');
     document.title = oldTitle;
+    if(pageStyle){ pageStyle.remove(); pageStyle = null; }
     window.removeEventListener('afterprint', cleanup);
   };
   window.addEventListener('afterprint', cleanup);
@@ -3306,7 +3340,7 @@ async function buildArrearsPdfFile(rep){
   for(const src of PDF_LIBS) await loadScript(src);
   if(document.fonts && document.fonts.ready) await document.fonts.ready;
   const host = document.createElement('div');
-  host.className = 'pdf-host';
+  host.className = 'pdf-host' + (rep.landscape ? ' wide' : '');
   host.innerHTML = rep.html;
   document.body.appendChild(host);
   try{
@@ -3316,7 +3350,7 @@ async function buildArrearsPdfFile(rep){
     const breaks = [...host.querySelectorAll('.pr-head, tr, .pr-foot')]
       .map(el=> Math.round((el.getBoundingClientRect().bottom - top) * scale));
     const canvas = await window.html2canvas(host, {scale, backgroundColor: '#ffffff', useCORS: true, logging: false});
-    const pdf = new window.jspdf.jsPDF({unit: 'pt', format: 'a4', compress: true});
+    const pdf = new window.jspdf.jsPDF({unit: 'pt', format: 'a4', orientation: rep.landscape ? 'landscape' : 'portrait', compress: true});
     const pageW = pdf.internal.pageSize.getWidth(), pageH = pdf.internal.pageSize.getHeight(), m = 24;
     const ratio = (pageW - 2*m) / canvas.width;
     const sliceH = Math.floor((pageH - 2*m) / ratio);        // ارتفاع الصفحة بالبكسل في الصورة
