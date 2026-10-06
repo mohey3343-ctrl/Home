@@ -660,6 +660,22 @@
   .pr-table tfoot td.grand{ color:var(--night); font-size:13px; }
   .pr-table tfoot tr.cnt td{ background:#fff8ea; font-weight:400; color:var(--ink-soft); font-size:10.5px; }
   .pdf-host.wide{ width:1100px; }
+  .pr-block{ margin-top:14px; page-break-inside:avoid; }
+  .pr-sec-title{ font-weight:700; color:var(--night); font-size:13px; margin-bottom:6px; }
+  .pr-summary{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+  .pr-summary > div{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; }
+  .pr-summary span{ font-size:10.5px; color:var(--ink-soft); }
+  .pr-summary b{ font-size:16px; color:var(--ink); }
+  .pr-summary .neg b{ color:#b23434; }
+  .pr-summary .pos b{ color:#0b7a53; }
+  .pr-msg{ background:#fff4e0; border:1px solid #f3d29a; border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.8; color:#5a3a00; }
+  .pr-msg-main{ font-weight:700; }
+  .pr-msg-note{ margin-top:4px; }
+  .pr-pay{ background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .pr-pay-item{ display:flex; align-items:baseline; gap:8px; font-size:13px; line-height:2; }
+  .pr-dot{ color:var(--lit-2); font-size:9px; }
+  .rp-text{ width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-family:'IBM Plex Sans Arabic'; font-size:13px; color:var(--ink); resize:vertical; font-weight:400; }
+  #content.locked textarea{ pointer-events:none; opacity:.45; }
   .pdf-host{ position:fixed; top:0; left:-10000px; width:760px; padding:16px; background:#fff; color:var(--ink);
     direction:rtl; font-family:'IBM Plex Sans Arabic', sans-serif; }
 </style>
@@ -1113,6 +1129,10 @@ function migrateState(opts){
     state.settings.changePinTaps = 7;
     changed = true;
   }
+  // ورقة المتأخرات: طرق السداد، رسالة للسكان، وإظهار التزامات العمارة
+  if(typeof state.settings.paymentOptions !== 'string'){ state.settings.paymentOptions = DEFAULT_PAYMENT_OPTIONS; changed = true; }
+  if(typeof state.settings.reportNote !== 'string'){ state.settings.reportNote = ''; changed = true; }
+  if(typeof state.settings.reportShowObligations !== 'boolean'){ state.settings.reportShowObligations = true; changed = true; }
   if(!Array.isArray(state.settings.expenseKinds) || !state.settings.expenseKinds.length){
     // أنواع المصروفات الافتراضية (بتتعدّل من تبويب الإعدادات)
     state.settings.expenseKinds = DEFAULT_EXPENSE_KINDS.map(k=> Object.assign({}, k));
@@ -2078,6 +2098,11 @@ const DEFAULT_EXPENSE_KINDS = [
   {key:'maintenance', label:'صيانة عامة',       icon:'🔧', split:'all'},
   {key:'other',       label:'أخرى',             icon:'🧾', split:'all'},
 ];
+const DEFAULT_PAYMENT_OPTIONS = [
+  'إنستا باي: أ/ بكر — 01098020086 — باسم أبو بكر',
+  'إنستا باي: أ/ محمد — 01100890608 — باسم M -----S-----K-----T',
+  'أو ترك الشهرية عند السوبر ماركت أسفل البرج وإبلاغنا على الجروب الخاص بالبرج'
+].join('\n');
 const LOCKED_KINDS = ['water','electricity','other']; // مينفعش تتمسح: ليها حساب خاص، و"أخرى" هي الاحتياطي
 const SPLIT_LABELS = {
   all: 'على كل السكان',
@@ -2596,6 +2621,17 @@ function tplSettings(){
     </div>`;
   });
   html += `</div>
+    <div class="section-title">📢 ورقة متأخرات السكان (اللي بتتطبع وبتتبعت)</div>
+    <div class="card">
+      <label class="pp-field row" style="margin-top:0;"><input type="checkbox" data-rp-obl ${state.settings.reportShowObligations !== false ? 'checked' : ''}> إظهار الالتزامات اللي على العمارة ورصيد الصندوق تحت الجدول</label>
+      <label class="pp-field">رسالة زيادة للسكان (اختياري — بتظهر تحت الرسالة الأساسية)
+        <textarea class="rp-text" data-rp-note rows="3" placeholder="مثلاً: عشان نقدر نجدد عقد صيانة الأسانسير ونركّب الكاميرات">${escapeHtml(state.settings.reportNote||'')}</textarea>
+      </label>
+      <label class="pp-field">طرق السداد (كل طريقة في سطر)
+        <textarea class="rp-text" data-rp-pay rows="4">${escapeHtml(state.settings.paymentOptions||'')}</textarea>
+      </label>
+      <div class="kind-hint">الرسالة الأساسية بتتكتب لوحدها بالأرقام: لو رصيد الصندوق مش مغطي الالتزامات بتقول كده وبتكتب العجز.</div>
+    </div>
     <div class="section-title">➕ إضافة نوع جديد</div>
     <div class="card">
       <form id="addKindForm" class="inline">
@@ -2613,6 +2649,12 @@ function bindSettingsEvents(){
   const kinds = ()=> state.settings.expenseKinds;
   const find = key=> kinds().find(k=> k.key===key);
   const save = ()=>{ persist(); renderAll(); };
+  const obl = document.querySelector('[data-rp-obl]');
+  if(obl) obl.addEventListener('change', ()=>{ if(!unlocked) return; state.settings.reportShowObligations = obl.checked; persist(); });
+  const note = document.querySelector('[data-rp-note]');
+  if(note) note.addEventListener('change', ()=>{ if(!unlocked) return; state.settings.reportNote = note.value; persist(); });
+  const pay = document.querySelector('[data-rp-pay]');
+  if(pay) pay.addEventListener('change', ()=>{ if(!unlocked) return; state.settings.paymentOptions = pay.value; persist(); });
   document.querySelectorAll('[data-k-icon]').forEach(inp=> inp.addEventListener('change', ()=>{
     if(!unlocked) return;
     const k = find(inp.dataset.kIcon); if(!k) return;
@@ -3290,7 +3332,59 @@ function arrearsReportHtml(){
     </table>
     <div class="pr-foot">المبالغ بالجنيه. المتأخر = الاشتراك الشهري ناقص المدفوع، لحد ${monthLabel(asOf)}.</div>`;
   // لو الشهور كتير الصفحة بتتقلب بالعرض عشان الأعمدة تفضل مقروءة
-  return {html, asOf, total, count: arrears.length, landscape: monthKeys.length + (hasDebts ? 1 : 0) > 6};
+  return {html: html + arrearsReportExtrasHtml(total), asOf, total, count: arrears.length, landscape: monthKeys.length + (hasDebts ? 1 : 0) > 6};
+}
+
+/* تحت جدول المتأخرات: الالتزامات اللي على العمارة، رصيد الصندوق قصادها، رسالة للسكان، وطرق السداد.
+   الأرقام هي نفس "إجمالي الالتزامات المتبقية" و"الفائض / العجز" اللي في نظرة عامة. */
+function arrearsReportExtrasHtml(arrearsTotal){
+  const s = state.settings;
+  const showObl = s.reportShowObligations !== false;
+  const balance = computeFundBalance();
+  const obligations = (state.commitments||[]).filter(c=> !c.aptId)
+    .map(c=> ({c, rem: commitmentTotalRemaining(c), paid: commitmentPaidTotal(c),
+               full: c.type==='installment' ? (Number(c.totalAmount)||0) : commitmentTotalDue(c, currentMonth)}))
+    .filter(x=> x.rem > 0);
+  const oblTotal = obligations.reduce((sum,x)=> sum + x.rem, 0);
+  const gap = balance - oblTotal;
+  let html = '';
+  if(showObl && obligations.length){
+    html += `<div class="pr-block">
+      <div class="pr-sec-title">📋 الالتزامات اللي على العمارة</div>
+      <table class="pr-table">
+        <thead><tr><th>البيان</th><th class="c">النوع</th><th class="c">المبلغ</th><th class="c">اتدفع</th><th class="c">المتبقي</th></tr></thead>
+        <tbody>${obligations.map(x=> `<tr>
+          <td>${escapeHtml(x.c.note || COMMITMENT_TYPES[x.c.type])}</td>
+          <td class="c">${escapeHtml(kindName(commitKind(x.c)))}</td>
+          <td class="c num">${fmt(x.full)}</td>
+          <td class="c num">${x.paid ? fmt(x.paid) : '—'}</td>
+          <td class="c num owed">${fmt(x.rem)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td colspan="4">إجمالي الالتزامات</td><td class="c num grand">${fmt(oblTotal)}</td></tr></tfoot>
+      </table>
+    </div>
+    <div class="pr-block pr-summary">
+      <div><span>رصيد الصندوق الحالي</span><b class="num">${fmt(balance)}</b></div>
+      <div><span>إجمالي الالتزامات</span><b class="num">${fmt(oblTotal)}</b></div>
+      <div class="${gap<0 ? 'neg' : 'pos'}"><span>${gap<0 ? 'العجز' : 'الفائض بعد الالتزامات'}</span><b class="num">${fmt(Math.abs(gap))}</b></div>
+      <div><span>متأخرات السكان</span><b class="num">${fmt(arrearsTotal)}</b></div>
+    </div>`;
+  }
+  const msg = (showObl && oblTotal > 0 && gap < 0)
+    ? `برجاء سرعة سداد المتأخرات، حيث إن رصيد الصندوق الحالي (${fmt(balance)} جنيه) لا يغطي إجمالي الالتزامات المطلوبة على العمارة (${fmt(oblTotal)} جنيه) — والعجز ${fmt(-gap)} جنيه.`
+    : 'برجاء سداد المتأخرات في أقرب وقت عشان نقدر نغطي مصاريف العمارة.';
+  const note = String(s.reportNote||'').trim();
+  html += `<div class="pr-block pr-msg">
+    <div class="pr-msg-main">📢 ${msg}</div>
+    ${note ? `<div class="pr-msg-note">${escapeHtml(note).replace(/\n/g, '<br>')}</div>` : ''}
+  </div>`;
+  const opts = String(s.paymentOptions||'').split('\n').map(x=> x.trim()).filter(Boolean);
+  if(opts.length){
+    html += `<div class="pr-block pr-pay">
+      <div class="pr-sec-title">💳 طرق السداد</div>
+      ${opts.map(o=> `<div class="pr-pay-item"><span class="pr-dot">●</span><span>${escapeHtml(o)}</span></div>`).join('')}
+    </div>`;
+  }
+  return html;
 }
 
 /* تنزيل PDF: بنرسم التقرير في #printArea ونفتح شاشة الطباعة — ومنها "حفظ كـ PDF".
@@ -3347,7 +3441,7 @@ async function buildArrearsPdfFile(rep){
     const scale = 2;
     // نهايات الصفوف (بالبكسل في الصورة) عشان الصفحة تتقطع بين صفين، مش في نص صف
     const top = host.getBoundingClientRect().top;
-    const breaks = [...host.querySelectorAll('.pr-head, tr, .pr-foot')]
+    const breaks = [...host.querySelectorAll('.pr-head, tr, .pr-foot, .pr-block')]
       .map(el=> Math.round((el.getBoundingClientRect().bottom - top) * scale));
     const canvas = await window.html2canvas(host, {scale, backgroundColor: '#ffffff', useCORS: true, logging: false});
     const pdf = new window.jspdf.jsPDF({unit: 'pt', format: 'a4', orientation: rep.landscape ? 'landscape' : 'portrait', compress: true});
