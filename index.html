@@ -121,6 +121,22 @@
     pointer-events:none;
   }
   .facade.locked .win{ pointer-events:none; }
+  /* وضع العرض (السكان): مفيش أي زرار أو خانة أو كلمة توحي إن فيه تعديل — كله بيختفي مش بيبهت بس */
+  body.view-mode #syncStatus,
+  body.view-mode #tabbar button[data-tab="collect"],
+  body.view-mode #tabbar button[data-tab="apts"],
+  body.view-mode #tabbar button[data-tab="settings"],
+  #content.locked .edit-only,
+  #content.locked form,
+  #content.locked button.del,
+  #content.locked button.pill,
+  #content.locked .amount-input,
+  #content.locked input[type=checkbox],
+  #content.locked .preset-row,
+  #content.locked .cash-strip,
+  #content.locked #settleAllElevatorShares,
+  #content.locked .tx-attach{ display:none !important; }
+  .ro-val{ font-family:'IBM Plex Mono'; font-weight:700; }
 
   .balance-hero{
     position:relative;
@@ -678,6 +694,65 @@
   #content.locked textarea{ pointer-events:none; opacity:.45; }
   .pdf-host{ position:fixed; top:0; left:-10000px; width:760px; padding:16px; background:#fff; color:var(--ink);
     direction:rtl; font-family:'IBM Plex Sans Arabic', sans-serif; }
+
+  /* ================= الخزن ================= */
+  .cash-strip{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .cash-strip label{ font-size:12.5px; color:var(--ink-soft); }
+  .acc-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; margin-top:10px; }
+  .acc-card{ display:flex; flex-direction:column; align-items:center; gap:2px; border:1px solid var(--line); background:var(--paper); border-radius:12px; padding:8px 6px; cursor:pointer; font-family:inherit; color:var(--ink); }
+  .acc-card b{ font-size:18px; }
+  .acc-card .acc-n{ font-size:12px; color:var(--ink-soft); }
+  .acc-card.on{ border-color:var(--lit-2); box-shadow:0 0 0 2px rgba(234,169,63,.35); }
+  .acc-card.neg b{ color:var(--bad); }
+  .acc-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:6px 0; border-bottom:1px solid var(--line); }
+  .acc-row:last-of-type{ border-bottom:none; }
+  .acc-row input[type=text]{ flex:1; min-width:110px; }
+  .acc-row input.acc-icon{ flex:0 0 46px; min-width:0; width:46px; text-align:center; }
+  .acc-row label{ display:flex; align-items:center; gap:4px; font-size:12.5px; color:var(--ink-soft); }
+  .acc-row input[type=number]{ width:100px; }
+  .acc-chip{ font-size:11px; color:var(--ink-soft); background:var(--paper-2); border-radius:999px; padding:2px 8px; white-space:nowrap; }
+  .acc-sel, .st-acc{ font-size:11.5px; padding:2px 4px; border-radius:6px; max-width:130px; }
+  .hero-accs{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px 12px; margin-top:8px; font-size:12px; color:#c9c4ee; }
+  .hero-acc b{ color:#fff; font-size:13px; }
+  .hero-acc.neg b{ color:var(--warn-on-night); }
+
+  /* ================= ورق الأبواب (كشف حساب لكل شقة — للطباعة بس) ================= */
+  .door-opt{ display:flex; align-items:center; gap:8px; font-size:13px; padding:6px 0; cursor:pointer; }
+  .door-sheet{ direction:rtl; }
+  .door-page{ break-after:page; page-break-after:always; }
+  .door-page:last-child{ break-after:auto; page-break-after:auto; }
+  .door-card{ box-sizing:border-box; border:1.5px solid var(--night); border-radius:14px; padding:5mm 6mm; display:flex; flex-direction:column; overflow:hidden; background:#fff; }
+  .door-page.half .door-card{ height:134mm; }
+  .door-page.full .door-card{ min-height:270mm; font-size:1.25em; }
+  .dc-cut{ height:10mm; position:relative; }
+  .dc-cut::before{ content:''; position:absolute; left:0; right:0; top:50%; border-top:1.5px dashed #8c94a8; }
+  .dc-cut span{ position:absolute; top:50%; right:8mm; transform:translateY(-50%); background:#fff; padding:0 6px; font-size:10px; color:#8c94a8; }
+  .dc-head{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:3mm; margin-bottom:3mm; border-bottom:2px solid var(--night); }
+  .dc-bld{ font-size:11px; color:var(--ink-soft); font-weight:700; }
+  .dc-apt{ font-family:'El Messiri', sans-serif; font-size:24px; font-weight:700; color:var(--night); line-height:1.25; }
+  .dc-apt b{ font-size:30px; }
+  .dc-apt span{ font-family:'IBM Plex Sans Arabic', sans-serif; font-size:12px; font-weight:400; color:var(--ink-soft); }
+  .dc-name{ font-size:15px; font-weight:700; color:var(--ink); }
+  .dc-total{ display:flex; flex-direction:column; align-items:center; border:2px solid #b23434; border-radius:12px; padding:6px 14px; min-width:120px; }
+  .dc-total span{ font-size:11px; color:#b23434; font-weight:700; }
+  .dc-total b{ font-size:28px; color:#b23434; line-height:1.2; }
+  .dc-total small{ font-size:10px; color:var(--ink-soft); }
+  .dc-total.clear{ border-color:#0b7a53; }
+  .dc-total.clear span, .dc-total.clear b{ color:#0b7a53; }
+  .dc-table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .dc-table th{ background:var(--paper-2); color:var(--ink-soft); font-weight:700; text-align:right; padding:5px 6px; border-bottom:2px solid var(--line); font-size:11px; }
+  .dc-table td{ padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .dc-table .c{ text-align:center; }
+  .dc-pay{ display:inline-block; white-space:nowrap; margin:0 4px; }
+  .dc-pay small{ color:var(--ink-soft); font-size:10px; }
+  .dc-owed{ color:#b23434; font-weight:700; }
+  .dc-ok{ color:#0b7a53; font-weight:700; white-space:nowrap; }
+  .dc-nil{ color:#c3c9d6; }
+  .dc-sub{ font-size:10px; color:var(--ink-soft); }
+  .dc-foot{ margin-top:auto; padding-top:3mm; font-size:11px; color:var(--ink-soft); line-height:1.7; }
+  .dc-msg{ font-weight:700; color:#5a3a00; }
+  .dc-opts{ color:var(--ink); }
+  .dc-date{ font-size:10px; }
 </style>
 </head>
 <body>
@@ -819,6 +894,8 @@ let state = null;
 let currentTab = 'overview';
 let currentMonth = todayStr().slice(0,7); // YYYY-MM — يفتح دايمًا على الشهر الحالي فعليًا
 let collectDate = todayStr(); // التاريخ اللي بيتسجل بيه أي تحصيل/سداد جديد — قابل للتغيير من تبويبي التحصيل والالتزامات
+let cashAcc = (()=>{ try{ return localStorage.getItem('cashAcc') || null; }catch(e){ return null; } })(); // الخزنة اللي بيتسجّل فيها أي تحصيل/صرف جديد (بتتفتكر على الجهاز)
+let fundAccFilter = '';  // دفتر الصندوق: كل الخزن ولا خزنة واحدة
 let unlocked = false; // resets to locked/view-only every time the page loads — not persisted
 let editingCommitId = null; // id of the commitment currently open for inline editing (apts tab)
 let selectedCommitIds = new Set(); // ids of commitments ticked for bulk delete
@@ -1007,8 +1084,8 @@ async function loadState(){
       canWrite = false;
       readOnlyReason = 'البيانات اللي في الشيت مش سليمة';
       setSyncStatus('⛔ البيانات اللي في جوجل شيت مش مقروءة — الحفظ متوقف', true);
-      showBlocker('البيانات في جوجل شيت مش سليمة',
-        'التطبيق قرأ الشيت بس مش قادر يفهم المحتوى، فوقف الحفظ عشان مايكتبش فوق حاجة.\nافتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
+      showBlocker('البيانات مش متاحة دلوقتي',
+        'حاول تاني بعد شوية.\n\n(للمسؤول: البيانات اللي في جوجل شيت مش مقروءة — ارجع نسخة سابقة من: ملف ← سجل الإصدارات)',
         [{label:'حاول تاني', onClick: retryLoad}]);
       return false;
     }
@@ -1030,7 +1107,7 @@ async function loadState(){
     setSyncStatus('🟠 مش متصل بجوجل شيت — الحفظ متوقف', true);
     const btns = [{label:'حاول تاني', onClick: retryLoad}];
     if(local && validState(safeParse(local.raw))){
-      btns.push({label:'اعرض آخر نسخة على الجهاز (عرض فقط)', onClick: function(){
+      btns.push({label:'اعرض آخر نسخة على الجهاز', onClick: function(){
         state = safeParse(local.raw);
         migrateState();
         hideBlocker();
@@ -1038,8 +1115,8 @@ async function loadState(){
         setSyncStatus('👁️ عرض فقط من نسخة الجهاز — أي تعديل مش هيتحفظ', true);
       }});
     }
-    showBlocker('مش قادر أوصل لقاعدة البيانات',
-      'السبب: ' + r.error + '\nالتطبيق وقف الحفظ عشان مايمسحش البيانات الموجودة في جوجل شيت.',
+    showBlocker('مش قادر يحمّل البيانات',
+      'اتأكد إن النت شغّال وحاول تاني.',
       btns);
     return false;
   }
@@ -1049,8 +1126,10 @@ async function loadState(){
   readOnlyReason = 'قاعدة البيانات فاضية';
   setSyncStatus('⚠️ قاعدة البيانات فاضية — مفيش حفظ تلقائي', true);
   const btns = [{label:'حاول تاني', onClick: retryLoad}];
+  // اختيارات المسؤول (رفع نسخة الجهاز / بيانات جديدة) مش بتظهر غير بعد الرمز السري
+  const adminBtns = [];
   if(local && validState(safeParse(local.raw))){
-    btns.push({label:'ارفع آخر نسخة محفوظة على الجهاز' + (local.at ? ' (' + new Date(local.at).toLocaleString('ar-EG') + ')' : ''), onClick: async function(){
+    adminBtns.push({label:'ارفع آخر نسخة محفوظة على الجهاز' + (local.at ? ' (' + new Date(local.at).toLocaleString('ar-EG') + ')' : ''), onClick: async function(){
       const parsed = safeParse(local.raw);
       state = parsed;
       canWrite = true;
@@ -1060,7 +1139,7 @@ async function loadState(){
       renderAll();
     }});
   }
-  btns.push({label:'ابدأ بيانات جديدة من الصفر', danger:true, onClick: async function(){
+  adminBtns.push({label:'ابدأ بيانات جديدة من الصفر', danger:true, onClick: async function(){
     if(prompt('ده هيكتب بيانات جديدة فاضية في جوجل شيت.\nلو انت متأكد اكتب كلمة: جديد') !== 'جديد') return;
     state = seedState();
     canWrite = true;
@@ -1069,9 +1148,14 @@ async function loadState(){
     await persist({force:true});
     renderAll();
   }});
-  showBlocker('قاعدة البيانات فاضية',
-    'جوجل شيت رد بنجاح بس مفيش بيانات متسجّلة.\nلو المفروض فيه بيانات، متكملش — افتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
-    btns);
+  btns.push({label:'🔑 للمسؤول', onClick: function(){
+    const known = (safeParse(local && local.raw) || {settings:{}}).settings.editPin || '1234';
+    if(prompt('الرمز السري') !== known) return;
+    showBlocker('قاعدة البيانات فاضية',
+      'جوجل شيت رد بنجاح بس مفيش بيانات متسجّلة.\nلو المفروض فيه بيانات، متكملش — افتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
+      [{label:'حاول تاني', onClick: retryLoad}].concat(adminBtns));
+  }});
+  showBlocker('البيانات مش متاحة دلوقتي', 'حاول تاني بعد شوية.', btns);
   return false;
 }
 
@@ -1195,6 +1279,24 @@ function migrateState(opts){
   }
   if(!state.paymentDates){
     state.paymentDates = {};
+    changed = true;
+  }
+  // الخزن: الفلوس ممكن تبقى معايا أو مع السوبر ماركت أو مع بكر — كل خزنة ليها رصيدها
+  if(!Array.isArray(state.settings.accounts) || !state.settings.accounts.length){
+    state.settings.accounts = DEFAULT_ACCOUNTS.map((a,i)=> Object.assign({}, a, {opening: i===0 ? (Number(state.settings.openingBalance)||0) : 0}));
+    changed = true;
+  }
+  if(!Array.isArray(state.transfers)){ state.transfers = []; changed = true; }
+  {
+    // الرصيد الافتتاحي الإجمالي = مجموع افتتاحي الخزن (لو نسخة قديمة غيّرت الإجمالي، الفرق بيروح على الخزنة الأولى)
+    const accs = state.settings.accounts;
+    const sum = round2(accs.reduce((t,a)=> t + (Number(a.opening)||0), 0));
+    const total = round2(state.settings.openingBalance);
+    if(sum !== total){ accs[0].opening = round2((Number(accs[0].opening)||0) + total - sum); changed = true; }
+  }
+  if(!state.paymentLog || typeof state.paymentLog !== 'object'){
+    // كل دفعة اشتراك بتاريخها (الدفعات القديمة بتتقري من payments/paymentDates لحد ما تتعدّل)
+    state.paymentLog = {};
     changed = true;
   }
   (state.commitments||[]).forEach(c=>{
@@ -1637,7 +1739,8 @@ function renderStatement(keepScroll){
 
   if(edit){
     html += `<div class="pp-actions" style="padding:10px 14px 0;">
-      ${cur ? `<button type="button" class="pp-btn ghost" data-st-moveout="${escapeHtml(apt.id)}">🚪 الساكن مشي</button>`
+      ${cur ? `<button type="button" class="pp-btn ghost" data-st-door="${escapeHtml(apt.id)}">🖨 ورقة الباب</button>` : ''}
+      ${!edit ? '' : cur ? `<button type="button" class="pp-btn ghost" data-st-moveout="${escapeHtml(apt.id)}">🚪 الساكن مشي</button>`
             : `<button type="button" class="pp-btn" data-st-movein="${escapeHtml(apt.id)}">🏠 ساكن جديد</button>`}
     </div>`;
   }
@@ -1660,20 +1763,31 @@ function renderStatement(keepScroll){
     if(!months.length) html += `<div class="pp-foot">لسه مفيش شهور عليه.</div>`;
     months.slice().reverse().forEach(mk=>{
       const sub = subscriptionFor(apt, mk);
-      const paid = (state.payments[mk]||{})[apt.id] || 0;
-      const date = (state.paymentDates[mk]||{})[apt.id] || '';
+      const entries = paymentEntries(mk, apt.id);
+      const paid = entries.reduce((s,x)=> s + x.amount, 0);
       due += sub; paidSum += paid;
-      const st = paid >= sub ? `<span class="pp-badge ok">مدفوع</span>` : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`;
+      const st = paid >= sub ? `<span class="pp-badge ok">مدفوع</span>` : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)} — باقي ${fmt(sub - paid)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`;
+      const oneDate = !edit && entries.length === 1 ? ' · ' + escapeHtml(entries[0].date) : '';
       html += `<div class="pp-row st-row">
-        <span class="k">${monthLabel(mk)}<small>${st}${date && !edit ? ' · ' + escapeHtml(date) : ''}</small></span>
+        <span class="k">${monthLabel(mk)}<small>${st}${oneDate}</small></span>
         ${edit ? `<span class="st-edit">
-            <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="المدفوع">
-            <input type="date" class="st-date" data-st-date="${mk}" value="${escapeHtml(date)}" aria-label="تاريخ الدفع">
-            ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع كامل">✔</button>` : ''}
-            ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح الدفعة">✕</button>` : ''}
+            <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="إجمالي المدفوع" title="إجمالي المدفوع للشهر — الزيادة بتتسجّل دفعة جديدة بتاريخ التحصيل">
+            ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع الباقي (${fmt(sub - paid)})">✔</button>` : ''}
+            ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح كل دفعات الشهر">✕</button>` : ''}
           </span>`
         : `<span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>`}
       </div>`;
+      // كل دفعة بتاريخها (لو دفع على مرتين أو أكتر — أو في وضع التعديل عشان تقدر تغيّر التاريخ)
+      if(edit || entries.length > 1) entries.forEach((x, i)=>{
+        html += `<div class="pp-row st-row sub"><span class="k"><small>دفعة ${entries.length > 1 ? (i+1) : ''}</small></span>${edit
+          ? `<span class="st-edit">
+              <input type="number" min="0" class="st-in" data-st-e-amt="${mk}|${i}" value="${x.amount}" aria-label="مبلغ الدفعة">
+              <input type="date" class="st-date" data-st-e-date="${mk}|${i}" value="${escapeHtml(x.date)}" aria-label="تاريخ الدفعة">
+              ${accSelectHtml(`class="st-acc" data-st-e-acc="${mk}|${i}" aria-label="الفلوس مع مين"`, accOf(x))}
+              <button type="button" class="st-mini del" data-st-e-del="${mk}|${i}" title="مسح الدفعة دي">✕</button>
+            </span>`
+          : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date)} · ${escapeHtml(accName(accOf(x)))}</small></span>`}</div>`;
+      });
     });
 
     if(commits.length){
@@ -1692,9 +1806,10 @@ function renderStatement(keepScroll){
             ? `<span class="st-edit">
                 <input type="number" min="0" class="st-in" data-st-cp-amt="${escapeHtml(x.id)}" value="${x.amount}">
                 <input type="date" class="st-date" data-st-cp-date="${escapeHtml(x.id)}" value="${escapeHtml(x.date||'')}">
+                ${accSelectHtml(`class="st-acc" data-st-cp-acc="${escapeHtml(x.id)}" aria-label="الفلوس مع مين"`, accOf(x))}
                 <button type="button" class="st-mini del" data-st-cp-del="${escapeHtml(x.id)}" title="مسح الدفعة">✕</button>
               </span>`
-            : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date||'')}</small></span>`}</div>`;
+            : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date||'')} · ${escapeHtml(accName(accOf(x)))}</small></span>`}</div>`;
         });
         if(edit) html += `<div class="st-edit add">
             <input type="number" min="0" class="st-in" data-st-cp-new="${escapeHtml(c.id)}" placeholder="${fmt(Math.max(0, cDue - cPaid))}">
@@ -1708,7 +1823,7 @@ function renderStatement(keepScroll){
     html += `<div class="pp-row total"><span class="k">المطلوب ${fmt(due)} · المدفوع ${fmt(paidSum)}</span><span class="v num" style="color:${left>0?'var(--bad)':'var(--good)'}">${left>0 ? 'باقي ' + fmt(left) : left<0 ? 'زيادة ' + fmt(-left) : 'خالص ✓'}</span></div>
       </div>`;
   });
-  if(edit) html += `<div class="pp-foot" style="padding:8px 16px 0;">أي دفعة جديدة من هنا بتتسجّل بتاريخ التحصيل المختار (${escapeHtml(collectDate)})، وتقدر تغيّر التاريخ من الخانة اللي جنبها.</div>`;
+  if(edit) html += `<div class="pp-foot" style="padding:8px 16px 0;">الخانة اللي جنب الشهر هي إجمالي المدفوع: لو زوّدته، الزيادة بس بتتسجّل دفعة جديدة بتاريخ التحصيل المختار (${escapeHtml(collectDate)}) في خزنة «${escapeHtml(accName(curAcc()))}» والدفعات اللي قبلها بتفضل بتواريخها. تحتها كل دفعة لوحدها وتقدر تعدّل مبلغها أو تاريخها.</div>`;
 
   const ov = openPopup('statementPopup', html);
   ov.querySelector('.popup-box').scrollTop = scroll;
@@ -1718,26 +1833,42 @@ function renderStatement(keepScroll){
 
 function bindStatementEvents(ov, apt){
   const done = ()=>{ persist(); renderAll(); };
-  const setPay = (mk, val, date)=>{
-    if(!state.payments[mk]) state.payments[mk] = {};
-    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-    if(val > 0){
-      state.payments[mk][apt.id] = val;
-      state.paymentDates[mk][apt.id] = date || state.paymentDates[mk][apt.id] || collectDate;
-    } else {
-      delete state.payments[mk][apt.id];
-      delete state.paymentDates[mk][apt.id];
-    }
-  };
+  const setPay = (mk, val, date)=> setMonthPaid(mk, apt.id, val, date || collectDate);
   ov.querySelectorAll('[data-st-pay]').forEach(inp=> inp.addEventListener('change', ()=>{
     if(!unlocked) return;
     setPay(inp.dataset.stPay, Math.max(0, Number(inp.value)||0)); done();
   }));
-  ov.querySelectorAll('[data-st-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+  // تعديل دفعة واحدة (مبلغها/تاريخها/مسحها) — الإجمالي بيتظبط لوحده
+  const editEntry = (ref, fn)=>{
+    const [mk, i] = ref.split('|');
+    const list = paymentEntries(mk, apt.id);
+    if(!list[Number(i)]) return;
+    fn(list, Number(i));
+    writePaymentEntries(mk, apt.id, list); done();
+  };
+  ov.querySelectorAll('[data-st-e-amt]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!unlocked) return;
+    const v = Number(inp.value)||0;
+    if(v <= 0){ alert('لو عايز تشيل الدفعة دوس ✕'); renderStatement(true); return; }
+    editEntry(inp.dataset.stEAmt, (list, i)=> list[i].amount = v);
+  }));
+  ov.querySelectorAll('[data-st-e-date]').forEach(inp=> inp.addEventListener('change', ()=>{
     if(!unlocked || !inp.value) return;
-    const mk = inp.dataset.stDate;
-    if(!((state.payments[mk]||{})[apt.id] > 0)){ alert('سجّل المبلغ الأول'); renderStatement(true); return; }
-    state.paymentDates[mk][apt.id] = inp.value; done();
+    editEntry(inp.dataset.stEDate, (list, i)=> list[i].date = inp.value);
+  }));
+  ov.querySelectorAll('[data-st-e-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
+    if(!unlocked) return;
+    editEntry(sel.dataset.stEAcc, (list, i)=> list[i].acc = sel.value);
+  }));
+  ov.querySelectorAll('[data-st-cp-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
+    if(!unlocked) return;
+    const x = findCp(sel.dataset.stCpAcc); if(!x) return;
+    x.acc = sel.value; done();
+  }));
+  ov.querySelectorAll('[data-st-e-del]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    if(!confirm('تمسح الدفعة دي؟')) return;
+    editEntry(b.dataset.stEDel, (list, i)=> list.splice(i, 1));
   }));
   ov.querySelectorAll('[data-st-full]').forEach(b=> b.addEventListener('click', ()=>{
     if(!unlocked) return;
@@ -1774,7 +1905,7 @@ function bindStatementEvents(ov, apt){
     const v = Number(inp && inp.value) || Number(inp && inp.placeholder.replace(/,/g,'')) || 0;
     if(v <= 0){ alert('اكتب المبلغ'); return; }
     if(!state.commitmentPayments) state.commitmentPayments = [];
-    state.commitmentPayments.push({id:'cp'+Date.now(), commitmentId:c.id, aptId:c.aptId, date:collectDate, amount:v});
+    state.commitmentPayments.push({acc: curAcc(), id:'cp'+Date.now(), commitmentId:c.id, aptId:c.aptId, date:collectDate, amount:v});
     done();
   }));
   ov.querySelectorAll('[data-st-commit-del]').forEach(b=> b.addEventListener('click', ()=>{
@@ -1786,7 +1917,150 @@ function bindStatementEvents(ov, apt){
     done();
   }));
   ov.querySelectorAll('[data-st-moveout]').forEach(b=> b.addEventListener('click', ()=> showMoveOut(b.dataset.stMoveout)));
+  ov.querySelectorAll('[data-st-door]').forEach(b=> b.addEventListener('click', ()=>{
+    const r = residentsOf(apt).find(x=> x.current);
+    if(r) printDoorNotices([doorNoticeFor(r)], 'half');
+  }));
   ov.querySelectorAll('[data-st-movein]').forEach(b=> b.addEventListener('click', ()=> showMoveIn(b.dataset.stMovein)));
+}
+
+/* ---------------- دفعات الاشتراك بتواريخها ----------------
+   payments[mk][apt] = إجمالي المدفوع للشهر (هو اللي بيدخل في كل الحسابات زي ما هو)،
+   وpaymentLog[mk][apt] = [{amount, date}] — كل دفعة لوحدها بتاريخها.
+   مثال: دفع 300 يوم 5/10 وبعدين 200 يوم 10/11 ← دفعتين، مش 500 بتاريخ النهارده.
+   لو الإجمالي اتغيّر من مكان مش عارف الدفعات (نسخة قديمة من البرنامج مثلًا) بنظبط الفرق:
+   الزيادة بتتسجّل دفعة بآخر تاريخ معروف، والنقص بيتشال من آخر دفعات. */
+function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+
+/* ---------------- الخزن (مين معاه الفلوس) ----------------
+   كل حركة فلوس (تحصيل، سداد التزام، مصروف، حركة يدوية، صرف أسانسير) عليها acc = الخزنة اللي الفلوس دخلتها أو خرجت منها،
+   والتحويلات (state.transfers) بتنقل فلوس من خزنة لخزنة من غير ما تغيّر رصيد الصندوق الكلي.
+   أي حركة قديمة من غير خزنة بتتحسب على الخزنة الأولى، وتقدر تغيّرها من دفتر الصندوق. */
+const DEFAULT_ACCOUNTS = [
+  {id:'me', name:'معايا', icon:'👤'},
+  {id:'market', name:'السوبر ماركت', icon:'🏪'},
+  {id:'bakr', name:'بكر', icon:'🧑'},
+];
+function accountsList(){ return state.settings.accounts || []; }
+function defaultAccId(){ return (accountsList()[0]||{}).id || 'me'; }
+function validAcc(id){ return !!id && accountsList().some(a=> a.id===id); }
+function accOf(rec){ return rec && validAcc(rec.acc) ? rec.acc : defaultAccId(); }
+function accName(id){
+  const a = accountsList().find(x=> x.id===id) || accountsList()[0] || {name:'—'};
+  return (a.icon ? a.icon + ' ' : '') + a.name;
+}
+function curAcc(){ if(!validAcc(cashAcc)) cashAcc = defaultAccId(); return cashAcc; }
+function setCurAcc(id){
+  if(!validAcc(id)) return;
+  cashAcc = id;
+  try{ localStorage.setItem('cashAcc', id); }catch(e){}
+}
+function accSelectHtml(attrs, selected){
+  return `<select ${attrs}>${accountsList().map(a=> `<option value="${escapeHtml(a.id)}" ${a.id===selected?'selected':''}>${escapeHtml(accName(a.id))}</option>`).join('')}</select>`;
+}
+function syncOpeningTotal(){
+  state.settings.openingBalance = round2(accountsList().reduce((t,a)=> t + (Number(a.opening)||0), 0));
+}
+/* كل حركات الفلوس بخزنتها — منها بيتحسب رصيد كل خزنة ودفتر الصندوق */
+function cashMovements(){
+  const list = [];
+  (state.fundLedger||[]).forEach(f=> list.push({acc: accOf(f), amount: Number(f.amount)||0}));
+  Object.entries(state.payments||{}).forEach(([mk, obj])=> Object.keys(obj||{}).forEach(aptId=>
+    paymentEntries(mk, aptId).forEach(x=> list.push({acc: accOf(x), amount: x.amount}))));
+  (state.commitmentPayments||[]).forEach(cp=>{
+    const c = (state.commitments||[]).find(x=> x.id===cp.commitmentId);
+    list.push({acc: accOf(cp), amount: (c && !c.aptId) ? -(Number(cp.amount)||0) : (Number(cp.amount)||0)});
+  });
+  (state.expenses||[]).forEach(e=> list.push({acc: accOf(e), amount: -(Number(e.amount)||0)}));
+  (state.elevatorSpends||[]).forEach(sp=> list.push({acc: accOf(sp), amount: -(Number(sp.amount)||0)}));
+  (state.transfers||[]).forEach(t=>{
+    const amt = Number(t.amount)||0;
+    list.push({acc: validAcc(t.from) ? t.from : defaultAccId(), amount: -amt});
+    list.push({acc: validAcc(t.to) ? t.to : defaultAccId(), amount: amt});
+  });
+  return list;
+}
+function computeAccountBalances(){
+  const bal = {};
+  accountsList().forEach(a=> bal[a.id] = Number(a.opening)||0);
+  cashMovements().forEach(m=> bal[m.acc] = round2((bal[m.acc]||0) + m.amount));
+  return bal;
+}
+function accountUsed(id){
+  if(id === defaultAccId()) return true;
+  const hit = r=> r && r.acc === id;
+  return (state.fundLedger||[]).some(hit) || (state.commitmentPayments||[]).some(hit) || (state.expenses||[]).some(hit)
+    || (state.elevatorSpends||[]).some(hit) || (state.transfers||[]).some(t=> t.from===id || t.to===id)
+    || Object.values(state.paymentLog||{}).some(o=> Object.values(o||{}).some(l=> Array.isArray(l) && l.some(hit)));
+}
+// شريط التاريخ + الخزنة اللي فوق تبويبات التحصيل والالتزامات والمتأخرات
+function tplCashStrip(dateLabel, dateId){
+  return `<div class="card cash-strip">
+    <label>📅 ${dateLabel}</label>
+    <input type="date" id="${dateId}" class="cash-date-input" value="${collectDate}">
+    <label>💼 الفلوس مع مين</label>
+    ${accSelectHtml('class="cash-acc-input" aria-label="الخزنة"', curAcc())}
+  </div>`;
+}
+function paymentEntries(mk, aptId){
+  const total = round2((state.payments[mk]||{})[aptId]);
+  if(total <= 0) return [];
+  const raw = ((state.paymentLog||{})[mk]||{})[aptId];
+  const fallback = ((state.paymentDates||{})[mk]||{})[aptId] || (mk + '-01');
+  const list = (Array.isArray(raw) ? raw : [])
+    .filter(x=> x && Number(x.amount) > 0)
+    .map(x=> ({amount: round2(x.amount), date: x.date || fallback, acc: x.acc}));
+  const sum = round2(list.reduce((s,x)=> s + x.amount, 0));
+  if(sum < total) list.push({amount: round2(total - sum), date: fallback});
+  else if(sum > total) trimPaymentEntries(list, round2(sum - total));
+  return sortPaymentEntries(list);
+}
+function sortPaymentEntries(list){
+  return list.map((x,i)=> [x,i]).sort((a,b)=> a[0].date.localeCompare(b[0].date) || a[1]-b[1]).map(p=> p[0]);
+}
+// بيشيل مبلغ من آخر الدفعات (الأحدث الأول)
+function trimPaymentEntries(list, excess){
+  sortPaymentEntries(list).reverse().forEach(x=>{
+    if(excess <= 0) return;
+    const cut = Math.min(x.amount, excess);
+    x.amount = round2(x.amount - cut); excess = round2(excess - cut);
+  });
+  for(let i = list.length - 1; i >= 0; i--) if(list[i].amount <= 0) list.splice(i, 1);
+  return list;
+}
+function writePaymentEntries(mk, aptId, list){
+  list = sortPaymentEntries(list.filter(x=> x && round2(x.amount) > 0).map(x=>{
+    const e = {amount: round2(x.amount), date: x.date || (mk + '-01')};
+    if(x.acc) e.acc = x.acc;
+    return e;
+  }));
+  if(!state.payments[mk]) state.payments[mk] = {};
+  if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
+  if(!state.paymentLog) state.paymentLog = {};
+  if(!state.paymentLog[mk]) state.paymentLog[mk] = {};
+  if(!list.length){
+    delete state.payments[mk][aptId];
+    delete state.paymentDates[mk][aptId];
+    delete state.paymentLog[mk][aptId];
+    return;
+  }
+  state.payments[mk][aptId] = round2(list.reduce((s,x)=> s + x.amount, 0));
+  state.paymentDates[mk][aptId] = list[list.length-1].date;     // آخر دفعة (للتوافق مع النسخ القديمة)
+  state.paymentLog[mk][aptId] = list;
+}
+/* تغيير إجمالي المدفوع للشهر: الزيادة بس هي اللي بتتسجّل دفعة جديدة بالتاريخ ده،
+   والدفعات اللي قبلها بتفضل بتواريخها. النقص بيتشال من آخر دفعات. */
+function setMonthPaid(mk, aptId, newTotal, date, acc){
+  const list = paymentEntries(mk, aptId);
+  const old = round2(list.reduce((s,x)=> s + x.amount, 0));
+  newTotal = Math.max(0, round2(newTotal));
+  if(newTotal > old) list.push({amount: round2(newTotal - old), date: date || collectDate, acc: acc || curAcc()});
+  else if(newTotal < old) trimPaymentEntries(list, round2(old - newTotal));
+  writePaymentEntries(mk, aptId, list);
+}
+// "300 (5/10) + 200 (10/11)"
+function paymentEntriesText(entries){
+  return entries.map(x=> fmt(x.amount) + ' (' + shortDate(x.date) + ')').join(' + ');
 }
 
 function statusFor(apt, monthKey){
@@ -1926,20 +2200,16 @@ function settleArrearsFor(key){
   const apt = r.apt;
   const asOf = arrearsAsOfMonth();
   residentMonths(r, asOf).forEach(mk=>{
-    if(!state.payments[mk]) state.payments[mk] = {};
-    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-    const paid = state.payments[mk][apt.id] || 0;
+    const paid = (state.payments[mk]||{})[apt.id] || 0;
     const sub = subscriptionFor(apt, mk);
-    if(paid < sub){
-      state.payments[mk][apt.id] = sub;
-      state.paymentDates[mk][apt.id] = collectDate; // تاريخ التحصيل المختار، مش النهارده بالعافية
-    }
+    // الباقي بس بيتسجّل دفعة بتاريخ التحصيل المختار، واللي اتدفع قبل كده بيفضل بتاريخه
+    if(paid < sub) setMonthPaid(mk, apt.id, sub, collectDate);
   });
   residentCommitments(r).filter(c=> c.startMonth<=asOf).forEach(c=>{
     const rem = commitmentRemaining(c, asOf);
     if(rem>0){
       if(!state.commitmentPayments) state.commitmentPayments=[];
-      state.commitmentPayments.push({
+      state.commitmentPayments.push({acc: curAcc(), 
         id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
         commitmentId:c.id, aptId:c.aptId, date: collectDate, amount: rem
       });
@@ -1962,10 +2232,7 @@ function editArrearOwed(aptId, key, newOwedRaw){
       renderAll();
       return;
     }
-    if(!state.payments[mk]) state.payments[mk] = {};
-    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-    state.payments[mk][apt.id] = sub - newOwed;
-    state.paymentDates[mk][apt.id] = collectDate;
+    setMonthPaid(mk, apt.id, sub - newOwed, collectDate);
   } else if(key.startsWith('c:')){
     // بند التزام (دين/قسط): بنسجّل الفرق كسداد أو كإضافة على الالتزام عشان يظبط المتبقي على القيمة الجديدة
     const commitId = key.slice(2);
@@ -1975,7 +2242,7 @@ function editArrearOwed(aptId, key, newOwedRaw){
     const delta = oldRem - newOwed;
     if(delta !== 0){
       if(!state.commitmentPayments) state.commitmentPayments = [];
-      state.commitmentPayments.push({
+      state.commitmentPayments.push({acc: curAcc(), 
         id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
         commitmentId: c.id, aptId: c.aptId, date: collectDate, amount: delta
       });
@@ -2018,14 +2285,11 @@ function useElevatorShareForApt(aptId, amount){
   months.forEach(mk=>{
     if(remaining<=0) return;
     if(!isOccupiedInMonth(apt, mk)) return;
-    if(!state.payments[mk]) state.payments[mk] = {};
-    if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-    const paid = state.payments[mk][apt.id] || 0;
+    const paid = (state.payments[mk]||{})[apt.id] || 0;
     const owed = subscriptionFor(apt, mk) - paid;
     if(owed>0){
       const pay = Math.min(owed, remaining);
-      state.payments[mk][apt.id] = paid + pay;
-      state.paymentDates[mk][apt.id] = todayStr();
+      setMonthPaid(mk, apt.id, paid + pay, todayStr());
       remaining -= pay;
     }
   });
@@ -2037,7 +2301,7 @@ function useElevatorShareForApt(aptId, amount){
       if(rem>0){
         const pay = Math.min(rem, remaining);
         if(!state.commitmentPayments) state.commitmentPayments=[];
-        state.commitmentPayments.push({
+        state.commitmentPayments.push({acc: curAcc(), 
           id:'cp'+Date.now()+Math.random().toString(36).slice(2,6),
           commitmentId:c.id, aptId:c.aptId, date: currentMonth+'-01', amount: pay
         });
@@ -2048,7 +2312,7 @@ function useElevatorShareForApt(aptId, amount){
   const used = amount - remaining;
   if(used>0){
     if(!state.elevatorSpends) state.elevatorSpends=[];
-    state.elevatorSpends.push({
+    state.elevatorSpends.push({acc: curAcc(), 
       id:'esp'+Date.now()+Math.random().toString(36).slice(2,6),
       date: currentMonth+'-01',
       note: 'خصم نصيب '+(residentNameFor(apt, currentMonth)||apt.id)+' من رصيد الأسانسير في سداد المستحق عليه',
@@ -2208,6 +2472,7 @@ function tplKindReview(){
 
 /* سطر صغير في المصروفات والالتزامات بيودّي على المراجعة في الإعدادات (بيختفي لما كله يتصنّف) */
 function tplKindReviewHint(){
+  if(!unlocked) return '';
   const count = unclassifiedRecords().length;
   if(!count) return '';
   return `<div class="note-strip" data-goto-settings style="cursor:pointer;">🏷 فيه ${count} مصروف/التزام قديم محتاج يتصنّف — اضغط هنا للمراجعة في ⚙️ الإعدادات ›</div>`;
@@ -2471,7 +2736,7 @@ function waterSourceNote(w, mk){
   const txt = {
     expenses: 'من المصروفات المتسجّلة في الشهر ده.',
     commitment: 'من التزام المياه بتاع الشهر ده (الإيصال) — لو اتدفع بالكامل بيتحسب المدفوع فعلًا، ولو لسه بيتحسب مبلغ الإيصال.',
-    estimate: 'لسه مفيش فاتورة مياه لـ' + monthLabel(mk) + '، فده تقدير من آخر فاتورة (' + (w.fromMonth ? monthLabel(w.fromMonth) : '') + ') لحد ما الإيصال ييجي وتسجّله كالتزام.',
+    estimate: 'لسه مفيش فاتورة مياه لـ' + monthLabel(mk) + '، فده تقدير من آخر فاتورة (' + (w.fromMonth ? monthLabel(w.fromMonth) : '') + ') لحد ما الإيصال ييجي.',
     none: 'مفيش فاتورة مياه متسجّلة لسه — سجّل الإيصال كالتزام عام على العمارة ونوعه "مياه".'
   }[w.source];
   return `<div class="pp-note">${escapeHtml(txt)}</div>`;
@@ -2514,7 +2779,7 @@ function showSharesPopup(){
         ${shown.filter(l=> l.total > 0).map(l=> `<div>${escapeHtml(kindName(l.kind.key))}</div><div class="n">${l.sub ? fmt1(l.sub) : '—'}</div><div class="n">${l.non ? fmt1(l.non) : '—'}</div>`).join('')}
         <div class="tot">الإجمالي</div><div class="n tot">${fmt(s.subscriber)}</div><div class="n tot">${fmt(s.nonSubscriber)}</div>
       </div>
-      <div class="pp-foot">طريقة تقسيم كل بند بتتغيّر من تبويب الإعدادات.</div>
+      ${unlocked ? '<div class="pp-foot">طريقة تقسيم كل بند بتتغيّر من تبويب الإعدادات.</div>' : ''}
     </div>`;
 
   shown.forEach(l=>{
@@ -2544,7 +2809,7 @@ function showSharesPopup(){
         if(r.beforeFirst > 0) html += `<div class="pp-foot">${r.beforeFirst} يوم في الشهر قبل أول شحنة متسجّلة (${shortDate(r.first)}) مش محسوبين.</div>`;
         html += row('كهرباء الكارت في ' + monthLabel(s.mk), fmt(r.cardAmount), 'total',
           (r.estimate > 0 && r.actual > 0) ? `${fmt(r.actual)} فعلي + ${fmt(r.estimate)} تقدير` : '');
-        if(r.estimate > 0) html += `<div class="pp-foot">التقدير = متوسط استهلاك اليوم من أول شحنة لآخر شحنة، وبيتظبط لوحده أول ما تسجّل الشحنة الجاية.</div>`;
+        if(r.estimate > 0) html += `<div class="pp-foot">التقدير = متوسط استهلاك اليوم من أول شحنة لآخر شحنة، وبيتظبط لوحده مع الشحنة الجاية.</div>`;
       } else {
         html += `<div class="pp-note">لسه مفيش شحنتين بتاريخين مختلفين عشان نحسب متوسط اليوم، فبنستخدم الشحنات اللي اتدفعت فعلًا في الشهر ده.</div>`;
         html += r.charges.map(c=> row(escapeHtml(c.note), fmt(c.amount), '', escapeHtml(c.date))).join('');
@@ -2552,7 +2817,7 @@ function showSharesPopup(){
       if(r.extras.length) html += `<div class="pp-subtitle">التزامات كهرباء على الشهر ده</div>` + itemRows(r.extras);
     } else if(r.source==='fixed'){
       html += `<div class="pp-note">مبلغ ثابت <b class="num">${fmt(kind.fixedMonthly)}</b> جنيه كل شهر. اتدفع منه لحد دلوقتي <b class="num">${fmt(r.paid)}</b> — الدفعات للمتابعة بس ومش بتغيّر النصيب.</div>`
-        + (r.paid > Number(kind.fixedMonthly) ? `<div class="pp-note warn">المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.</div>` : '')
+        + (unlocked && r.paid > Number(kind.fixedMonthly) ? `<div class="pp-note warn">المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.</div>` : '')
         + itemRows(r.items);
     } else if(r.source==='none' && Number(kind.fixedMonthly) > 0){
       html += `<div class="pp-note">مبلغ ثابت شهريًا، بس بيبدأ من أول شهر اتسجّل فيه النوع ده (بعد الشهر ده).</div>`;
@@ -2813,7 +3078,9 @@ function renderOverviewData(){
 
   const balanceHero = document.getElementById('balanceHero');
   balanceHero.classList.toggle('balance-neg', balance<0);
-  balanceHero.innerHTML = `<span class="icon3d lg gold" style="margin-bottom:6px;">🏦</span><div class="lbl">رصيد الصندوق</div><div class="val num">${fmt(balance)} <span style="font-size:14px;font-weight:400">جنيه</span></div>`;
+  const accBal = computeAccountBalances();
+  balanceHero.innerHTML = `<span class="icon3d lg gold" style="margin-bottom:6px;">🏦</span><div class="lbl">رصيد الصندوق</div><div class="val num">${fmt(balance)} <span style="font-size:14px;font-weight:400">جنيه</span></div>
+    <div class="hero-accs">${accountsList().map(a=> `<span class="hero-acc ${accBal[a.id]<0?'neg':''}">${escapeHtml(accName(a.id))} <b class="num">${fmt(accBal[a.id]||0)}</b></span>`).join('')}</div>`;
 
   const stats = document.getElementById('stats');
   stats.innerHTML = `
@@ -2848,17 +3115,12 @@ function quickTogglePaid(aptId){
   if(!unlocked) return;
   const apt = state.apartments.find(a=>a.id===aptId);
   if(!apt) return;
-  if(!state.payments[currentMonth]) state.payments[currentMonth]={};
-  if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
-  const current = state.payments[currentMonth][aptId]||0;
+  const current = (state.payments[currentMonth]||{})[aptId]||0;
   const sub = subscriptionFor(apt, currentMonth);
   const goingToZero = current>=sub;
-  state.payments[currentMonth][aptId] = goingToZero ? 0 : sub;
-  if(goingToZero){
-    delete state.paymentDates[currentMonth][aptId];
-  } else {
-    state.paymentDates[currentMonth][aptId] = collectDate;
-  }
+  if(goingToZero && !confirm('تمسح كل دفعات ' + monthLabel(currentMonth) + ' للشقة ' + aptId + '؟')) return;
+  // "دفع كامل" بيسجّل الباقي بس كدفعة جديدة — اللي اتدفع قبل كده بيفضل بتاريخه
+  setMonthPaid(currentMonth, aptId, goingToZero ? 0 : sub, collectDate);
   persist();
   renderAll();
 }
@@ -2875,7 +3137,13 @@ function renderAll(){
   // أزرار النسخة الاحتياطية/الاسترجاع ظاهرة بس في وضع التعديل (بعد الرمز السري)
   const backupRow = document.getElementById('backupRow');
   if(backupRow) backupRow.style.display = unlocked ? 'flex' : 'none';
-  let banner = unlocked ? '' : `<div class="view-only-banner">👁 وضع العرض فقط</div>`;
+  document.body.classList.toggle('view-mode', !unlocked);
+  // تبويبات الإدارة (التحصيل، الشقق، الإعدادات) مش بتظهر للسكان
+  if(!unlocked && ['collect','apts','settings'].includes(currentTab)){
+    currentTab = 'overview';
+    document.querySelectorAll('#tabbar button').forEach(b=> b.classList.toggle('active', b.dataset.tab==='overview'));
+  }
+  const banner = '';
   if(currentTab==='overview') c.innerHTML = banner + tplOverview();
   if(currentTab==='collect') c.innerHTML = banner + tplCollect();
   if(currentTab==='balance') c.innerHTML = banner + tplResidentsBalance();
@@ -2911,10 +3179,7 @@ function tplCollect(){
   const groups = apartmentsByFloor();
   const visibleCommitIds = collectTabCommitmentIds();
   const selCount = visibleCommitIds.filter(id=>selectedCommitIds.has(id)).length;
-  let html = `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-    <label style="font-size:12.5px;color:var(--ink-soft);">📅 تاريخ التحصيل (هيتسجّل بيه أي دفع جديد)</label>
-    <input type="date" id="collectDateInput" value="${collectDate}">
-  </div>`;
+  let html = tplCashStrip('تاريخ التحصيل', 'collectDateInput');
   if(visibleCommitIds.length>0){
     html += `<div style="display:flex; justify-content:flex-end; align-items:center; margin:8px 0; gap:8px; flex-wrap:wrap;">
       <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
@@ -3017,14 +3282,14 @@ function tplElevatorFundBlock(){
     });
   }
   html += `</div>`;
-  if(settleableSubs.length>0){
+  if(settleableSubs.length>0 && unlocked){
     html += `
     <div class="section-title">✅ خصم نصيب المشتركين من المستحق عليهم</div>
     <div class="card">
       <button type="button" id="settleAllElevatorShares" style="margin-top:8px;">خصم نصيب كل المشتركين من المستحق عليهم (${settleableSubs.length} شقة)</button>
     </div>`;
   }
-  html += `
+  if(unlocked) html += `
     <div class="section-title">💳 صرف من رصيد الأسانسير</div>
     <div class="card">
       <form id="elevatorSpendForm" class="inline">
@@ -3034,6 +3299,7 @@ function tplElevatorFundBlock(){
         </select>
         <input type="number" name="amount" placeholder="المبلغ (لو مش هتصرف الكل)">
         <input type="text" name="note" placeholder="البيان (مثلاً: شراء واير أسانسير)">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">💼 اتصرف من ${accSelectHtml('name="acc"', curAcc())}</label>
         <button type="submit">صرف</button>
       </form>
     </div>`;
@@ -3043,14 +3309,11 @@ function tplElevatorFundBlock(){
 function tplCommitmentsBlock(){
   const commitments = (state.commitments||[]).filter(c=>!c.aptId);
   const selCount = commitments.filter(c=>selectedCommitIds.has(c.id)).length;
-  let html = tplKindReviewHint() + `<div class="card" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-    <label style="font-size:12.5px;color:var(--ink-soft);">📅 تاريخ السداد (هيتسجّل بيه أي دفع جديد)</label>
-    <input type="date" id="commitDateInput" value="${collectDate}">
-  </div>`;
+  let html = tplKindReviewHint() + tplCashStrip('تاريخ السداد', 'commitDateInput');
   html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">تقرير الالتزامات العامة على العمارة (ديون وفواتير قديمة بدون شقة)</div>
       ${commitments.length>0 ? `
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div class="edit-only" style="display:flex; align-items:center; gap:8px;">
         <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
           <input type="checkbox" id="selectAllCommits" class="bulk-checkbox" ${selCount>0 && selCount===commitments.length ? 'checked':''}>
           تحديد الكل
@@ -3114,8 +3377,8 @@ function tplCommitmentsBlock(){
     });
   }
   html += `</div>
-    <div class="section-title">إضافة التزام يدوي (زي فاتورة قديمة)</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة التزام يدوي (زي فاتورة قديمة)</div>
+    <div class="card edit-only">
       <form id="commitForm" class="inline">
         <select name="aptId">
           <option value="">— بدون شقة (التزام عام على العمارة)</option>
@@ -3136,8 +3399,8 @@ function tplCommitmentsBlock(){
       </form>
     </div>
 
-    <div class="section-title">📢 تجميع فلوس لمشروع (كاميرات، صيانة، إلخ)</div>
-    <div class="card">
+    <div class="section-title edit-only">📢 تجميع فلوس لمشروع (كاميرات، صيانة، إلخ)</div>
+    <div class="card edit-only">
       <form id="campaignForm" class="inline">
         <input type="text" name="title" placeholder="اسم المشروع (مثلاً: كاميرات مراقبة)" required>
         <input type="number" name="totalAmount" placeholder="إجمالي المبلغ المطلوب" required min="1">
@@ -3162,11 +3425,11 @@ function tplResidentsBalance(){
 function tplArrearsReport(){
   const arrears = computeArrears();
   const selCount = arrears.filter(a=>selectedArrearApts.has(a.key)).length;
-  let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
+  let html = (unlocked ? tplCashStrip('تاريخ التحصيل (للتسوية)', 'arrearsDateInput') : '') + `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">مين لسه مدفعش (وأي شهور)</div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         ${arrears.length>0 ? `
-        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+        <label class="edit-only" style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
           <input type="checkbox" id="selectAllArrears" class="bulk-checkbox" ${selCount>0 && selCount===arrears.length ? 'checked':''}>
           تحديد الكل
         </label>
@@ -3176,6 +3439,7 @@ function tplArrearsReport(){
         <button class="export-btn" id="exportReportBtn">⬇ تنزيل Excel</button>
         <button class="export-btn" id="exportPdfBtn" style="background:var(--lit-2);">⬇ تنزيل PDF</button>
         <button class="export-btn" id="sharePdfBtn" style="background:#25a35a;">📤 مشاركة</button>
+        <button class="export-btn edit-only" id="doorNoticesBtn" style="background:var(--night);">🚪 ورق الأبواب</button>
       </div>
     </div>`;
   if(arrears.length===0){
@@ -3200,7 +3464,7 @@ function tplArrearsReport(){
             <th style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.8); font-family:'IBM Plex Mono'; font-size:11.5px; white-space:nowrap; min-width:72px;">${monthLabel(mk)}</th>`).join('')}
             ${hasDebts ? `<th style="padding:10px 8px; text-align:center; color:rgba(255,200,100,.9); font-size:11.5px; white-space:nowrap; min-width:72px;">ديون/التزامات</th>` : ''}
             <th style="padding:10px 10px; text-align:center; color:var(--lit); font-family:'IBM Plex Mono'; font-weight:700; white-space:nowrap;">الإجمالي</th>
-            <th style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap;">تسوية</th>
+            <th class="edit-only" style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap;">تسوية</th>
           </tr>
         </thead>
         <tbody>
@@ -3221,6 +3485,7 @@ function tplArrearsReport(){
                 const item = a.items.find(m=> m.mk===mk);
                 if(!item) return `<td style="padding:8px; text-align:center; color:var(--ink-soft);">—</td>`;
                 const itemKey = 'm:'+mk;
+                if(!unlocked) return `<td style="padding:8px; text-align:center;"><span class="num" style="color:var(--bad); font-weight:700; font-size:12px;">${fmt(item.owed)}</span></td>`;
                 return `<td style="padding:6px 8px; text-align:center;">
                   <input type="number" class="arrear-amount-input" data-arrear-owed="${a.apt.id}::${itemKey}" value="${item.owed}" step="0.01"
                     style="width:68px; text-align:center; font-family:'IBM Plex Mono'; font-size:12px; font-weight:700;
@@ -3237,7 +3502,7 @@ function tplArrearsReport(){
                 <span class="num" style="color:var(--bad); font-weight:700; font-size:13px;">${fmt(a.total)}</span>
               </td>
               <!-- تسوية -->
-              <td style="padding:8px; text-align:center;">
+              <td class="edit-only" style="padding:8px; text-align:center;">
                 <button type="button" class="del" data-settle-apt="${escapeHtml(a.key)}" style="font-size:11px; padding:3px 8px; white-space:nowrap;">✔ سدّد</button>
               </td>
             </tr>`;
@@ -3260,7 +3525,7 @@ function tplArrearsReport(){
             <td style="padding:10px 8px; text-align:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:14px; color:var(--lit);">
               ${fmt(arrears.reduce((s,a)=>s+a.total,0))}
             </td>
-            <td></td>
+            <td class="edit-only"></td>
           </tr>
         </tfoot>
       </table>
@@ -3392,16 +3657,19 @@ function arrearsReportExtrasHtml(arrearsTotal){
 function exportArrearsPDF(){
   const rep = arrearsReportHtml();
   if(!rep){ alert('مفيش متأخرات — كله متسدد 🎉'); return; }
-  const asOf = rep.asOf;
-  document.getElementById('printArea').innerHTML = rep.html;
+  printHtmlPage(rep.html, 'متأخرات-السكان-' + rep.asOf,               // ده اسم ملف الـ PDF المقترح
+    rep.landscape ? '@media print{ @page{ size:A4 landscape; margin:10mm; } }' : null);
+}
+function printHtmlPage(html, title, pageCss){
+  document.getElementById('printArea').innerHTML = html;
   let pageStyle = null;
-  if(rep.landscape){
+  if(pageCss){
     pageStyle = document.createElement('style');
-    pageStyle.textContent = '@media print{ @page{ size:A4 landscape; margin:10mm; } }';
+    pageStyle.textContent = pageCss;
     document.head.appendChild(pageStyle);
   }
   const oldTitle = document.title;
-  document.title = 'متأخرات-السكان-' + asOf;           // ده اسم ملف الـ PDF المقترح
+  document.title = title;
   document.body.classList.add('printing');
   const cleanup = ()=>{
     document.body.classList.remove('printing');
@@ -3520,6 +3788,119 @@ async function shareArrearsPDF(btn){
   }
 }
 
+/* ---------------- ورق الأبواب: كشف حساب كل شقة لوحدها يتعلّق على بابها ----------------
+   ورقتين في صفحة A4 (كل واحدة نص صفحة وبينهم خط قص) أو صفحة كاملة لكل شقة.
+   في كل ورقة: الساكن، المطلوب منه، وكل شهر: الاشتراك، دفع كام يوم كام، والباقي منه. */
+function doorNoticeFor(r){
+  const apt = r.apt, asOf = arrearsAsOfMonth();
+  const months = residentMonths(r, asOf).map(mk=>{
+    const sub = subscriptionFor(apt, mk);
+    const entries = paymentEntries(mk, apt.id);
+    const paid = round2(entries.reduce((s,x)=> s + x.amount, 0));
+    return {mk, sub, entries, paid, owed: Math.max(0, round2(sub - paid))};
+  });
+  const debts = residentCommitments(r).filter(c=> c.startMonth <= asOf)
+    .map(c=> ({c, due: commitmentTotalDue(c, asOf), rem: commitmentRemaining(c, asOf), pays: commitmentPayments(c)}))
+    .filter(x=> x.rem > 0);
+  const total = round2(months.reduce((s,m)=> s + m.owed, 0) + debts.reduce((s,x)=> s + x.rem, 0));
+  return {r, apt, asOf, months, debts, total};
+}
+function currentDoorNotices(){
+  return state.apartments
+    .flatMap(apt=> residentsOf(apt).filter(r=> r.current && isOccupiedInMonth(apt, arrearsAsOfMonth())))
+    .map(doorNoticeFor)
+    .sort((a,b)=> String(a.apt.id).localeCompare(String(b.apt.id), 'en', {numeric:true}));
+}
+function doorCardHtml(d, maxRows){
+  // كل الشهور اللي عليها فلوس + آخر شهرين اتدفعوا (عشان يبان إنه دفع)
+  const paidTail = d.months.filter(m=> m.owed <= 0).slice(-2);
+  let shown = d.months.filter(m=> m.owed > 0 || paidTail.includes(m));
+  const olderPaid = d.months.filter(m=> m.owed <= 0 && !paidTail.includes(m) && (!shown.length || m.mk < shown[shown.length-1].mk)).length;
+  // لو الشهور كتير على الورقة: أقدم الشهور بتتجمع في سطر واحد
+  const room = Math.max(3, maxRows - d.debts.length);
+  let summary = null;
+  if(shown.length > room){
+    const old = shown.slice(0, shown.length - room + 1);
+    shown = shown.slice(shown.length - room + 1);
+    summary = {from: old[0].mk, to: old[old.length-1].mk,
+      sub: old.reduce((s,m)=> s + m.sub, 0), paid: old.reduce((s,m)=> s + m.paid, 0), owed: old.reduce((s,m)=> s + m.owed, 0)};
+  }
+  const payCell = list=> list.length
+    ? list.map(x=> `<span class="dc-pay"><b class="num">${fmt(x.amount)}</b> <small>يوم ${escapeHtml(shortDate(x.date))}</small></span>`).join('')
+    : '<span class="dc-nil">—</span>';
+  const leftCell = v=> v > 0 ? `<td class="c num dc-owed">${fmt(v)}</td>` : `<td class="c dc-ok">✓ خالص</td>`;
+  let rows = '';
+  if(summary) rows += `<tr><td>${monthLabel(summary.from)} ← ${monthLabel(summary.to)}</td><td class="c num">${fmt(summary.sub)}</td>
+      <td class="c">${summary.paid ? '<b class="num">' + fmt(summary.paid) + '</b>' : '<span class="dc-nil">—</span>'}</td>${leftCell(summary.owed)}</tr>`;
+  rows += shown.map(m=> `<tr><td>${monthLabel(m.mk)}</td><td class="c num">${fmt(m.sub)}</td><td class="c">${payCell(m.entries)}</td>${leftCell(m.owed)}</tr>`).join('');
+  rows += d.debts.map(x=> `<tr><td>${escapeHtml(x.c.note || COMMITMENT_TYPES[x.c.type])}<div class="dc-sub">${escapeHtml(COMMITMENT_TYPES[x.c.type])}</div></td>
+      <td class="c num">${fmt(x.due)}</td><td class="c">${payCell(x.pays.map(p=> ({amount: Number(p.amount)||0, date: p.date || ''})))}</td>${leftCell(x.rem)}</tr>`).join('');
+  const opts = String(state.settings.paymentOptions||'').split('\n').map(x=> x.trim()).filter(Boolean);
+  const r = d.r;
+  return `<div class="door-card">
+    <div class="dc-head">
+      <div>
+        <div class="dc-bld">برج الأندلس — كشف حساب</div>
+        <div class="dc-apt">شقة <b class="num">${escapeHtml(d.apt.id)}</b> <span>${escapeHtml(d.apt.floor ? 'الدور ' + d.apt.floor : '')}</span></div>
+        <div class="dc-name">${escapeHtml(r.name || '')}</div>
+      </div>
+      <div class="dc-total ${d.total > 0 ? '' : 'clear'}">
+        ${d.total > 0
+          ? `<span>المطلوب سداده</span><b class="num">${fmt(d.total)}</b><small>جنيه — لحد ${monthLabel(d.asOf)}</small>`
+          : `<span>الحساب</span><b>خالص ✓</b><small>لحد ${monthLabel(d.asOf)}</small>`}
+      </div>
+    </div>
+    <table class="dc-table">
+      <thead><tr><th>الشهر / البند</th><th class="c">المطلوب</th><th class="c">اتدفع (والتاريخ)</th><th class="c">الباقي</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="c dc-nil">مفيش شهور عليه لسه</td></tr>'}</tbody>
+    </table>
+    ${olderPaid > 0 && !summary ? `<div class="dc-sub" style="margin-top:3px;">${olderPaid === 1 ? 'وفيه شهر قبل كده متسدد بالكامل.' : 'وفيه ' + olderPaid + ' شهور قبل كده متسددين بالكامل.'}</div>` : ''}
+    <div class="dc-foot">
+      <div class="dc-msg">${d.total > 0 ? 'برجاء سداد المبلغ المطلوب في أقرب وقت. لو دفعت ومش ظاهر هنا ابلغنا.' : 'شكرًا على التزامك 🌟'}</div>
+      ${opts.length ? `<div class="dc-opts">💳 ${opts.map(escapeHtml).join(' · ')}</div>` : ''}
+      <div class="dc-date">اتطبع يوم ${escapeHtml(todayStr())}</div>
+    </div>
+  </div>`;
+}
+function printDoorNotices(list, layout){
+  if(!list.length){ alert('مفيش شقق للطباعة'); return; }
+  const half = layout !== 'full';
+  const cards = list.map(d=> doorCardHtml(d, half ? 7 : 24));
+  let html = '';
+  if(half){
+    for(let i = 0; i < cards.length; i += 2){
+      html += `<div class="door-page half">${cards[i]}${cards[i+1] ? `<div class="dc-cut"><span>✂ قص هنا</span></div>${cards[i+1]}` : ''}</div>`;
+    }
+  } else {
+    html = cards.map(c=> `<div class="door-page full">${c}</div>`).join('');
+  }
+  printHtmlPage(`<div class="door-sheet">${html}</div>`,
+    list.length === 1 ? 'كشف-حساب-شقة-' + list[0].apt.id : 'ورق-الأبواب-' + arrearsAsOfMonth(),
+    '@media print{ @page{ size:A4 portrait; margin:8mm; } }');
+}
+function showDoorNoticesPopup(){
+  const all = currentDoorNotices();
+  const owing = all.filter(d=> d.total > 0);
+  const ov = openPopup('doorPopup', popupHead('🚪 ورق الأبواب') + `
+    <div class="pp-sec">
+      <div class="pp-note">ورقة لكل شقة فيها اسم الساكن، المطلوب منه، وكل شهر: دفع كام ويوم كام والباقي منه — تتعلّق على باب الشقة. الحسابات لحد ${monthLabel(arrearsAsOfMonth())}.</div>
+      <div class="pp-subtitle">مين</div>
+      <label class="door-opt"><input type="radio" name="doorWho" value="owing" ${owing.length ? 'checked' : ''}> الشقق اللي عليها فلوس بس — <b>${owing.length}</b> شقة</label>
+      <label class="door-opt"><input type="radio" name="doorWho" value="all" ${owing.length ? '' : 'checked'}> كل الشقق المسكونة — <b>${all.length}</b> شقة (اللي خالص بتطلعله ورقة «خالص ✓»)</label>
+      <div class="pp-subtitle">الشكل</div>
+      <label class="door-opt"><input type="radio" name="doorLayout" value="half" checked> ورقتين في الصفحة (A4 بتتقص نصين) — <b>موفّرة</b></label>
+      <label class="door-opt"><input type="radio" name="doorLayout" value="full"> صفحة كاملة لكل شقة (خط أكبر)</label>
+      <div class="pp-actions"><button type="button" class="pp-btn" id="doorPrint">🖨 طباعة / حفظ PDF</button></div>
+      <div class="pp-foot">الساكنين اللي مشيوا مش بيطلعلهم ورق (مالهمش باب) — متأخراتهم في تقرير المتأخرات.</div>
+    </div>`);
+  ov.querySelector('#doorPrint').addEventListener('click', ()=>{
+    const who = (ov.querySelector('input[name="doorWho"]:checked')||{}).value;
+    const layout = (ov.querySelector('input[name="doorLayout"]:checked')||{}).value;
+    closePopup('doorPopup');
+    printDoorNotices(who === 'all' ? all : owing, layout);
+  });
+}
+
 function exportReportCSV(){
   const arrears = computeArrears();
   const totalOwed = arrears.reduce((s,a)=>s+a.total,0);
@@ -3559,8 +3940,8 @@ function tplExpenses(){
   html += `</div>`;
 
   html += `
-    <div class="section-title">إضافة مصروف</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة مصروف</div>
+    <div class="card edit-only">
       <div class="preset-row">
         ${state.billPresets.map(p=>`<div class="preset" data-preset='${JSON.stringify(p)}'>${p.category} · ${fmt(p.amount)}</div>`).join('')}
       </div>
@@ -3569,6 +3950,7 @@ function tplExpenses(){
         ${kindSelectHtml('name="kind" required', '', '— اختار النوع —')}
         <input type="text" name="note" placeholder="الوصف (اكتب براحتك)">
         <input type="number" name="amount" placeholder="المبلغ" required>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">💼 اتصرف من ${accSelectHtml('name="acc"', curAcc())}</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">📎 مرفق (فاتورة/إيصال)
           <input type="file" name="attachment" accept="image/*,.pdf" style="max-width:170px;">
         </label>
@@ -3592,7 +3974,8 @@ function expenseRowHtml(e){
   const title = validKind(e.kind) ? escapeHtml(kindName(e.kind)) : escapeHtml(e.category);
   // في وضع التعديل: قايمة لتغيير النوع من مكانه
   const kindSel = unlocked ? kindSelectHtml(`data-exp-kind="${escapeHtml(e.id)}"`, expenseKind(e)) : '';
-  return `<div class="tx-row" style="flex-wrap:wrap; gap:6px;"><div class="tx-main" style="flex:1; min-width:140px;"><div class="note">${title} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date}</div></div><div style="display:flex;align-items:center;gap:8px; flex-wrap:wrap;">${kindSel}${attachCellHtml(e)}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
+  const accSel = unlocked ? accSelectHtml(`class="acc-sel" data-set-acc="expense|${escapeHtml(e.id)}" aria-label="اتصرف من"`, accOf(e)) : '';
+  return `<div class="tx-row" style="flex-wrap:wrap; gap:6px;"><div class="tx-main" style="flex:1; min-width:140px;"><div class="note">${title} ${e.note?('— '+escapeHtml(e.note)):''}</div><div class="date">${e.date} · من ${escapeHtml(accName(accOf(e)))}</div></div><div style="display:flex;align-items:center;gap:8px; flex-wrap:wrap;">${kindSel}${accSel}${attachCellHtml(e)}<div class="tx-amt out num">-${fmt(e.amount)}</div><button class="del" data-del-exp="${e.id}">✕</button></div></div>`;
 }
 
 /* دبوس المرفق: بيفتح المرفق الموجود (على درايف أو محفوظ جوه الشيت من زمان)،
@@ -3694,46 +4077,89 @@ function tplFund(){
       <div class="search-info" id="fundSearchInfo"></div>
     </div>`;
 
+  const accBal = computeAccountBalances();
+  if(!validAcc(fundAccFilter)) fundAccFilter = '';
   html += `<div class="card" style="text-align:center;">
-      <div class="section-title" style="margin-top:0">الرصيد الحالي</div>
+      <div class="section-title" style="margin-top:0">الرصيد الحالي (كل الخزن)</div>
       <div class="num" style="font-size:28px">${fmt(bal)} <span style="font-size:13px;color:var(--ink-soft)">جنيه</span></div>
+      <div class="acc-grid">
+        ${accountsList().map(a=> `<button type="button" class="acc-card ${fundAccFilter===a.id?'on':''} ${accBal[a.id]<0?'neg':''}" data-acc-filter="${escapeHtml(a.id)}" title="اعرض حركات الخزنة دي بس">
+          <span class="acc-n">${escapeHtml(accName(a.id))}</span><b class="num">${fmt(accBal[a.id]||0)}</b></button>`).join('')}
+      </div>
+      <div class="kind-hint" style="margin-top:6px;">اضغط على أي خزنة لعرض حركاتها بس في الدفتر.</div>
     </div>`;
 
   html += `
-    <div class="section-title">الرصيد الافتتاحي</div>
-    <div class="card">
-      <form id="openingForm" class="inline">
-        <input type="number" name="openingBalance" value="${state.settings.openingBalance}">
-        <button type="submit">حفظ</button>
+    <div class="section-title edit-only">🔁 نقل فلوس من خزنة لخزنة</div>
+    <div class="card edit-only">
+      <form id="transferForm" class="inline">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">من ${accSelectHtml('name="from"', accountsList()[1] ? accountsList()[1].id : defaultAccId())}</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">لـ ${accSelectHtml('name="to"', defaultAccId())}</label>
+        <input type="number" name="amount" placeholder="المبلغ" min="0" step="any" required>
+        <input type="date" name="date" value="${todayStr()}" required>
+        <input type="text" name="note" placeholder="ملحوظة (اختياري)">
+        <button type="submit">نقل</button>
       </form>
+      <div class="kind-hint" style="margin-top:6px;">مثلًا بكر جابلك الفلوس اللي معاه: من «بكر» لـ «معايا». النقل مش بيغيّر رصيد الصندوق الكلي.</div>
+    </div>`;
+
+  html += `
+    <div class="section-title edit-only">💼 الخزن والرصيد الافتتاحي</div>
+    <div class="card edit-only">
+      ${accountsList().map((a,i)=> `<div class="acc-row">
+        <input type="text" class="acc-icon" data-acc-icon="${escapeHtml(a.id)}" value="${escapeHtml(a.icon||'')}" aria-label="أيقونة" maxlength="4">
+        <input type="text" data-acc-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" aria-label="اسم الخزنة">
+        <label>افتتاحي <input type="number" step="any" data-acc-opening="${escapeHtml(a.id)}" value="${Number(a.opening)||0}"></label>
+        ${i>0 && !accountUsed(a.id) ? `<button type="button" class="del" data-acc-del="${escapeHtml(a.id)}" title="مسح الخزنة">✕</button>` : ''}
+      </div>`).join('')}
+      <form id="accAddForm" class="inline" style="margin-top:8px;">
+        <input type="text" name="name" placeholder="اسم خزنة جديدة" required>
+        <button type="submit">+ خزنة</button>
+      </form>
+      <div class="kind-hint" style="margin-top:6px;">الرصيد الافتتاحي = اللي كان مع كل واحد أول ما بدأنا نسجّل (إجماليهم ${fmt(state.settings.openingBalance)}). أي حركة قديمة اتسجّلت قبل الخزن بتتحسب على «${escapeHtml(accName(defaultAccId()))}» — وتقدر تغيّر خزنتها من الدفتر تحت.</div>
     </div>`;
 
   html += `<div class="section-title">دفتر الصندوق</div><div class="card" id="fundLedgerList">`;
+  const openingDate = monthsRange(START_MONTH, currentMonth)[0]+'-01';
   const ledgerEntries = [
-    {date: monthsRange(START_MONTH, currentMonth)[0]+'-01', note:'الرصيد الافتتاحي', amount: state.settings.openingBalance, kind:'opening'},
-    ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id, record:f})),
+    ...accountsList().filter(a=> Number(a.opening)).map(a=> ({date: openingDate, note:'الرصيد الافتتاحي', amount: Number(a.opening)||0, kind:'opening', acc:a.id})),
+    ...state.fundLedger.map(f=>({date:f.date, note:f.note, amount:f.amount, kind:'manual', id:f.id, record:f, acc:accOf(f)})),
   ];
+  (state.transfers||[]).forEach(t=>{
+    ledgerEntries.push({date:t.date, note:'🔁 نقل من '+accName(t.from)+' لـ '+accName(t.to)+(t.note ? ' — '+t.note : ''), amount:Number(t.amount)||0, kind:'transfer', id:t.id, record:t, from:t.from, to:t.to});
+  });
   Object.entries(state.payments).forEach(([mk, obj])=>{
-    Object.entries(obj).forEach(([aptId, amt])=>{
-      if(amt>0){
-        const apt = state.apartments.find(a=>a.id===aptId);
-        const payDate = (state.paymentDates[mk]||{})[aptId] || (mk+'-01');
-        ledgerEntries.push({date:payDate, note:'تحصيل من '+((apt && residentNameFor(apt, mk)) || aptId)+' — '+monthLabel(mk), amount:amt, kind:'payment', month:mk, aptId});
-      }
+    Object.keys(obj).forEach(aptId=>{
+      const apt = state.apartments.find(a=>a.id===aptId);
+      const entries = paymentEntries(mk, aptId);
+      entries.forEach((x, i)=>{
+        ledgerEntries.push({date:x.date, note:'تحصيل من '+((apt && residentNameFor(apt, mk)) || aptId)+' — '+monthLabel(mk)+(entries.length>1 ? ' (دفعة '+(i+1)+' من '+entries.length+')' : ''), amount:x.amount, kind:'payment', month:mk, aptId, idx:i, acc:accOf(x)});
+      });
     });
   });
   (state.commitmentPayments||[]).forEach(cp=>{
     const c = state.commitments.find(x=>x.id===cp.commitmentId);
     const isGeneral = c && !c.aptId;
     const amt = isGeneral ? -cp.amount : cp.amount;
-    ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id, record:cp});
+    ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id, record:cp, acc:accOf(cp)});
   });
   state.expenses.forEach(e=>{
-    ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id, record:e});
+    ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id, record:e, acc:accOf(e)});
   });
   (state.elevatorSpends||[]).forEach(sp=>{
-    ledgerEntries.push({date:sp.date, note:'🛗 صرف من رصيد الأسانسير — '+sp.note, amount:-sp.amount, kind:'elevatorSpend', id:sp.id, record:sp});
+    ledgerEntries.push({date:sp.date, note:'🛗 صرف من رصيد الأسانسير — '+sp.note, amount:-sp.amount, kind:'elevatorSpend', id:sp.id, record:sp, acc:accOf(sp)});
   });
+  if(fundAccFilter){
+    const fa = fundAccFilter;
+    for(let i = ledgerEntries.length - 1; i >= 0; i--){
+      const le = ledgerEntries[i];
+      if(le.kind==='transfer'){
+        if(le.from===fa && le.to!==fa) le.amount = -le.amount;          // خارج من الخزنة دي
+        else if(le.to!==fa) ledgerEntries.splice(i, 1);
+      } else if(le.acc!==fa) ledgerEntries.splice(i, 1);
+    }
+    html += `<div class="note-strip" style="margin-bottom:8px;">بتشوف حركات «${escapeHtml(accName(fa))}» بس — رصيدها <b class="num">${fmt(accBal[fa]||0)}</b>. <button type="button" class="del" data-acc-filter="">اعرض الكل</button></div>`;
+  }
   ledgerEntries.sort((a,b)=> a.date.localeCompare(b.date));
   if(ledgerEntries.length===0) html += `<div class="empty">مفيش حركات لسه</div>`;
   ledgerEntries.forEach(le=>{
@@ -3742,25 +4168,37 @@ function tplFund(){
     if(le.kind==='manual'){ delAttr = `data-del-fund="${le.id}"`; dateAttr = `data-edit-fund-date="${le.id}"`; }
     else if(le.kind==='commitPay'){ delAttr = `data-del-commitpay="${le.id}"`; dateAttr = `data-edit-commitpay-date="${le.id}"`; }
     else if(le.kind==='expense'){ delAttr = `data-del-exp-fund="${le.id}"`; dateAttr = `data-edit-exp-date="${le.id}"`; }
-    else if(le.kind==='payment'){ delAttr = `data-del-payment="${le.month}|${le.aptId}"`; dateAttr = `data-edit-payment-date="${le.month}|${le.aptId}"`; }
+    else if(le.kind==='payment'){ delAttr = `data-del-payment="${le.month}|${le.aptId}|${le.idx}"`; dateAttr = `data-edit-payment-date="${le.month}|${le.aptId}|${le.idx}"`; }
     else if(le.kind==='elevatorSpend'){ delAttr = `data-del-elevator-spend="${le.id}"`; dateAttr = `data-edit-elevator-spend-date="${le.id}"`; }
-    const delBtn = delAttr ? `<button class="del" ${delAttr}>✕</button>` : '';
-    const dateEl = dateAttr
+    else if(le.kind==='transfer'){ delAttr = `data-del-transfer="${le.id}"`; dateAttr = `data-edit-transfer-date="${le.id}"`; }
+    const accRef = le.kind==='manual' || le.kind==='commitPay' || le.kind==='expense' || le.kind==='elevatorSpend' ? le.kind + '|' + le.id
+      : le.kind==='payment' ? 'payment|' + le.month + '|' + le.aptId + '|' + le.idx : '';
+    const accEl = le.kind==='transfer' ? ''
+      : (unlocked && accRef) ? accSelectHtml(`class="acc-sel" data-set-acc="${escapeHtml(accRef)}" aria-label="الخزنة"`, le.acc)
+      : `<span class="acc-chip">${escapeHtml(accName(le.acc))}</span>`;
+    const delBtn = (delAttr && unlocked) ? `<button class="del" ${delAttr}>✕</button>` : '';
+    const dateEl = (dateAttr && unlocked)
       ? `<input type="date" class="ledger-date-input" ${dateAttr} value="${le.date.slice(0,10)}" style="border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-soft); background:transparent;">`
       : `<div class="date">${le.date}</div>`;
     const attachHtml = attachCellHtml(le.record);
-    const searchText = normalizeSearch([le.note, le.date, le.aptId||'', Math.abs(le.amount)].join(' '));
-    html += `<div class="tx-row" data-q="${escapeHtml(searchText)}" data-amt="${le.amount}"><div class="tx-main"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px">${attachHtml}<div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>${delBtn}</div></div>`;
+    const searchText = normalizeSearch([le.note, le.date, le.aptId||'', Math.abs(le.amount), le.kind==='transfer' ? '' : accName(le.acc)].join(' '));
+    // النقل من غير فلتر مش وارد ولا منصرف (الفلوس لسه في الصندوق)
+    const neutral = le.kind==='transfer' && !fundAccFilter;
+    const amtHtml = neutral
+      ? `<div class="tx-amt num" style="color:var(--ink-soft)">⇄ ${fmt(Math.abs(le.amount))}</div>`
+      : `<div class="tx-amt ${le.amount<0?'out':'in'} num">${le.amount<0?'-':'+'}${fmt(Math.abs(le.amount))}</div>`;
+    html += `<div class="tx-row" data-q="${escapeHtml(searchText)}" data-amt="${neutral ? 0 : le.amount}" style="flex-wrap:wrap; gap:6px;"><div class="tx-main" style="flex:1; min-width:140px;"><div class="note">${escapeHtml(le.note)}</div>${dateEl}</div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${accEl}${attachHtml}${amtHtml}${delBtn}</div></div>`;
   });
   html += `</div>`;
 
   html += `
-    <div class="section-title">إضافة حركة يدوية</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة حركة يدوية</div>
+    <div class="card edit-only">
       <form id="fundForm" class="inline">
         <input type="date" name="date" value="${todayStr()}" required>
         <input type="text" name="note" placeholder="البيان" required>
         <input type="number" name="amount" placeholder="+ إيداع أو - سحب" required>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">💼 ${accSelectHtml('name="acc"', curAcc())}</label>
         <button type="submit">إضافة</button>
       </form>
     </div>`;
@@ -3772,7 +4210,7 @@ function tplPlans(){
   if(state.plans.length===0) html += `<div class="empty">مفيش خطط مسجلة</div>`;
   state.plans.forEach(p=>{
     html += `<div class="plan-row ${p.done?'done':''}">
-      <input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>
+      ${unlocked ? `<input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>` : (p.done ? '<span style="color:var(--good);font-weight:700;">✓ اتعمل</span>' : '')}
       <div class="item">${escapeHtml(p.item)}</div>
       <div class="num">${fmt(p.cost)}</div>
       <button class="del" data-del-plan="${p.id}">✕</button>
@@ -3782,8 +4220,8 @@ function tplPlans(){
   html += `</div><div class="card" style="display:flex;justify-content:space-between;"><div>إجمالي المتبقي</div><div class="num">${fmt(total)}</div></div>`;
 
   html += `
-    <div class="section-title">إضافة خطة</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة خطة</div>
+    <div class="card edit-only">
       <form id="planForm" class="inline">
         <input type="text" name="item" placeholder="اسم البند" required>
         <input type="number" name="cost" placeholder="التكلفة المتوقعة" required>
@@ -3901,6 +4339,27 @@ function bindCommitEditHandlers(){
   });
 }
 function bindTabEvents(){
+  // التاريخ والخزنة: نفس القيمة في كل التبويبات
+  document.querySelectorAll('.cash-date-input').forEach(inp=> inp.addEventListener('change', ()=>{ if(inp.value) collectDate = inp.value; }));
+  document.querySelectorAll('.cash-acc-input').forEach(sel=> sel.addEventListener('change', ()=> setCurAcc(sel.value)));
+  // تغيير خزنة حركة موجودة (من دفتر الصندوق أو المصروفات)
+  document.querySelectorAll('[data-set-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
+    if(!unlocked || !validAcc(sel.value)) return;
+    const [kind, ...ref] = sel.dataset.setAcc.split('|');
+    if(kind==='payment'){
+      const [mk, aptId, idx] = ref;
+      const list = paymentEntries(mk, aptId);
+      if(!list[Number(idx)]) return;
+      list[Number(idx)].acc = sel.value;
+      writePaymentEntries(mk, aptId, list);
+    } else {
+      const arr = {manual: state.fundLedger, commitPay: state.commitmentPayments, expense: state.expenses, elevatorSpend: state.elevatorSpends}[kind] || [];
+      const rec = arr.find(x=> x.id===ref[0]);
+      if(!rec) return;
+      rec.acc = sel.value;
+    }
+    persist(); renderAll();
+  }));
   if(currentTab==='collect'){
     bindCommitEditHandlers();
     const collectDateInput = document.getElementById('collectDateInput');
@@ -3911,14 +4370,8 @@ function bindTabEvents(){
       inp.addEventListener('change', e=>{
         const aptId = e.target.dataset.apt;
         const val = Math.max(0, Number(e.target.value)||0);
-        if(!state.payments[currentMonth]) state.payments[currentMonth]={};
-        if(!state.paymentDates[currentMonth]) state.paymentDates[currentMonth]={};
-        state.payments[currentMonth][aptId] = val;
-        if(val>0){
-          state.paymentDates[currentMonth][aptId] = collectDate;
-        } else {
-          delete state.paymentDates[currentMonth][aptId];
-        }
+        // الرقم هنا إجمالي المدفوع للشهر: الزيادة بس بتتسجّل دفعة جديدة بتاريخ التحصيل
+        setMonthPaid(currentMonth, aptId, val, collectDate);
         persist(); renderAll();
       });
     });
@@ -3934,7 +4387,7 @@ function bindTabEvents(){
         const val = Number(inp.value) || commitmentSuggestedAmount(c);
         if(val<=0) return;
         if(!state.commitmentPayments) state.commitmentPayments=[];
-        state.commitmentPayments.push({
+        state.commitmentPayments.push({acc: curAcc(), 
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
           date: collectDate, amount: val
         });
@@ -4002,7 +4455,8 @@ function bindTabEvents(){
         return;
       }
       if(!state.elevatorSpends) state.elevatorSpends=[];
-      state.elevatorSpends.push({
+      if(f.acc) setCurAcc(f.acc.value);
+      state.elevatorSpends.push({acc: curAcc(), 
         id:'esp'+Date.now(), date: currentMonth+'-01', note: note||'صرف من رصيد الأسانسير',
         amount: spendAmount
       });
@@ -4051,6 +4505,8 @@ function bindTabEvents(){
     if(pdfBtn) pdfBtn.addEventListener('click', exportArrearsPDF);
     const shareBtn = document.getElementById('sharePdfBtn');
     if(shareBtn) shareBtn.addEventListener('click', ()=> shareArrearsPDF(shareBtn));
+    const doorBtn = document.getElementById('doorNoticesBtn');
+    if(doorBtn) doorBtn.addEventListener('click', showDoorNoticesPopup);
     document.querySelectorAll('[data-settle-apt]').forEach(b=>{
       b.addEventListener('click', ()=>{
         if(!unlocked) return;
@@ -4170,7 +4626,7 @@ function bindTabEvents(){
         const val = Number(inp.value) || commitmentSuggestedAmount(c);
         if(val<=0) return;
         if(!state.commitmentPayments) state.commitmentPayments=[];
-        state.commitmentPayments.push({
+        state.commitmentPayments.push({acc: curAcc(), 
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
           date: collectDate, amount: val
         });
@@ -4229,8 +4685,10 @@ function bindTabEvents(){
         kind: f.kind.value,
         category: kindInfo(f.kind.value).label,
         note: f.note.value,
-        amount
+        amount,
+        acc: validAcc(f.acc.value) ? f.acc.value : curAcc()
       };
+      setCurAcc(newExp.acc);
       const file = f.attachment && f.attachment.files && f.attachment.files[0];
       if(file){
         const submitBtn = f.querySelector('button[type="submit"], button:not([type])');
@@ -4275,19 +4733,81 @@ function bindTabEvents(){
       applyFundSearch();
     });
     applyFundSearch();
-    document.getElementById('openingForm').addEventListener('submit', e=>{
+    const findAcc = id=> accountsList().find(a=> a.id===id);
+    document.querySelectorAll('[data-acc-filter]').forEach(b=> b.addEventListener('click', ()=>{
+      const id = b.dataset.accFilter;
+      fundAccFilter = (id && fundAccFilter !== id) ? id : '';
+      renderAll();
+    }));
+    document.querySelectorAll('[data-acc-name]').forEach(inp=> inp.addEventListener('change', ()=>{
+      if(!unlocked) return;
+      const a = findAcc(inp.dataset.accName); const v = inp.value.trim();
+      if(!a || !v){ renderAll(); return; }
+      a.name = v; persist(); renderAll();
+    }));
+    document.querySelectorAll('[data-acc-icon]').forEach(inp=> inp.addEventListener('change', ()=>{
+      if(!unlocked) return;
+      const a = findAcc(inp.dataset.accIcon); if(!a) return;
+      a.icon = inp.value.trim(); persist(); renderAll();
+    }));
+    document.querySelectorAll('[data-acc-opening]').forEach(inp=> inp.addEventListener('change', ()=>{
+      if(!unlocked) return;
+      const a = findAcc(inp.dataset.accOpening); if(!a) return;
+      a.opening = round2(inp.value); syncOpeningTotal(); persist(); renderAll();
+    }));
+    document.querySelectorAll('[data-acc-del]').forEach(b=> b.addEventListener('click', ()=>{
+      if(!unlocked) return;
+      const a = findAcc(b.dataset.accDel);
+      if(!a || accountUsed(a.id)) return;
+      if(!confirm('تمسح خزنة «' + a.name + '»؟' + (Number(a.opening) ? '\nرصيدها الافتتاحي (' + fmt(a.opening) + ') هيتنقل على «' + accountsList()[0].name + '».' : ''))) return;
+      accountsList()[0].opening = round2((Number(accountsList()[0].opening)||0) + (Number(a.opening)||0));
+      state.settings.accounts = accountsList().filter(x=> x !== a);
+      syncOpeningTotal(); persist(); renderAll();
+    }));
+    const accAdd = document.getElementById('accAddForm');
+    if(accAdd) accAdd.addEventListener('submit', e=>{
       e.preventDefault();
-      state.settings.openingBalance = Number(e.target.openingBalance.value)||0;
+      if(!unlocked) return;
+      const name = e.target.name.value.trim(); if(!name) return;
+      state.settings.accounts.push({id:'acc'+Date.now().toString(36), name, icon:'💼', opening:0});
       persist(); renderAll();
     });
+    const trForm = document.getElementById('transferForm');
+    if(trForm) trForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      if(!unlocked) return;
+      const f = e.target;
+      const amount = round2(f.amount.value);
+      if(f.from.value === f.to.value){ alert('اختار خزنتين مختلفين'); return; }
+      if(amount <= 0){ alert('اكتب المبلغ'); return; }
+      const have = computeAccountBalances()[f.from.value] || 0;
+      if(amount > have && !confirm('«' + accName(f.from.value) + '» معاه ' + fmt(have) + ' بس. تنقل ' + fmt(amount) + ' برضه؟')) return;
+      if(!state.transfers) state.transfers = [];
+      state.transfers.push({id:'tr'+Date.now(), date: f.date.value || todayStr(), from: f.from.value, to: f.to.value, amount, note: f.note.value.trim()});
+      persist(); renderAll();
+    });
+    document.querySelectorAll('[data-del-transfer]').forEach(b=> b.addEventListener('click', ()=>{
+      if(!unlocked || !confirm('تمسح النقل ده؟')) return;
+      state.transfers = (state.transfers||[]).filter(t=> t.id!==b.dataset.delTransfer);
+      persist(); renderAll();
+    }));
+    document.querySelectorAll('[data-edit-transfer-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+      if(!unlocked || !inp.value) return;
+      const t = (state.transfers||[]).find(x=> x.id===inp.dataset.editTransferDate);
+      if(t) t.date = inp.value;
+      persist(); renderAll();
+    }));
     document.getElementById('fundForm').addEventListener('submit', e=>{
       e.preventDefault();
       const f = e.target;
+      const acc = validAcc(f.acc.value) ? f.acc.value : curAcc();
+      setCurAcc(acc);
       state.fundLedger.push({
         id:'f'+Date.now(),
         date: f.date.value,
         note: f.note.value,
-        amount: Number(f.amount.value)||0
+        amount: Number(f.amount.value)||0,
+        acc
       });
       persist(); renderAll();
     });
@@ -4317,9 +4837,11 @@ function bindTabEvents(){
     });
     document.querySelectorAll('[data-del-payment]').forEach(b=>{
       b.addEventListener('click', ()=>{
-        const [mk, aptId] = b.dataset.delPayment.split('|');
-        if(state.payments[mk]) delete state.payments[mk][aptId];
-        if(state.paymentDates[mk]) delete state.paymentDates[mk][aptId];
+        const [mk, aptId, idx] = b.dataset.delPayment.split('|');
+        const list = paymentEntries(mk, aptId);
+        if(!list[Number(idx)]) return;
+        list.splice(Number(idx), 1);
+        writePaymentEntries(mk, aptId, list);
         persist(); renderAll();
       });
     });
@@ -4358,10 +4880,12 @@ function bindTabEvents(){
     document.querySelectorAll('[data-edit-payment-date]').forEach(inp=>{
       inp.addEventListener('change', ()=>{
         if(!unlocked) return;
-        const [mk, aptId] = inp.dataset.editPaymentDate.split('|');
+        const [mk, aptId, idx] = inp.dataset.editPaymentDate.split('|');
         if(!inp.value) return;
-        if(!state.paymentDates[mk]) state.paymentDates[mk] = {};
-        state.paymentDates[mk][aptId] = inp.value;
+        const list = paymentEntries(mk, aptId);
+        if(!list[Number(idx)]) return;
+        list[Number(idx)].date = inp.value;
+        writePaymentEntries(mk, aptId, list);
         persist(); renderAll();
       });
     });
@@ -4437,6 +4961,9 @@ function bindTabEvents(){
           if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
         });
         Object.values(state.paymentDates).forEach(monthObj=>{
+          if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
+        });
+        Object.values(state.paymentLog||{}).forEach(monthObj=>{
           if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
         });
         (state.commitments||[]).forEach(c=>{ if(c.aptId===oldId) c.aptId=newId; });
