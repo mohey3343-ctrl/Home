@@ -121,6 +121,22 @@
     pointer-events:none;
   }
   .facade.locked .win{ pointer-events:none; }
+  /* وضع العرض (السكان): مفيش أي زرار أو خانة أو كلمة توحي إن فيه تعديل — كله بيختفي مش بيبهت بس */
+  body.view-mode #syncStatus,
+  body.view-mode #tabbar button[data-tab="collect"],
+  body.view-mode #tabbar button[data-tab="apts"],
+  body.view-mode #tabbar button[data-tab="settings"],
+  #content.locked .edit-only,
+  #content.locked form,
+  #content.locked button.del,
+  #content.locked button.pill,
+  #content.locked .amount-input,
+  #content.locked input[type=checkbox],
+  #content.locked .preset-row,
+  #content.locked .cash-strip,
+  #content.locked #settleAllElevatorShares,
+  #content.locked .tx-attach{ display:none !important; }
+  .ro-val{ font-family:'IBM Plex Mono'; font-weight:700; }
 
   .balance-hero{
     position:relative;
@@ -1068,8 +1084,8 @@ async function loadState(){
       canWrite = false;
       readOnlyReason = 'البيانات اللي في الشيت مش سليمة';
       setSyncStatus('⛔ البيانات اللي في جوجل شيت مش مقروءة — الحفظ متوقف', true);
-      showBlocker('البيانات في جوجل شيت مش سليمة',
-        'التطبيق قرأ الشيت بس مش قادر يفهم المحتوى، فوقف الحفظ عشان مايكتبش فوق حاجة.\nافتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
+      showBlocker('البيانات مش متاحة دلوقتي',
+        'حاول تاني بعد شوية.\n\n(للمسؤول: البيانات اللي في جوجل شيت مش مقروءة — ارجع نسخة سابقة من: ملف ← سجل الإصدارات)',
         [{label:'حاول تاني', onClick: retryLoad}]);
       return false;
     }
@@ -1091,7 +1107,7 @@ async function loadState(){
     setSyncStatus('🟠 مش متصل بجوجل شيت — الحفظ متوقف', true);
     const btns = [{label:'حاول تاني', onClick: retryLoad}];
     if(local && validState(safeParse(local.raw))){
-      btns.push({label:'اعرض آخر نسخة على الجهاز (عرض فقط)', onClick: function(){
+      btns.push({label:'اعرض آخر نسخة على الجهاز', onClick: function(){
         state = safeParse(local.raw);
         migrateState();
         hideBlocker();
@@ -1099,8 +1115,8 @@ async function loadState(){
         setSyncStatus('👁️ عرض فقط من نسخة الجهاز — أي تعديل مش هيتحفظ', true);
       }});
     }
-    showBlocker('مش قادر أوصل لقاعدة البيانات',
-      'السبب: ' + r.error + '\nالتطبيق وقف الحفظ عشان مايمسحش البيانات الموجودة في جوجل شيت.',
+    showBlocker('مش قادر يحمّل البيانات',
+      'اتأكد إن النت شغّال وحاول تاني.',
       btns);
     return false;
   }
@@ -1110,8 +1126,10 @@ async function loadState(){
   readOnlyReason = 'قاعدة البيانات فاضية';
   setSyncStatus('⚠️ قاعدة البيانات فاضية — مفيش حفظ تلقائي', true);
   const btns = [{label:'حاول تاني', onClick: retryLoad}];
+  // اختيارات المسؤول (رفع نسخة الجهاز / بيانات جديدة) مش بتظهر غير بعد الرمز السري
+  const adminBtns = [];
   if(local && validState(safeParse(local.raw))){
-    btns.push({label:'ارفع آخر نسخة محفوظة على الجهاز' + (local.at ? ' (' + new Date(local.at).toLocaleString('ar-EG') + ')' : ''), onClick: async function(){
+    adminBtns.push({label:'ارفع آخر نسخة محفوظة على الجهاز' + (local.at ? ' (' + new Date(local.at).toLocaleString('ar-EG') + ')' : ''), onClick: async function(){
       const parsed = safeParse(local.raw);
       state = parsed;
       canWrite = true;
@@ -1121,7 +1139,7 @@ async function loadState(){
       renderAll();
     }});
   }
-  btns.push({label:'ابدأ بيانات جديدة من الصفر', danger:true, onClick: async function(){
+  adminBtns.push({label:'ابدأ بيانات جديدة من الصفر', danger:true, onClick: async function(){
     if(prompt('ده هيكتب بيانات جديدة فاضية في جوجل شيت.\nلو انت متأكد اكتب كلمة: جديد') !== 'جديد') return;
     state = seedState();
     canWrite = true;
@@ -1130,9 +1148,14 @@ async function loadState(){
     await persist({force:true});
     renderAll();
   }});
-  showBlocker('قاعدة البيانات فاضية',
-    'جوجل شيت رد بنجاح بس مفيش بيانات متسجّلة.\nلو المفروض فيه بيانات، متكملش — افتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
-    btns);
+  btns.push({label:'🔑 للمسؤول', onClick: function(){
+    const known = (safeParse(local && local.raw) || {settings:{}}).settings.editPin || '1234';
+    if(prompt('الرمز السري') !== known) return;
+    showBlocker('قاعدة البيانات فاضية',
+      'جوجل شيت رد بنجاح بس مفيش بيانات متسجّلة.\nلو المفروض فيه بيانات، متكملش — افتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
+      [{label:'حاول تاني', onClick: retryLoad}].concat(adminBtns));
+  }});
+  showBlocker('البيانات مش متاحة دلوقتي', 'حاول تاني بعد شوية.', btns);
   return false;
 }
 
@@ -1714,7 +1737,7 @@ function renderStatement(keepScroll){
       ${residents.length > 1 || (residents.length && !cur) ? `<span class="pp-chip"><b class="num">${residents.length}</b> ساكن سكنوها</span>` : ''}
     </div>`;
 
-  if(edit || cur){
+  if(edit){
     html += `<div class="pp-actions" style="padding:10px 14px 0;">
       ${cur ? `<button type="button" class="pp-btn ghost" data-st-door="${escapeHtml(apt.id)}">🖨 ورقة الباب</button>` : ''}
       ${!edit ? '' : cur ? `<button type="button" class="pp-btn ghost" data-st-moveout="${escapeHtml(apt.id)}">🚪 الساكن مشي</button>`
@@ -2449,6 +2472,7 @@ function tplKindReview(){
 
 /* سطر صغير في المصروفات والالتزامات بيودّي على المراجعة في الإعدادات (بيختفي لما كله يتصنّف) */
 function tplKindReviewHint(){
+  if(!unlocked) return '';
   const count = unclassifiedRecords().length;
   if(!count) return '';
   return `<div class="note-strip" data-goto-settings style="cursor:pointer;">🏷 فيه ${count} مصروف/التزام قديم محتاج يتصنّف — اضغط هنا للمراجعة في ⚙️ الإعدادات ›</div>`;
@@ -2712,7 +2736,7 @@ function waterSourceNote(w, mk){
   const txt = {
     expenses: 'من المصروفات المتسجّلة في الشهر ده.',
     commitment: 'من التزام المياه بتاع الشهر ده (الإيصال) — لو اتدفع بالكامل بيتحسب المدفوع فعلًا، ولو لسه بيتحسب مبلغ الإيصال.',
-    estimate: 'لسه مفيش فاتورة مياه لـ' + monthLabel(mk) + '، فده تقدير من آخر فاتورة (' + (w.fromMonth ? monthLabel(w.fromMonth) : '') + ') لحد ما الإيصال ييجي وتسجّله كالتزام.',
+    estimate: 'لسه مفيش فاتورة مياه لـ' + monthLabel(mk) + '، فده تقدير من آخر فاتورة (' + (w.fromMonth ? monthLabel(w.fromMonth) : '') + ') لحد ما الإيصال ييجي.',
     none: 'مفيش فاتورة مياه متسجّلة لسه — سجّل الإيصال كالتزام عام على العمارة ونوعه "مياه".'
   }[w.source];
   return `<div class="pp-note">${escapeHtml(txt)}</div>`;
@@ -2755,7 +2779,7 @@ function showSharesPopup(){
         ${shown.filter(l=> l.total > 0).map(l=> `<div>${escapeHtml(kindName(l.kind.key))}</div><div class="n">${l.sub ? fmt1(l.sub) : '—'}</div><div class="n">${l.non ? fmt1(l.non) : '—'}</div>`).join('')}
         <div class="tot">الإجمالي</div><div class="n tot">${fmt(s.subscriber)}</div><div class="n tot">${fmt(s.nonSubscriber)}</div>
       </div>
-      <div class="pp-foot">طريقة تقسيم كل بند بتتغيّر من تبويب الإعدادات.</div>
+      ${unlocked ? '<div class="pp-foot">طريقة تقسيم كل بند بتتغيّر من تبويب الإعدادات.</div>' : ''}
     </div>`;
 
   shown.forEach(l=>{
@@ -2785,7 +2809,7 @@ function showSharesPopup(){
         if(r.beforeFirst > 0) html += `<div class="pp-foot">${r.beforeFirst} يوم في الشهر قبل أول شحنة متسجّلة (${shortDate(r.first)}) مش محسوبين.</div>`;
         html += row('كهرباء الكارت في ' + monthLabel(s.mk), fmt(r.cardAmount), 'total',
           (r.estimate > 0 && r.actual > 0) ? `${fmt(r.actual)} فعلي + ${fmt(r.estimate)} تقدير` : '');
-        if(r.estimate > 0) html += `<div class="pp-foot">التقدير = متوسط استهلاك اليوم من أول شحنة لآخر شحنة، وبيتظبط لوحده أول ما تسجّل الشحنة الجاية.</div>`;
+        if(r.estimate > 0) html += `<div class="pp-foot">التقدير = متوسط استهلاك اليوم من أول شحنة لآخر شحنة، وبيتظبط لوحده مع الشحنة الجاية.</div>`;
       } else {
         html += `<div class="pp-note">لسه مفيش شحنتين بتاريخين مختلفين عشان نحسب متوسط اليوم، فبنستخدم الشحنات اللي اتدفعت فعلًا في الشهر ده.</div>`;
         html += r.charges.map(c=> row(escapeHtml(c.note), fmt(c.amount), '', escapeHtml(c.date))).join('');
@@ -2793,7 +2817,7 @@ function showSharesPopup(){
       if(r.extras.length) html += `<div class="pp-subtitle">التزامات كهرباء على الشهر ده</div>` + itemRows(r.extras);
     } else if(r.source==='fixed'){
       html += `<div class="pp-note">مبلغ ثابت <b class="num">${fmt(kind.fixedMonthly)}</b> جنيه كل شهر. اتدفع منه لحد دلوقتي <b class="num">${fmt(r.paid)}</b> — الدفعات للمتابعة بس ومش بتغيّر النصيب.</div>`
-        + (r.paid > Number(kind.fixedMonthly) ? `<div class="pp-note warn">المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.</div>` : '')
+        + (unlocked && r.paid > Number(kind.fixedMonthly) ? `<div class="pp-note warn">المدفوع أكتر من الثابت: لو فيه مصروف زيادة (إصلاح مثلًا) مش من الاشتراك، غيّر نوعه لنوع من غير مبلغ ثابت عشان يتحسب.</div>` : '')
         + itemRows(r.items);
     } else if(r.source==='none' && Number(kind.fixedMonthly) > 0){
       html += `<div class="pp-note">مبلغ ثابت شهريًا، بس بيبدأ من أول شهر اتسجّل فيه النوع ده (بعد الشهر ده).</div>`;
@@ -3113,7 +3137,13 @@ function renderAll(){
   // أزرار النسخة الاحتياطية/الاسترجاع ظاهرة بس في وضع التعديل (بعد الرمز السري)
   const backupRow = document.getElementById('backupRow');
   if(backupRow) backupRow.style.display = unlocked ? 'flex' : 'none';
-  let banner = unlocked ? '' : `<div class="view-only-banner">👁 وضع العرض فقط</div>`;
+  document.body.classList.toggle('view-mode', !unlocked);
+  // تبويبات الإدارة (التحصيل، الشقق، الإعدادات) مش بتظهر للسكان
+  if(!unlocked && ['collect','apts','settings'].includes(currentTab)){
+    currentTab = 'overview';
+    document.querySelectorAll('#tabbar button').forEach(b=> b.classList.toggle('active', b.dataset.tab==='overview'));
+  }
+  const banner = '';
   if(currentTab==='overview') c.innerHTML = banner + tplOverview();
   if(currentTab==='collect') c.innerHTML = banner + tplCollect();
   if(currentTab==='balance') c.innerHTML = banner + tplResidentsBalance();
@@ -3252,14 +3282,14 @@ function tplElevatorFundBlock(){
     });
   }
   html += `</div>`;
-  if(settleableSubs.length>0){
+  if(settleableSubs.length>0 && unlocked){
     html += `
     <div class="section-title">✅ خصم نصيب المشتركين من المستحق عليهم</div>
     <div class="card">
       <button type="button" id="settleAllElevatorShares" style="margin-top:8px;">خصم نصيب كل المشتركين من المستحق عليهم (${settleableSubs.length} شقة)</button>
     </div>`;
   }
-  html += `
+  if(unlocked) html += `
     <div class="section-title">💳 صرف من رصيد الأسانسير</div>
     <div class="card">
       <form id="elevatorSpendForm" class="inline">
@@ -3283,7 +3313,7 @@ function tplCommitmentsBlock(){
   html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:16px 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">تقرير الالتزامات العامة على العمارة (ديون وفواتير قديمة بدون شقة)</div>
       ${commitments.length>0 ? `
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div class="edit-only" style="display:flex; align-items:center; gap:8px;">
         <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
           <input type="checkbox" id="selectAllCommits" class="bulk-checkbox" ${selCount>0 && selCount===commitments.length ? 'checked':''}>
           تحديد الكل
@@ -3347,8 +3377,8 @@ function tplCommitmentsBlock(){
     });
   }
   html += `</div>
-    <div class="section-title">إضافة التزام يدوي (زي فاتورة قديمة)</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة التزام يدوي (زي فاتورة قديمة)</div>
+    <div class="card edit-only">
       <form id="commitForm" class="inline">
         <select name="aptId">
           <option value="">— بدون شقة (التزام عام على العمارة)</option>
@@ -3369,8 +3399,8 @@ function tplCommitmentsBlock(){
       </form>
     </div>
 
-    <div class="section-title">📢 تجميع فلوس لمشروع (كاميرات، صيانة، إلخ)</div>
-    <div class="card">
+    <div class="section-title edit-only">📢 تجميع فلوس لمشروع (كاميرات، صيانة، إلخ)</div>
+    <div class="card edit-only">
       <form id="campaignForm" class="inline">
         <input type="text" name="title" placeholder="اسم المشروع (مثلاً: كاميرات مراقبة)" required>
         <input type="number" name="totalAmount" placeholder="إجمالي المبلغ المطلوب" required min="1">
@@ -3399,7 +3429,7 @@ function tplArrearsReport(){
       <div class="section-title" style="margin:0;">مين لسه مدفعش (وأي شهور)</div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         ${arrears.length>0 ? `
-        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
+        <label class="edit-only" style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
           <input type="checkbox" id="selectAllArrears" class="bulk-checkbox" ${selCount>0 && selCount===arrears.length ? 'checked':''}>
           تحديد الكل
         </label>
@@ -3409,7 +3439,7 @@ function tplArrearsReport(){
         <button class="export-btn" id="exportReportBtn">⬇ تنزيل Excel</button>
         <button class="export-btn" id="exportPdfBtn" style="background:var(--lit-2);">⬇ تنزيل PDF</button>
         <button class="export-btn" id="sharePdfBtn" style="background:#25a35a;">📤 مشاركة</button>
-        <button class="export-btn" id="doorNoticesBtn" style="background:var(--night);">🚪 ورق الأبواب</button>
+        <button class="export-btn edit-only" id="doorNoticesBtn" style="background:var(--night);">🚪 ورق الأبواب</button>
       </div>
     </div>`;
   if(arrears.length===0){
@@ -3434,7 +3464,7 @@ function tplArrearsReport(){
             <th style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.8); font-family:'IBM Plex Mono'; font-size:11.5px; white-space:nowrap; min-width:72px;">${monthLabel(mk)}</th>`).join('')}
             ${hasDebts ? `<th style="padding:10px 8px; text-align:center; color:rgba(255,200,100,.9); font-size:11.5px; white-space:nowrap; min-width:72px;">ديون/التزامات</th>` : ''}
             <th style="padding:10px 10px; text-align:center; color:var(--lit); font-family:'IBM Plex Mono'; font-weight:700; white-space:nowrap;">الإجمالي</th>
-            <th style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap;">تسوية</th>
+            <th class="edit-only" style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap;">تسوية</th>
           </tr>
         </thead>
         <tbody>
@@ -3455,6 +3485,7 @@ function tplArrearsReport(){
                 const item = a.items.find(m=> m.mk===mk);
                 if(!item) return `<td style="padding:8px; text-align:center; color:var(--ink-soft);">—</td>`;
                 const itemKey = 'm:'+mk;
+                if(!unlocked) return `<td style="padding:8px; text-align:center;"><span class="num" style="color:var(--bad); font-weight:700; font-size:12px;">${fmt(item.owed)}</span></td>`;
                 return `<td style="padding:6px 8px; text-align:center;">
                   <input type="number" class="arrear-amount-input" data-arrear-owed="${a.apt.id}::${itemKey}" value="${item.owed}" step="0.01"
                     style="width:68px; text-align:center; font-family:'IBM Plex Mono'; font-size:12px; font-weight:700;
@@ -3471,7 +3502,7 @@ function tplArrearsReport(){
                 <span class="num" style="color:var(--bad); font-weight:700; font-size:13px;">${fmt(a.total)}</span>
               </td>
               <!-- تسوية -->
-              <td style="padding:8px; text-align:center;">
+              <td class="edit-only" style="padding:8px; text-align:center;">
                 <button type="button" class="del" data-settle-apt="${escapeHtml(a.key)}" style="font-size:11px; padding:3px 8px; white-space:nowrap;">✔ سدّد</button>
               </td>
             </tr>`;
@@ -3494,7 +3525,7 @@ function tplArrearsReport(){
             <td style="padding:10px 8px; text-align:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:14px; color:var(--lit);">
               ${fmt(arrears.reduce((s,a)=>s+a.total,0))}
             </td>
-            <td></td>
+            <td class="edit-only"></td>
           </tr>
         </tfoot>
       </table>
@@ -3909,8 +3940,8 @@ function tplExpenses(){
   html += `</div>`;
 
   html += `
-    <div class="section-title">إضافة مصروف</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة مصروف</div>
+    <div class="card edit-only">
       <div class="preset-row">
         ${state.billPresets.map(p=>`<div class="preset" data-preset='${JSON.stringify(p)}'>${p.category} · ${fmt(p.amount)}</div>`).join('')}
       </div>
@@ -4055,12 +4086,12 @@ function tplFund(){
         ${accountsList().map(a=> `<button type="button" class="acc-card ${fundAccFilter===a.id?'on':''} ${accBal[a.id]<0?'neg':''}" data-acc-filter="${escapeHtml(a.id)}" title="اعرض حركات الخزنة دي بس">
           <span class="acc-n">${escapeHtml(accName(a.id))}</span><b class="num">${fmt(accBal[a.id]||0)}</b></button>`).join('')}
       </div>
-      <div class="kind-hint" style="margin-top:6px;">دوس على خزنة عشان تشوف حركاتها بس في الدفتر تحت.</div>
+      <div class="kind-hint" style="margin-top:6px;">اضغط على أي خزنة لعرض حركاتها بس في الدفتر.</div>
     </div>`;
 
   html += `
-    <div class="section-title">🔁 نقل فلوس من خزنة لخزنة</div>
-    <div class="card">
+    <div class="section-title edit-only">🔁 نقل فلوس من خزنة لخزنة</div>
+    <div class="card edit-only">
       <form id="transferForm" class="inline">
         <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">من ${accSelectHtml('name="from"', accountsList()[1] ? accountsList()[1].id : defaultAccId())}</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:12.5px;">لـ ${accSelectHtml('name="to"', defaultAccId())}</label>
@@ -4073,8 +4104,8 @@ function tplFund(){
     </div>`;
 
   html += `
-    <div class="section-title">💼 الخزن والرصيد الافتتاحي</div>
-    <div class="card">
+    <div class="section-title edit-only">💼 الخزن والرصيد الافتتاحي</div>
+    <div class="card edit-only">
       ${accountsList().map((a,i)=> `<div class="acc-row">
         <input type="text" class="acc-icon" data-acc-icon="${escapeHtml(a.id)}" value="${escapeHtml(a.icon||'')}" aria-label="أيقونة" maxlength="4">
         <input type="text" data-acc-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" aria-label="اسم الخزنة">
@@ -4145,8 +4176,8 @@ function tplFund(){
     const accEl = le.kind==='transfer' ? ''
       : (unlocked && accRef) ? accSelectHtml(`class="acc-sel" data-set-acc="${escapeHtml(accRef)}" aria-label="الخزنة"`, le.acc)
       : `<span class="acc-chip">${escapeHtml(accName(le.acc))}</span>`;
-    const delBtn = delAttr ? `<button class="del" ${delAttr}>✕</button>` : '';
-    const dateEl = dateAttr
+    const delBtn = (delAttr && unlocked) ? `<button class="del" ${delAttr}>✕</button>` : '';
+    const dateEl = (dateAttr && unlocked)
       ? `<input type="date" class="ledger-date-input" ${dateAttr} value="${le.date.slice(0,10)}" style="border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-soft); background:transparent;">`
       : `<div class="date">${le.date}</div>`;
     const attachHtml = attachCellHtml(le.record);
@@ -4161,8 +4192,8 @@ function tplFund(){
   html += `</div>`;
 
   html += `
-    <div class="section-title">إضافة حركة يدوية</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة حركة يدوية</div>
+    <div class="card edit-only">
       <form id="fundForm" class="inline">
         <input type="date" name="date" value="${todayStr()}" required>
         <input type="text" name="note" placeholder="البيان" required>
@@ -4179,7 +4210,7 @@ function tplPlans(){
   if(state.plans.length===0) html += `<div class="empty">مفيش خطط مسجلة</div>`;
   state.plans.forEach(p=>{
     html += `<div class="plan-row ${p.done?'done':''}">
-      <input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>
+      ${unlocked ? `<input type="checkbox" data-plan-toggle="${p.id}" ${p.done?'checked':''}>` : (p.done ? '<span style="color:var(--good);font-weight:700;">✓ اتعمل</span>' : '')}
       <div class="item">${escapeHtml(p.item)}</div>
       <div class="num">${fmt(p.cost)}</div>
       <button class="del" data-del-plan="${p.id}">✕</button>
@@ -4189,8 +4220,8 @@ function tplPlans(){
   html += `</div><div class="card" style="display:flex;justify-content:space-between;"><div>إجمالي المتبقي</div><div class="num">${fmt(total)}</div></div>`;
 
   html += `
-    <div class="section-title">إضافة خطة</div>
-    <div class="card">
+    <div class="section-title edit-only">إضافة خطة</div>
+    <div class="card edit-only">
       <form id="planForm" class="inline">
         <input type="text" name="item" placeholder="اسم البند" required>
         <input type="number" name="cost" placeholder="التكلفة المتوقعة" required>
