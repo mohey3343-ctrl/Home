@@ -3881,11 +3881,15 @@ function printDoorNotices(list, layout){
 function showDoorNoticesPopup(){
   const all = currentDoorNotices();
   const owing = all.filter(d=> d.total > 0);
+  // المتأخرين بجد: عليهم شهرين اشتراك أو أكتر مش متسددين (اللي عليه الشهر الحالي بس لسه في وقت الدفع)
+  const lateMonths = d=> d.months.filter(m=> m.owed > 0).length;
+  const late = owing.filter(d=> lateMonths(d) >= 2);
   const ov = openPopup('doorPopup', popupHead('🚪 ورق الأبواب') + `
     <div class="pp-sec">
       <div class="pp-note">ورقة لكل شقة فيها اسم الساكن، المطلوب منه، وكل شهر: دفع كام ويوم كام والباقي منه — تتعلّق على باب الشقة. الحسابات لحد ${monthLabel(arrearsAsOfMonth())}.</div>
       <div class="pp-subtitle">مين</div>
-      <label class="door-opt"><input type="radio" name="doorWho" value="owing" ${owing.length ? 'checked' : ''}> الشقق اللي عليها فلوس بس — <b>${owing.length}</b> شقة</label>
+      <label class="door-opt"><input type="radio" name="doorWho" value="late" ${late.length ? 'checked' : ''}> المتأخرين شهرين أو أكتر — <b>${late.length}</b> شقة</label>
+      <label class="door-opt"><input type="radio" name="doorWho" value="owing" ${!late.length && owing.length ? 'checked' : ''}> كل اللي عليهم فلوس (حتى لو شهر واحد) — <b>${owing.length}</b> شقة</label>
       <label class="door-opt"><input type="radio" name="doorWho" value="all" ${owing.length ? '' : 'checked'}> كل الشقق المسكونة — <b>${all.length}</b> شقة (اللي خالص بتطلعله ورقة «خالص ✓»)</label>
       <div class="pp-subtitle">الشكل</div>
       <label class="door-opt"><input type="radio" name="doorLayout" value="half" checked> ورقتين في الصفحة (A4 بتتقص نصين) — <b>موفّرة</b></label>
@@ -3897,7 +3901,7 @@ function showDoorNoticesPopup(){
     const who = (ov.querySelector('input[name="doorWho"]:checked')||{}).value;
     const layout = (ov.querySelector('input[name="doorLayout"]:checked')||{}).value;
     closePopup('doorPopup');
-    printDoorNotices(who === 'all' ? all : owing, layout);
+    printDoorNotices(who === 'all' ? all : who === 'late' ? late : owing, layout);
   });
 }
 
