@@ -782,7 +782,8 @@
     <button id="pinSubmit">فتح</button>
   </div>
   <div id="syncStatus" style="font-size:10.5px; text-align:center; color:#bfe0ff; margin:-4px 0 6px;">🔄 بيتزامن مع جوجل شيت...</div>
-  <div id="backupRow" style="display:none; gap:8px; justify-content:center; margin:0 0 10px;">
+  <div id="backupRow" style="display:none; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 10px;">
+    <button id="btnRefresh" style="font-size:10.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.5); background:rgba(255,255,255,.22); color:#fff; font-weight:700; font-family:inherit; cursor:pointer;">🔄 تحديث</button>
     <button id="btnExport" style="font-size:10.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10); color:#dceaff; font-family:inherit; cursor:pointer;">⬇️ نزّل نسخة احتياطية</button>
     <button id="btnImport" style="font-size:10.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10); color:#dceaff; font-family:inherit; cursor:pointer;">⬆️ استرجاع من ملف</button>
     <input type="file" id="importFile" accept=".json,application/json" style="display:none">
@@ -807,6 +808,7 @@
 
 <script>
 const STORE_KEY = 'building-finances-v1';
+const APP_VERSION = '2026-11-12a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
 const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
 const START_MONTH = '2026-08';
@@ -1385,6 +1387,45 @@ async function persistNow(opts){
     setSyncStatus('🟠 محفوظ على الجهاز بس — ' + e.message, true);
     return false;
   }
+}
+
+/* ---------------- زرار "🔄 تحديث" (بيظهر بعد الرمز السري بس) ----------------
+   وانت فاتح التعديل التحديث التلقائي واقف، فالزرار ده بيجيب آخر بيانات من جوجل شيت (اللي اتسجّلت من موبايل تاني مثلًا)
+   من غير ما يقفل التعديل. قبلها بيستنى أي حفظ شغّال، ولو فيه تعديل لسه ما اتحفظش بيحاول يحفظه الأول.
+   وكمان بيشوف لو فيه نسخة أحدث من البرنامج نفسه على الموقع. */
+async function refreshNow(btn){
+  const label = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ بيحدّث...'; }
+  try{
+    for(let i = 0; i < 60 && (saveInFlight || savePending); i++) await sleep(250);
+    if(canWrite && state && JSON.stringify(state) !== lastSyncedRaw){
+      const saved = await persistNow();
+      if(!saved && !confirm('فيه تعديلات على الموبايل ده لسه ما اتحفظتش في جوجل شيت.\nلو كمّلت التحديث هتضيع. تكمّل؟')) return;
+    }
+    const r = await remoteGet('data', 2);
+    if(!r.ok){ alert('مش قادر يوصل لجوجل شيت دلوقتي — اتأكد من النت وجرّب تاني.'); return; }
+    const parsed = r.value ? safeParse(r.value) : null;
+    if(!validState(parsed)){ alert('البيانات اللي في جوجل شيت مش سليمة — ماتغيّرش حاجة.'); return; }
+    lastSyncedRaw = r.value;
+    state = parsed;
+    canWrite = true;
+    saveLocalBackup(r.value);
+    migrateState();
+    renderAll();
+    setSyncStatus('🟢 اتحدّث من جوجل شيت ' + new Date().toLocaleTimeString('ar-EG'));
+    showToast('✓ اتحدّث — دي آخر بيانات');
+    checkAppVersion();
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = label; }
+  }
+}
+async function checkAppVersion(){
+  try{
+    const res = await fetch(location.href.split('#')[0], {cache:'no-store'});
+    if(!res.ok) return;
+    const m = (await res.text()).match(/const APP_VERSION = '([^']+)'/);
+    if(m && m[1] !== APP_VERSION && confirm('فيه نسخة جديدة من البرنامج على الموقع. تفتحها دلوقتي؟\n(هتحتاج تكتب الرمز السري تاني)')) location.reload();
+  }catch(e){}
 }
 
 /* ---------------- نسخة احتياطية يدوية (ملف على الموبايل/الكمبيوتر) ---------------- */
@@ -5257,6 +5298,7 @@ window.addEventListener('pagehide', ()=>{
 
 /* أزرار النسخة الاحتياطية اليدوية */
 document.getElementById('btnExport').addEventListener('click', exportBackup);
+document.getElementById('btnRefresh').addEventListener('click', e=> refreshNow(e.currentTarget));
 document.getElementById('btnImport').addEventListener('click', function(){
   if(!unlocked){ alert('افتح وضع التعديل الأول (الرمز السري) قبل الاستعادة.'); return; }
   document.getElementById('importFile').click();
