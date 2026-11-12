@@ -696,7 +696,17 @@
     direction:rtl; font-family:'IBM Plex Sans Arabic', sans-serif; }
 
   /* ================= الخزن ================= */
-  .cash-strip{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .cash-strip{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; border:2px solid var(--lit-2); }
+  .cash-strip select{ font-weight:700; font-size:14px; padding:6px 8px; }
+  .st-cash{ display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin:10px 14px 0; padding:8px 10px; border:2px solid var(--lit-2); border-radius:12px; background:#fff8ea; font-size:12.5px; }
+  .st-cash label{ display:flex; align-items:center; gap:4px; }
+  .st-cash select{ font-weight:700; }
+  .st-skipped{ padding-top:6px; }
+  .st-skip-chip{ display:inline-flex; align-items:center; gap:4px; background:var(--paper-2); border-radius:999px; padding:2px 8px; margin:2px 0; }
+  #appToast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%, 20px); background:#1f6b45; color:#fff; padding:10px 16px; border-radius:12px;
+    font-size:13.5px; font-weight:700; white-space:pre-line; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none;
+    transition:opacity .2s, transform .2s; z-index:10000; max-width:90vw; }
+  #appToast.show{ opacity:1; transform:translate(-50%, 0); }
   .cash-strip label{ font-size:12.5px; color:var(--ink-soft); }
   .acc-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px; margin-top:10px; }
   .acc-card{ display:flex; flex-direction:column; align-items:center; gap:2px; border:1px solid var(--line); background:var(--paper); border-radius:12px; padding:8px 6px; cursor:pointer; font-family:inherit; color:var(--ink); }
@@ -1478,8 +1488,19 @@ function apartmentsByFloor(){
 }
 
 function isOccupiedInMonth(apt, monthKey){
-  const periods = apt.occupancyPeriods || [];
-  return periods.some(p => monthKey >= p.from && (p.to===null || monthKey < p.to));
+  return !!periodFor(apt, monthKey);
+}
+/* شهور اتشالت من الحساب لأن محدش كان ساكن فعلًا (apt.skipMonths) — الشقة بتتعامل فيها كأنها فاضية:
+   مفيش اشتراك ولا متأخرات ولا بتدخل في تقسيم المصروفات. بتترجع بزرار ↩ من كشف الحساب. */
+function isSkippedMonth(apt, mk){ return Array.isArray(apt.skipMonths) && apt.skipMonths.includes(mk); }
+function rawPeriodFor(apt, mk){
+  return (apt.occupancyPeriods||[]).find(p=> mk >= p.from && (p.to===null || mk < p.to)) || null;
+}
+function setSkippedMonth(apt, mk, skip){
+  const list = Array.isArray(apt.skipMonths) ? apt.skipMonths.filter(x=> x!==mk) : [];
+  if(skip) list.push(mk);
+  list.sort();
+  if(list.length) apt.skipMonths = list; else delete apt.skipMonths;
 }
 
 /* ---------------- السكان وفترات السكن ----------------
@@ -1490,7 +1511,8 @@ function isOccupiedInMonth(apt, monthKey){
    القديم ومتأخراته والتزاماته بتفضل باسمه، وتغيير اشتراك حد مابيغيّرش الشهور اللي فاتت.
    apt.name / apt.subscription / apt.elevator = بيانات الساكن الحالي (أو آخر ساكن لو الشقة فاضية). */
 function periodFor(apt, mk){
-  return (apt.occupancyPeriods||[]).find(p=> mk >= p.from && (p.to===null || mk < p.to)) || null;
+  if(isSkippedMonth(apt, mk)) return null;
+  return rawPeriodFor(apt, mk);
 }
 function openPeriod(apt){
   return (apt.occupancyPeriods||[]).find(p=> p.to===null) || null;
@@ -1543,6 +1565,10 @@ function residentRangeText(r){
   return 'من ' + monthLabel(r.from) + (r.to ? ' لـ ' + monthLabel(shiftMonth(r.to, -1)) : ' — لسه ساكن');
 }
 /* الشهور اللي الساكن كان عليه فيها اشتراك (من أول الحسابات لحد maxMonth) */
+function residentSkippedMonths(r, maxMonth){
+  if(!Array.isArray(r.apt.skipMonths)) return [];
+  return r.apt.skipMonths.filter(mk=> mk >= START_MONTH && mk <= maxMonth && r.periods.includes(rawPeriodFor(r.apt, mk)));
+}
 function residentMonths(r, maxMonth){
   const out = [];
   r.periods.forEach(p=>{
@@ -1744,6 +1770,13 @@ function renderStatement(keepScroll){
             : `<button type="button" class="pp-btn" data-st-movein="${escapeHtml(apt.id)}">🏠 ساكن جديد</button>`}
     </div>`;
   }
+  if(edit){
+    // أي تحصيل من هنا بيتسجّل بالتاريخ ده وفي الخزنة دي
+    html += `<div class="st-cash">
+      <label>📅 <input type="date" class="st-cash-date" value="${escapeHtml(collectDate)}" aria-label="تاريخ التحصيل"></label>
+      <label>💼 الفلوس مع ${accSelectHtml('class="st-cash-acc" aria-label="الفلوس مع مين"', curAcc())}</label>
+    </div>`;
+  }
   if(!residents.length){
     html += `<div class="pp-sec"><div class="pp-foot">مفيش سكان متسجّلين للشقة دي لسه.</div></div>`;
   }
@@ -1774,6 +1807,7 @@ function renderStatement(keepScroll){
             <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="إجمالي المدفوع" title="إجمالي المدفوع للشهر — الزيادة بتتسجّل دفعة جديدة بتاريخ التحصيل">
             ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع الباقي (${fmt(sub - paid)})">✔</button>` : ''}
             ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح كل دفعات الشهر">✕</button>` : ''}
+            ${!paid ? `<button type="button" class="st-mini" data-st-skip="${mk}" title="مكنش ساكن الشهر ده — شيله من الحساب">🚫</button>` : ''}
           </span>`
         : `<span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>`}
       </div>`;
@@ -1790,6 +1824,10 @@ function renderStatement(keepScroll){
       });
     });
 
+    const skipped = residentSkippedMonths(r, maxMonth);
+    if(skipped.length){
+      html += `<div class="pp-foot st-skipped">🚫 مش محسوب عليه (مكنش ساكن): ${skipped.map(mk=> `<span class="st-skip-chip">${monthLabel(mk)}${edit ? ` <button type="button" class="st-mini" data-st-unskip="${mk}" title="رجّع الشهر ده على حسابه">↩</button>` : ''}</span>`).join(' ')}</div>`;
+    }
     if(commits.length){
       html += `<div class="pp-subtitle">التزامات إضافية عليه</div>`;
       commits.forEach(c=>{
@@ -1856,6 +1894,21 @@ function bindStatementEvents(ov, apt){
     if(!unlocked || !inp.value) return;
     editEntry(inp.dataset.stEDate, (list, i)=> list[i].date = inp.value);
   }));
+  const cd = ov.querySelector('.st-cash-date');
+  if(cd) cd.addEventListener('change', ()=>{ if(cd.value){ collectDate = cd.value; renderStatement(true); } });
+  const ca = ov.querySelector('.st-cash-acc');
+  if(ca) ca.addEventListener('change', ()=>{ setCurAcc(ca.value); renderStatement(true); });
+  ov.querySelectorAll('[data-st-skip]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const mk = b.dataset.stSkip;
+    if(((state.payments[mk]||{})[apt.id]||0) > 0){ alert('فيه فلوس متسجّلة في الشهر ده — امسحها الأول.'); return; }
+    if(!confirm('محدش كان ساكن في شقة ' + apt.id + ' في ' + monthLabel(mk) + '؟\nالشهر هيتشال من الحساب ومش هيتحسب عليه اشتراك. وتقدر ترجّعه بزرار ↩.')) return;
+    setSkippedMonth(apt, mk, true); done();
+  }));
+  ov.querySelectorAll('[data-st-unskip]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    setSkippedMonth(apt, b.dataset.stUnskip, false); done();
+  }));
   ov.querySelectorAll('[data-st-e-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
     if(!unlocked) return;
     editEntry(sel.dataset.stEAcc, (list, i)=> list[i].acc = sel.value);
@@ -1906,6 +1959,7 @@ function bindStatementEvents(ov, apt){
     if(v <= 0){ alert('اكتب المبلغ'); return; }
     if(!state.commitmentPayments) state.commitmentPayments = [];
     state.commitmentPayments.push({acc: curAcc(), id:'cp'+Date.now(), commitmentId:c.id, aptId:c.aptId, date:collectDate, amount:v});
+    noteCash(v, curAcc());
     done();
   }));
   ov.querySelectorAll('[data-st-commit-del]').forEach(b=> b.addEventListener('click', ()=>{
@@ -1948,6 +2002,28 @@ function accOf(rec){ return rec && validAcc(rec.acc) ? rec.acc : defaultAccId();
 function accName(id){
   const a = accountsList().find(x=> x.id===id) || accountsList()[0] || {name:'—'};
   return (a.icon ? a.icon + ' ' : '') + a.name;
+}
+/* رسالة صغيرة تحت الشاشة بعد التحصيل: اتسجّل كام وفي أنهي خزنة */
+let cashNoteSums = {}, cashNoteTimer = null;
+function noteCash(amount, acc){
+  amount = round2(amount);
+  if(amount <= 0) return;
+  acc = validAcc(acc) ? acc : curAcc();
+  cashNoteSums[acc] = round2((cashNoteSums[acc]||0) + amount);
+  clearTimeout(cashNoteTimer);
+  cashNoteTimer = setTimeout(()=>{
+    const msg = Object.entries(cashNoteSums).map(([a, v])=> '✓ اتسجّل ' + fmt(v) + ' جنيه في خزنة «' + accName(a) + '»').join('\n');
+    cashNoteSums = {};
+    showToast(msg);
+  }, 60);
+}
+function showToast(msg){
+  let t = document.getElementById('appToast');
+  if(!t){ t = document.createElement('div'); t.id = 'appToast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=> t.classList.remove('show'), 3200);
 }
 function curAcc(){ if(!validAcc(cashAcc)) cashAcc = defaultAccId(); return cashAcc; }
 function setCurAcc(id){
@@ -2054,7 +2130,11 @@ function setMonthPaid(mk, aptId, newTotal, date, acc){
   const list = paymentEntries(mk, aptId);
   const old = round2(list.reduce((s,x)=> s + x.amount, 0));
   newTotal = Math.max(0, round2(newTotal));
-  if(newTotal > old) list.push({amount: round2(newTotal - old), date: date || collectDate, acc: acc || curAcc()});
+  if(newTotal > old){
+    const e = {amount: round2(newTotal - old), date: date || collectDate, acc: acc || curAcc()};
+    list.push(e);
+    noteCash(e.amount, e.acc);
+  }
   else if(newTotal < old) trimPaymentEntries(list, round2(old - newTotal));
   writePaymentEntries(mk, aptId, list);
 }
@@ -4395,6 +4475,7 @@ function bindTabEvents(){
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
           date: collectDate, amount: val
         });
+        if(c.aptId) noteCash(val, curAcc());
         persist(); renderAll();
       });
     });
@@ -4634,6 +4715,7 @@ function bindTabEvents(){
           id:'cp'+Date.now(), commitmentId:cId, aptId:c.aptId,
           date: collectDate, amount: val
         });
+        if(c.aptId) noteCash(val, curAcc());
         persist(); renderAll();
       });
     });
