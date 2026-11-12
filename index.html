@@ -378,6 +378,19 @@
     gap:8px;
   }
   .apt-row:last-child{border-bottom:none;}
+  /* تبويب الشقق: كل شقة كارت لوحدها عشان أزرارها ماتتلخبطش مع الشقة اللي تحتها */
+  .apt-card{ background:#fff; border:1.5px solid var(--line); border-radius:14px; margin:0 0 14px; overflow:hidden; box-shadow:var(--shadow-card); }
+  .apt-card-head{ display:flex; align-items:center; gap:10px; padding:9px 14px; background:var(--night); color:#fff; }
+  .apt-card.vacant .apt-card-head{ background:#6d6a92; }
+  .apt-card-num{ font-family:'IBM Plex Mono'; font-weight:700; font-size:15px; background:rgba(255,255,255,.14); border-radius:8px; padding:2px 8px; }
+  .apt-card-who{ font-weight:700; font-size:15px; }
+  .apt-card-body{ padding:10px 14px 12px; display:flex; flex-direction:column; gap:8px; }
+  .apt-card-line{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .apt-f{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
+  .apt-f input[type=text], .apt-f select{ border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; color:var(--ink); }
+  .apt-card-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-top:8px; border-top:1px dashed var(--line); }
+  .apt-card-actions .apt-del{ margin-inline-start:auto; font-size:12px; }
+  .apt-card-body .meta{ font-size:11.5px; color:var(--ink-soft); }
   .apt-info{display:flex; flex-direction:column; flex:1; min-width:0;}
   .apt-info .name{font-size:14.5px; font-weight:600;}
   .apt-info .meta{font-size:11.5px; color:var(--ink-soft);}
@@ -808,7 +821,7 @@
 
 <script>
 const STORE_KEY = 'building-finances-v1';
-const APP_VERSION = '2026-11-12a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
+const APP_VERSION = '2026-11-12b'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
 const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
 const START_MONTH = '2026-08';
@@ -4377,31 +4390,38 @@ function tplApts(){
       </form>
     </div>` : ''}
 
-    <div class="section-title">إدارة الشقق (${state.apartments.length})</div><div class="card">`;
+    <div class="section-title">إدارة الشقق (${state.apartments.length})</div><div>`;
   state.apartments.forEach(a=>{
-    html += `<div class="apt-row" style="flex-wrap:wrap;">
-      <div class="apt-info" style="flex:1; min-width:150px;">
-        <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" data-apt-id="${escapeHtml(a.id)}" value="${escapeHtml(a.id)}" placeholder="رقم الشقة" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; width:70px; font-family:'IBM Plex Mono';">
-          <select data-apt-floor="${escapeHtml(a.id)}" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; flex:1;">
+    // كل شقة في كارت لوحدها: عنوان واضح فوق (رقم الشقة + الساكن) وكل أزرارها جوّه نفس الكارت
+    const id = escapeHtml(a.id);
+    const who = a.occupied ? escapeHtml(a.name || '—') : 'شاغرة';
+    html += `<div class="apt-card ${a.occupied ? '' : 'vacant'}">
+      <div class="apt-card-head">
+        <span class="apt-card-num">شقة ${id}</span>
+        <span class="apt-card-who">${who}</span>
+      </div>
+      <div class="apt-card-body">
+        <div class="apt-card-line">
+          <label class="apt-f">رقم الشقة <input type="text" data-apt-id="${id}" value="${id}" style="width:70px; font-family:'IBM Plex Mono';"></label>
+          <label class="apt-f" style="flex:1;">الدور <select data-apt-floor="${id}" style="flex:1;">
             ${FLOOR_ORDER.map(f=>`<option value="${f}" ${f===a.floor?'selected':''}>${f}</option>`).join('')}
-          </select>
+          </select></label>
         </div>
         ${a.occupied
-          ? `<input type="text" data-apt-name="${escapeHtml(a.id)}" value="${escapeHtml(a.name)}" placeholder="اسم الساكن" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:13.5px; margin-top:4px; width:100%;">
-             <div class="meta" style="margin-top:4px;">ساكن من ${monthLabel((openPeriod(a)||{}).from || currentMonth)}</div>`
-          : `<div class="meta" style="margin-top:6px;">🔑 شاغرة${(()=>{ const rs = residentsOf(a); const last = rs[rs.length-1]; return last ? ' — آخر ساكن: ' + escapeHtml(last.name||'—') + ' (لحد ' + monthLabel(shiftMonth(last.to,-1)) + ')' : ''; })()}</div>`}
-      </div>
-      <div class="apt-actions" style="gap:8px; flex-wrap:wrap;">
-        ${a.occupied ? `
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-soft);">
-          <input type="checkbox" data-apt-elevator="${escapeHtml(a.id)}" ${a.elevator?'checked':''}> أسانسير
-        </label>
-        <input type="number" class="amount-input" data-apt-sub="${escapeHtml(a.id)}" value="${a.subscription}" style="width:74px" title="الاشتراك الشهري">
-        <button type="button" class="pill pay" data-move-out="${escapeHtml(a.id)}" style="background:var(--paper-2); color:var(--ink);">🚪 الساكن مشي</button>`
-        : `<button type="button" class="pill pay" data-move-in="${escapeHtml(a.id)}">🏠 ساكن جديد</button>`}
-        <button type="button" class="pill" data-open-statement="${escapeHtml(a.id)}" style="background:var(--paper-2); color:var(--ink);">📄 كشف حساب</button>
-        <button class="del" data-del-apt="${escapeHtml(a.id)}" title="حذف الشقة">✕</button>
+          ? `<label class="apt-f">اسم الساكن <input type="text" data-apt-name="${id}" value="${escapeHtml(a.name)}" style="flex:1;"></label>
+             <div class="meta">ساكن من ${monthLabel((openPeriod(a)||{}).from || currentMonth)}</div>
+             <div class="apt-card-line">
+               <label class="apt-f"><input type="checkbox" data-apt-elevator="${id}" ${a.elevator?'checked':''}> مشترك في الأسانسير</label>
+               <label class="apt-f">الاشتراك <input type="number" class="amount-input" data-apt-sub="${id}" value="${a.subscription}" style="width:74px"></label>
+             </div>`
+          : `<div class="meta">🔑 شاغرة${(()=>{ const rs = residentsOf(a); const last = rs[rs.length-1]; return last ? ' — آخر ساكن: ' + escapeHtml(last.name||'—') + ' (لحد ' + monthLabel(shiftMonth(last.to,-1)) + ')' : ''; })()}</div>`}
+        <div class="apt-card-actions">
+          <button type="button" class="pill" data-open-statement="${id}" style="background:var(--paper-2); color:var(--ink);">📄 كشف حساب ${id}</button>
+          ${a.occupied
+            ? `<button type="button" class="pill" data-move-out="${id}" style="background:var(--paper-2); color:var(--ink);">🚪 ${who} مشي</button>`
+            : `<button type="button" class="pill pay" data-move-in="${id}">🏠 ساكن جديد في ${id}</button>`}
+          <button type="button" class="del apt-del" data-del-apt="${id}" title="حذف شقة ${id}">🗑 حذف الشقة</button>
+        </div>
       </div>
     </div>`;
   });
@@ -5123,7 +5143,9 @@ function bindTabEvents(){
     });
     document.querySelectorAll('[data-del-apt]').forEach(b=>{
       b.addEventListener('click', ()=>{
-        if(!confirm('تحذف شقة ' + b.dataset.delApt + ' خالص؟\nلو الساكن مشي بس، استخدم "الساكن مشي" بدل الحذف عشان حساباته تفضل.')) return;
+        const ap = state.apartments.find(a=> a.id===b.dataset.delApt);
+        const nm = ap && ap.occupied && ap.name ? ' (الساكن: ' + ap.name + ')' : '';
+        if(!confirm('تحذف شقة ' + b.dataset.delApt + nm + ' خالص؟\nلو الساكن مشي بس، استخدم "الساكن مشي" بدل الحذف عشان حساباته تفضل.')) return;
         state.apartments = state.apartments.filter(a=>a.id!==b.dataset.delApt);
         persist(); renderAll();
       });
