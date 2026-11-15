@@ -821,7 +821,7 @@
 
 <script>
 const STORE_KEY = 'building-finances-v1';
-const APP_VERSION = '2026-11-12b'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
+const APP_VERSION = '2026-11-15a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
 const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
 const START_MONTH = '2026-08';
@@ -895,7 +895,6 @@ function seedState(){
       elevatorAmount: 500,
       noElevatorAmount: 450,
       openingBalance: 4050,
-      editPin: '1234',
       unlockTaps: 4,
       changePinTaps: 7
     },
@@ -940,23 +939,16 @@ function shiftMonth(key, delta){
 
 /* ---------------- شيت جوجل كقاعدة بيانات مشتركة ---------------- */
 /* غيّر الرابط ده لو عملت نشر (Deploy) جديد للسكريبت وطلع لك رابط مختلف */
-const REMOTE_DB_URL = 'https://script.google.com/macros/s/AKfycbz1_5VB0BEdJt6w0GiajPA2Rwdyx63CWSaYhZ2EYfu9EG038vZmsgDleAYxZrW1-Ch3aA/exec';
+const REMOTE_DB_URL = '__NEW_BACKEND_URL__'; // السكريبت المحمي (apps-script/Code.gs)
 
 /* رابط سكريبت رفع المرفقات على جوجل درايف (ملف Attachments.gs — نشر منفصل).
    لو فاضي: المرفقات بتتحفظ جوه الشيت زي الأول (وده اللي بيخلّي الحفظ يفشل لما الحجم يكبر).
    لو متعبّي: المرفق بيترفع على درايف وبيتحفظ في الشيت رابطه بس. */
-const ATTACH_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbxYa9M4dq4gIQ2xjpmd_jAOTwDL3jsQ3mNgVOKS_bdnwsW7Tj0wbvXZdMPuZt4EERtl/exec';
+const ATTACH_UPLOAD_URL = REMOTE_DB_URL; // المرفقات بتترفع على نفس السكريبت وبالرمز السري
 
 async function uploadAttachmentToDrive(att){
   const comma = att.dataUrl.indexOf(',');
-  const res = await fetch(ATTACH_UPLOAD_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // نص عادي عشان نتفادى preflight
-    body: JSON.stringify({action:'upload', name: att.name, type: att.type, data: att.dataUrl.slice(comma+1)})
-  });
-  const txt = await res.text();
-  let json = null;
-  try{ json = JSON.parse(txt); }catch(e){}
+  const json = await backendPost({action:'upload', name: att.name, type: att.type, data: att.dataUrl.slice(comma+1)});
   if(!json || json.ok !== true || !json.url){
     throw new Error((json && json.error) || 'رد غير مفهوم من سكريبت المرفقات (راجع إن النشر Anyone)');
   }
@@ -978,6 +970,27 @@ async function uploadAttachmentToDrive(att){
 const LOCAL_BACKUP_KEY = STORE_KEY + '::backup';
 let lastSyncedRaw = null;
 let syncTimer = null;
+/* الرمز السري: مش محفوظ في البيانات ولا على الجهاز — السكريبت هو اللي بيتأكد منه.
+   بيتحفظ في الذاكرة بس طول ما التعديل مفتوح، وبيتبعت مع كل حفظ. */
+let adminPin = null;
+// نفس دالة السكريبت بالظبط: "بصمة" البيانات عشان السكريبت يعرف لو جهاز تاني حفظ في النص
+function hashStr(s){
+  let h = 5381;
+  for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36) + ':' + s.length;
+}
+async function backendPost(payload){
+  const res = await fetch(REMOTE_DB_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // نص عادي عشان نتفادى preflight
+    body: JSON.stringify(Object.assign({pin: adminPin}, payload))
+  });
+  const txt = await res.text();
+  let json = null;
+  try{ json = JSON.parse(txt); }catch(e){}
+  if(!json) throw new Error('رد غير مفهوم من السكريبت');
+  return json;
+}
 let canWrite = false;        // مفيش حفظ خالص قبل قراءة ناجحة
 let readOnlyReason = '';
 let booting = false;         // true = بنعرض نسخة الجهاز لحد ما القراءة من جوجل شيت تخلص
@@ -1076,15 +1089,8 @@ async function remoteGet(key, tries){
   return {ok:false, error: lastErr ? lastErr.message : 'سبب غير معروف'};
 }
 
-async function remoteSet(key, value, force){
-  const res = await fetch(REMOTE_DB_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // نص عادي عشان نتفادى preflight
-    body: JSON.stringify({key:key, value:value, force: !!force})
-  });
-  const txt = await res.text();
-  let json = null;
-  try{ json = JSON.parse(txt); }catch(e){}
+async function remoteSet(key, value, force, base){
+  const json = await backendPost({action:'save', key:key, value:value, force: !!force, base: base || ''});
   if(!json || json.ok !== true){
     const err = new Error((json && json.error) || 'الحفظ ما تمّش');
     err.code = json && json.code;
@@ -1173,9 +1179,13 @@ async function loadState(){
     await persist({force:true});
     renderAll();
   }});
-  btns.push({label:'🔑 للمسؤول', onClick: function(){
-    const known = (safeParse(local && local.raw) || {settings:{}}).settings.editPin || '1234';
-    if(prompt('الرمز السري') !== known) return;
+  btns.push({label:'🔑 للمسؤول', onClick: async function(){
+    const pin = prompt('الرمز السري');
+    if(!pin) return;
+    let res = null;
+    try{ res = await backendPost({action:'check', pin}); }catch(e){}
+    if(!res || !res.ok){ alert(res && res.error ? res.error : 'الرمز غلط'); return; }
+    adminPin = pin;
     showBlocker('قاعدة البيانات فاضية',
       'جوجل شيت رد بنجاح بس مفيش بيانات متسجّلة.\nلو المفروض فيه بيانات، متكملش — افتح الشيت وارجع نسخة سابقة من: ملف ← سجل الإصدارات.',
       [{label:'حاول تاني', onClick: retryLoad}].concat(adminBtns));
@@ -1226,9 +1236,9 @@ function migrateState(opts){
     state.settings = { elevatorAmount:500, noElevatorAmount:450 };
     changed = true;
   }
-  if(!state.settings.editPin){
-    state.settings.editPin = '1234';
-    changed = true;
+  if(state.settings.editPin !== undefined){
+    // الرمز السري بقى في السكريبت بس — مايتحفظش جوّه البيانات
+    delete state.settings.editPin;
   }
   if(typeof state.settings.unlockTaps !== 'number'){
     state.settings.unlockTaps = 4;
@@ -1375,13 +1385,17 @@ async function persistNow(opts){
     setSyncStatus('⛔ اتمنع حفظ بيانات ناقصة', true);
     return false;
   }
+  if(state.settings) delete state.settings.editPin;     // الرمز مايتحفظش جوّه البيانات
   const raw = JSON.stringify(state);
   saveLocalBackup(raw);
+  // من غير الرمز السري (أجهزة السكان) مفيش أي كتابة على جوجل شيت خالص
+  if(!adminPin) return false;
   const prev = lastSyncedRaw;
+  const base = prev ? hashStr(prev) : '';
   lastSyncedRaw = raw;
   setSyncStatus('🔄 بيحفظ...');
   try{
-    await remoteSet('data', raw, opts.force);
+    await remoteSet('data', raw, opts.force, base);
     setSyncStatus('🟢 اتحفظ في جوجل شيت ' + new Date().toLocaleTimeString('ar-EG'));
     return true;
   }catch(e){
@@ -1397,6 +1411,19 @@ async function persistNow(opts){
       return false;
     }
     lastSyncedRaw = prev;
+    if(e.code === 'CONFLICT'){
+      // جهاز تاني حفظ وإحنا مش واخدين بالنا — منكتبش فوقه: نجيب آخر بيانات وتعيد تعديلك
+      setSyncStatus('⚠️ فيه تعديل من جهاز تاني — اتحدّث', true);
+      alert('فيه تعديل اتحفظ من جهاز تاني قبل تعديلك.\nهجيبلك آخر بيانات دلوقتي — راجع وأعمل تعديلك الأخير تاني.');
+      await reloadFromRemote();
+      return false;
+    }
+    if(e.code === 'AUTH' || e.code === 'LOCKED'){
+      setSyncStatus('⛔ الحفظ اترفض — ' + e.message, true);
+      alert('الحفظ اترفض: ' + e.message + '\nافتح التعديل بالرمز السري تاني.');
+      lockNow();
+      return false;
+    }
     setSyncStatus('🟠 محفوظ على الجهاز بس — ' + e.message, true);
     return false;
   }
@@ -1431,6 +1458,18 @@ async function refreshNow(btn){
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = label; }
   }
+}
+async function reloadFromRemote(){
+  const r = await remoteGet('data', 2);
+  const parsed = r.ok && r.value ? safeParse(r.value) : null;
+  if(!validState(parsed)) return false;
+  lastSyncedRaw = r.value;
+  state = parsed;
+  canWrite = true;
+  saveLocalBackup(r.value);
+  migrateState({noSave: true});
+  renderAll();
+  return true;
 }
 async function checkAppVersion(){
   try{
@@ -4383,7 +4422,7 @@ function tplApts(){
     <div class="section-title">إعدادات الدخول</div>
     <div class="card">
       <form id="lockSettingsForm" class="inline">
-        <input type="text" name="editPin" placeholder="الرقم السري" value="${state.settings.editPin}">
+        <input type="password" name="editPin" placeholder="رمز سري جديد (سيبه فاضي لو مش هتغيّره)" autocomplete="new-password">
         <input type="number" name="unlockTaps" placeholder="عدد دوسات الدخول" value="${state.settings.unlockTaps}" min="2" max="30">
         <input type="number" name="changePinTaps" placeholder="عدد دوسات تغيير الرقم السري" value="${state.settings.changePinTaps}" min="2" max="30">
         <button type="submit">حفظ</button>
@@ -5076,10 +5115,17 @@ function bindTabEvents(){
       lockSettingsForm.addEventListener('submit', e=>{
         e.preventDefault();
         const f = e.target;
-        state.settings.editPin = f.editPin.value || state.settings.editPin;
         state.settings.unlockTaps = Number(f.unlockTaps.value) || state.settings.unlockTaps;
         state.settings.changePinTaps = Number(f.changePinTaps.value) || state.settings.changePinTaps;
         persist(); renderAll();
+        const np = String(f.editPin.value||'').trim();
+        if(np){
+          if(np.length < 4){ alert('الرمز السري لازم يكون 4 أرقام/حروف على الأقل'); return; }
+          backendPost({action:'setPin', newPin: np}).then(res=>{
+            if(res.ok){ adminPin = np; alert('✓ الرمز السري اتغيّر'); }
+            else alert('الرمز ما اتغيّرش: ' + (res.error||''));
+          }).catch(()=> alert('مش قادر يوصل لجوجل شيت — الرمز ما اتغيّرش.'));
+        }
       });
     }
     // الساكن مشي / ساكن جديد: بيسألوا عن الشهر صراحةً بدل ما يعتمدوا على الشهر المعروض فوق
@@ -5276,8 +5322,23 @@ function tryUnlock(){
     alert('استنى ثواني لحد ما البيانات الجديدة توصل من جوجل شيت، وبعدين افتح التعديل.');
     return;
   }
-  const val = document.getElementById('pinInput').value;
-  if(val === state.settings.editPin){
+  const inp = document.getElementById('pinInput');
+  const val = inp.value;
+  if(!val) return;
+  const btn = document.getElementById('pinSubmit');
+  btn.disabled = true;
+  backendPost({action:'check', pin: val}).then(res=>{
+    btn.disabled = false;
+    if(res.ok){ adminPin = val; unlockGranted(); return; }
+    inp.value = '';
+    if(res.code === 'LOCKED') alert(res.error);
+  }).catch(()=>{
+    btn.disabled = false;
+    alert('مش قادر يوصل لجوجل شيت — اتأكد من النت وجرّب تاني.');
+  });
+}
+function unlockGranted(){
+  {
     unlocked = true;
     document.getElementById('unlockPanel').classList.remove('show');
     document.getElementById('pinInput').value='';
@@ -5289,13 +5350,12 @@ function tryUnlock(){
     titleTaps = [];
     renderAll();
     resetIdleTimer();
-  } else {
-    document.getElementById('pinInput').value='';
   }
 }
 
 function lockNow(){
   unlocked = false;
+  adminPin = null;
   document.getElementById('lockBtn').classList.remove('revealed');
   document.getElementById('unlockPanel').classList.remove('show');
   if(idleTimer) clearTimeout(idleTimer);
