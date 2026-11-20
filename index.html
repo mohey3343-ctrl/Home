@@ -715,7 +715,31 @@
   .st-cash label{ display:flex; align-items:center; gap:4px; }
   .st-cash select{ font-weight:700; }
   .st-skipped{ padding-top:6px; }
-  .st-waive-all{ padding:6px 0 0; text-align:left; }
+  .st-waive-all{ padding:6px 0 0; display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+  .st-pay .k b{ font-size:14px; display:inline; }
+  .col-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .col-row .pp-field{ flex:1; min-width:140px; }
+  #colAmount{ font-size:20px; font-weight:700; font-family:'IBM Plex Mono'; text-align:center; }
+  .col-preview{ margin-top:6px; }
+  .col-bar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; border:2px solid var(--lit-2); }
+  .col-bar label{ font-weight:700; font-size:13px; }
+  .col-bar select{ flex:1; min-width:180px; font-size:14px; padding:7px 8px; }
+  .arr-table{ width:100%; border-collapse:collapse; font-size:13px; direction:rtl; }
+  .arr-table thead tr{ background:var(--night); }
+  .arr-table tr{ border-bottom:1px solid var(--line); }
+  .arr-name{ padding:10px 12px; text-align:right; position:sticky; right:0; z-index:1; border-left:1px solid var(--line); font-weight:600; color:var(--ink); white-space:nowrap; min-width:90px; }
+  .arr-table thead .arr-name{ background:var(--night); color:#fff; font-family:'El Messiri'; font-weight:700; z-index:2; }
+  .arr-sub{ font-weight:500; font-size:11.5px; color:var(--ink-soft); }
+  .arr-c{ padding:8px; text-align:center; }
+  .arr-owed{ color:var(--bad); font-weight:700; font-size:12.5px; }
+  .arr-nil{ color:var(--ink-soft); }
+  .arr-foot{ background:var(--night-2); color:var(--lit); font-family:'IBM Plex Mono'; font-weight:700; font-size:12px; }
+  .arr-act{ white-space:nowrap; margin-top:5px; display:flex; gap:4px; }
+  .arr-btn{ border:1px solid var(--line); background:#fff; color:var(--night); border-radius:8px; padding:4px 8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:'IBM Plex Sans Arabic'; margin:1px; }
+  .arr-btn.pay{ background:var(--lit-2); border-color:var(--lit-2); color:#fff; }
+  .dc-last{ font-size:11px; color:var(--ink); margin-top:4px; }
+  .share-host{ width:640px; }
+  .door-page.share .door-card{ height:auto; min-height:0; }
   .st-skip-chip{ display:inline-flex; align-items:center; gap:4px; background:var(--paper-2); border-radius:999px; padding:2px 8px; margin:2px 0; }
   #appToast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%, 20px); background:#1f6b45; color:#fff; padding:10px 16px; border-radius:12px;
     font-size:13.5px; font-weight:700; white-space:pre-line; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none;
@@ -806,7 +830,6 @@
 
 <div class="tabbar" id="tabbar">
   <button data-tab="overview" class="active"><span class="icon3d gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="tab-label">نظرة عامة</span></button>
-  <button data-tab="collect"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="tab-label">التحصيل</span></button>
   <button data-tab="balance"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.8.2 5 2.2 5 5.4"/></svg></span><span class="tab-label">رصيد السكان</span></button>
   <button data-tab="arrears"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span class="tab-label">متأخرات السكان</span></button>
   <button data-tab="commitments"><span class="icon3d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span><span class="tab-label">التزامات العمارة</span></button>
@@ -822,7 +845,7 @@
 
 <script>
 const STORE_KEY = 'building-finances-v1';
-const APP_VERSION = '2026-11-20a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
+const APP_VERSION = '2026-11-20b'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
 const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
 const START_MONTH = '2026-08';
@@ -1841,11 +1864,221 @@ function showMoveIn(aptId){
   });
 }
 
-/* ---------------- كشف حساب الشقة (كل ساكن سكنها وفلوسه) ---------------- */
-let statementAptId = null;
+/* ================= التحصيل من مكان واحد (تبويب المتأخرات) =================
+   الساكن بيدفع مبلغ واحد (مثلًا 800) ← البرنامج بيوزّعه لوحده من الأقدم للأحدث على الشهور اللي عليه
+   والتزاماته، وأي زيادة بتروح مقدّم للشهور الجاية. كل الأجزاء بتتسجّل بنفس التاريخ والخزنة وعليها
+   rcpt واحد، فكشف الحساب ودفتر الصندوق بيعرضوها "دفعة واحدة 800" مش 450 + 350. */
+function newRcptId(){ return 'rc' + Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+function monthPaid(apt, mk){ return round2((state.payments[mk]||{})[apt.id] || 0); }
+function planCollection(r, amount){
+  const apt = r.apt, asOf = arrearsAsOfMonth();
+  const items = [];
+  residentMonths(r, asOf).forEach(mk=>{
+    const owed = round2(dueFor(apt, mk) - monthPaid(apt, mk));
+    if(owed > 0) items.push({kind:'m', mk, label: monthLabel(mk), owed, sort: mk + '-0'});
+  });
+  residentCommitments(r).filter(c=> c.startMonth <= asOf).forEach(c=>{
+    const rem = round2(commitmentRemaining(c, asOf));
+    if(rem > 0) items.push({kind:'c', c, label: c.note || COMMITMENT_TYPES[c.type], owed: rem, sort: c.startMonth + '-1'});
+  });
+  items.sort((a,b)=> a.sort.localeCompare(b.sort));
+  const totalOwed = round2(items.reduce((s,x)=> s + x.owed, 0));
+  let left = Math.max(0, round2(amount));
+  const parts = [];
+  items.forEach(it=>{
+    if(left <= 0) return;
+    const pay = Math.min(it.owed, left);
+    parts.push(Object.assign({}, it, {pay}));
+    left = round2(left - pay);
+  });
+  // زيادة ← مقدّم للشهور الجاية (للساكن الحالي بس)
+  if(left > 0 && r.current){
+    let mk = shiftMonth(asOf, 1);
+    for(let i = 0; i < 36 && left > 0; i++, mk = shiftMonth(mk, 1)){
+      const p = periodFor(apt, mk);
+      if(!p || !r.periods.includes(p)) continue;
+      const owed = round2(dueFor(apt, mk) - monthPaid(apt, mk));
+      if(owed <= 0) continue;
+      const pay = Math.min(owed, left);
+      parts.push({kind:'m', mk, label: monthLabel(mk) + ' (مقدّم)', owed, pay, advance: true});
+      left = round2(left - pay);
+    }
+  }
+  return {items, parts, left, totalOwed};
+}
+function applyCollection(r, plan, date, acc){
+  const apt = r.apt, rcpt = newRcptId();
+  if(!state.commitmentPayments) state.commitmentPayments = [];
+  let total = 0;
+  plan.parts.forEach((p, i)=>{
+    if(p.kind === 'm'){
+      const list = paymentEntries(p.mk, apt.id);
+      list.push({amount: p.pay, date, acc, rcpt});
+      writePaymentEntries(p.mk, apt.id, list);
+    } else {
+      state.commitmentPayments.push({acc, id: 'cp' + Date.now() + i + Math.random().toString(36).slice(2,5),
+        commitmentId: p.c.id, aptId: p.c.aptId, date, amount: p.pay, rcpt});
+    }
+    total = round2(total + p.pay);
+  });
+  noteCash(total, acc);
+  return rcpt;
+}
 
-function showStatement(aptId){
+/* دفعات الساكن مجمّعة: كل تحصيل (rcpt) سطر واحد بإجماليه، والدفعات القديمة كل واحدة لوحدها.
+   key: g:<rcpt> | e:<mk>|<apt>|<idx> | c:<cpId> */
+function residentPayments(r, uptoMonth){
+  const apt = r.apt, groups = new Map(), out = [];
+  const add = (x, key, part)=>{
+    if(x.rcpt){
+      let g = groups.get(x.rcpt);
+      if(!g){ g = {key: 'g:' + x.rcpt, date: x.date, acc: accOf(x), total: 0, parts: []}; groups.set(x.rcpt, g); }
+      g.total = round2(g.total + part.amount); g.parts.push(part);
+    } else out.push({key, date: x.date, acc: accOf(x), total: part.amount, parts: [part]});
+  };
+  residentMonths(r, uptoMonth || lastPaidMonth(apt)).forEach(mk=>
+    paymentEntries(mk, apt.id).forEach((x, i)=> add(x, 'e:' + mk + '|' + apt.id + '|' + i, {label: monthLabel(mk), amount: x.amount})));
+  residentCommitments(r).forEach(c=> commitmentPayments(c).forEach(cp=>
+    add(cp, 'c:' + cp.id, {label: c.note || COMMITMENT_TYPES[c.type], amount: Number(cp.amount)||0})));
+  return out.concat([...groups.values()]).sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+}
+function lastPaidMonth(apt){
+  const realMonth = todayStr().slice(0,7);
+  let max = currentMonth > realMonth ? currentMonth : realMonth;
+  Object.keys(state.payments||{}).forEach(mk=>{ if(mk > max && (state.payments[mk]||{})[apt.id] > 0) max = mk; });
+  return max;
+}
+function paymentPartsText(p){
+  return p.parts.length > 1 || p.parts[0].label.includes('مقدّم') ? p.parts.map(x=> x.label + ' ' + fmt(x.amount)).join(' + ') : p.parts[0].label;
+}
+/* تعديل/مسح دفعة (من كشف الحساب أو دفتر الصندوق). op: {date} | {acc} | {del:true} */
+function editPayment(key, op){
+  const apply = x=>{ if(op.date) x.date = op.date; if(op.acc) x.acc = op.acc; };
+  const kind = key.slice(0, 2), ref = key.slice(2);
+  if(kind === 'g:'){
+    Object.entries(state.paymentLog||{}).forEach(([mk, obj])=> Object.keys(obj||{}).forEach(aptId=>{
+      const list = paymentEntries(mk, aptId);
+      if(!list.some(x=> x.rcpt === ref)) return;
+      writePaymentEntries(mk, aptId, op.del ? list.filter(x=> x.rcpt !== ref) : list.map(x=>{ if(x.rcpt === ref) apply(x); return x; }));
+    }));
+    if(op.del) state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=> cp.rcpt !== ref);
+    else (state.commitmentPayments||[]).forEach(cp=>{ if(cp.rcpt === ref) apply(cp); });
+  } else if(kind === 'e:'){
+    const [mk, aptId, idx] = ref.split('|');
+    const list = paymentEntries(mk, aptId);
+    if(!list[Number(idx)]) return;
+    if(op.del) list.splice(Number(idx), 1); else apply(list[Number(idx)]);
+    writePaymentEntries(mk, aptId, list);
+  } else if(kind === 'c:'){
+    if(op.del) state.commitmentPayments = (state.commitmentPayments||[]).filter(cp=> cp.id !== ref);
+    else { const cp = (state.commitmentPayments||[]).find(x=> x.id === ref); if(cp) apply(cp); }
+  }
+}
+
+/* شاشة التحصيل: مبلغ واحد ← بيتوزع لوحده، وبعدها تقدر تبعتله كشف الحساب */
+function showCollect(aptId, rid){
+  if(!unlocked) return;
+  const apt = state.apartments.find(a=> a.id === aptId); if(!apt) return;
+  const r = residentsOf(apt).find(x=> rid ? x.rid === rid : x.current); if(!r) return;
+  const plan0 = planCollection(r, 0);
+  const nextDue = plan0.totalOwed || dueFor(apt, shiftMonth(arrearsAsOfMonth(), 1));
+  const html = popupHead('💰 تحصيل — ' + escapeHtml(r.name || '—') + ' (شقة ' + escapeHtml(apt.id) + ')') + `
+    <div class="pp-sec">
+      ${plan0.items.length ? `<div class="pp-subtitle">عليه (الأقدم الأول)</div>
+        ${plan0.items.map(it=> `<div class="pp-row"><span class="k">${escapeHtml(it.label)}</span><span class="v num">${fmt(it.owed)}</span></div>`).join('')}
+        <div class="pp-row total"><span class="k">الإجمالي</span><span class="v num" style="color:var(--bad)">${fmt(plan0.totalOwed)}</span></div>`
+        : `<div class="pp-note">مفيش عليه متأخرات — أي مبلغ هيتسجّل مقدّم للشهور الجاية.</div>`}
+      <label class="pp-field">💵 دفع كام؟
+        <input type="number" id="colAmount" min="0" step="any" inputmode="decimal" value="${nextDue || ''}">
+      </label>
+      <div class="col-row">
+        <label class="pp-field">📅 التاريخ <input type="date" id="colDate" value="${todayStr()}"></label>
+        <label class="pp-field">💼 الفلوس مع ${accSelectHtml('id="colAcc"', curAcc())}</label>
+      </div>
+      <div class="col-preview" id="colPreview"></div>
+      <div class="pp-actions"><button type="button" class="pp-btn" id="colSave">✔ تسجيل</button></div>
+    </div>`;
+  const ov = openPopup('collectPopup', html);
+  const amt = ov.querySelector('#colAmount');
+  const preview = ()=>{
+    const p = planCollection(r, Number(amt.value) || 0);
+    const box = ov.querySelector('#colPreview');
+    if(!p.parts.length){ box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="pp-subtitle">هيتوزعوا كده</div>` + p.parts.map(x=>
+      `<div class="pp-row"><span class="k">${escapeHtml(x.label)}</span><span class="v num">${fmt(x.pay)}${x.pay >= x.owed ? ' <small style="color:var(--good)">✓ خالص</small>' : ` <small style="color:var(--bad)">باقي ${fmt(x.owed - x.pay)}</small>`}</span></div>`).join('')
+      + (p.left > 0 ? `<div class="pp-note warn">فاضل ${fmt(p.left)} مش لاقي مكان يتسجّل فيه — قلّل المبلغ.</div>` : '')
+      + (!p.left && p.totalOwed > 0 ? `<div class="pp-foot">${round2(p.totalOwed - p.parts.filter(x=> !x.advance).reduce((s,x)=> s + x.pay, 0)) > 0 ? 'هيفضل عليه ' + fmt(round2(p.totalOwed - p.parts.filter(x=> !x.advance).reduce((s,x)=> s + x.pay, 0))) : 'كده هيبقى خالص ✓'}</div>` : '');
+  };
+  amt.addEventListener('input', preview);
+  preview();
+  setTimeout(()=>{ amt.focus(); amt.select(); }, 50);
+  ov.querySelector('#colSave').addEventListener('click', ()=>{
+    const v = round2(amt.value);
+    if(!(v > 0)){ alert('اكتب المبلغ اللي دفعه'); return; }
+    const p = planCollection(r, v);
+    if(p.left > 0){ alert('المبلغ أكبر من اللي عليه بـ ' + fmt(p.left) + ' — مفيش مكان يتسجّل فيه.'); return; }
+    const date = ov.querySelector('#colDate').value || todayStr();
+    const acc = ov.querySelector('#colAcc').value;
+    setCurAcc(acc); collectDate = date;
+    applyCollection(r, p, date, acc);
+    persist(); renderAll();
+    const after = planCollection(r, 0).totalOwed;
+    const ov2 = openPopup('collectPopup', popupHead('✓ اتسجّل') + `
+      <div class="pp-sec">
+        <div class="pp-note"><b class="num">${fmt(v)}</b> جنيه من ${escapeHtml(r.name || '—')} (شقة ${escapeHtml(apt.id)}) — يوم ${escapeHtml(date)} — في خزنة «${escapeHtml(accName(acc))}».</div>
+        <div class="pp-row total"><span class="k">${after > 0 ? 'باقي عليه' : 'حسابه'}</span><span class="v num" style="color:${after > 0 ? 'var(--bad)' : 'var(--good)'}">${after > 0 ? fmt(after) : 'خالص ✓'}</span></div>
+        <div class="pp-actions">
+          <button type="button" class="pp-btn" id="colShare">📤 ابعتله كشف الحساب</button>
+          <button type="button" class="pp-btn ghost" id="colDone">تمام</button>
+        </div>
+      </div>`);
+    ov2.querySelector('#colShare').addEventListener('click', e=> shareStatementImage(r, e.currentTarget));
+    ov2.querySelector('#colDone').addEventListener('click', ()=> closePopup('collectPopup'));
+  });
+}
+
+/* كشف حساب الساكن كصورة — تتبعت واتساب */
+async function shareStatementImage(r, btn){
+  const label = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ بيجهّز الصورة...'; }
+  const d = doorNoticeFor(r);
+  const name = 'كشف-حساب-شقة-' + r.apt.id + '.png';
+  let file;
+  const host = document.createElement('div');
+  host.className = 'pdf-host share-host';
+  host.innerHTML = `<div class="door-page share">${doorCardHtml(d, 40)}</div>`;
+  document.body.appendChild(host);
+  try{
+    await loadScript(PDF_LIBS[0]);
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    const canvas = await window.html2canvas(host, {scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false});
+    const blob = await new Promise(res=> canvas.toBlob(res, 'image/png'));
+    file = new File([blob], name, {type: 'image/png'});
+  }catch(e){
+    alert('الصورة ما اتعملتش: ' + e.message);
+    return;
+  }finally{
+    host.remove();
+    if(btn){ btn.disabled = false; btn.textContent = label; }
+  }
+  const text = 'كشف حساب شقة ' + r.apt.id + ' — ' + (r.name || '') + (d.total > 0 ? ' — المطلوب ' + fmt(d.total) + ' جنيه' : ' — الحساب خالص ✓');
+  if(navigator.canShare && navigator.canShare({files: [file]})){
+    try{ await navigator.share({files: [file], title: 'كشف حساب', text}); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  downloadFile(file);
+  showToast('✓ نزّلت الصورة — ابعتها له على الواتساب');
+}
+
+/* ---------------- كشف حساب الشقة ----------------
+   مفتوح من تبويب المتأخرات/الشقق: تقدر تصلّح (شطب، مكنش ساكن، تاريخ/خزنة/مسح دفعة) وتحصّل بزرار 💰.
+   مفتوح من الواجهة (العمارة): عرض بس. */
+let statementAptId = null;
+let statementEditable = false;
+
+function showStatement(aptId, opts){
   statementAptId = aptId;
+  statementEditable = !(opts && opts.readOnly);
   renderStatement();
 }
 function refreshStatement(){
@@ -1857,10 +2090,9 @@ function renderStatement(keepScroll){
   if(!apt){ closePopup('statementPopup'); statementAptId = null; return; }
   const old = document.getElementById('statementPopup');
   const scroll = keepScroll && old ? old.querySelector('.popup-box').scrollTop : 0;
-  const realMonth = todayStr().slice(0,7);
-  const maxMonth = currentMonth > realMonth ? currentMonth : realMonth;
+  const maxMonth = lastPaidMonth(apt);
   const residents = residentsOf(apt).reverse();          // الحالي الأول
-  const edit = unlocked;
+  const edit = unlocked && statementEditable;
   const cur = residents.find(r=> r.current);
 
   let html = popupHead('📄 كشف حساب — شقة ' + escapeHtml(apt.id)) + `
@@ -1870,19 +2102,15 @@ function renderStatement(keepScroll){
       ${residents.length > 1 || (residents.length && !cur) ? `<span class="pp-chip"><b class="num">${residents.length}</b> ساكن سكنوها</span>` : ''}
     </div>`;
 
-  if(edit){
+  if(unlocked){
     html += `<div class="pp-actions" style="padding:10px 14px 0;">
-      ${cur ? `<button type="button" class="pp-btn ghost" data-st-door="${escapeHtml(apt.id)}">🖨 ورقة الباب</button>` : ''}
+      ${edit && cur ? `<button type="button" class="pp-btn" data-st-collect="${escapeHtml(cur.rid)}">💰 تحصيل</button>` : ''}
+      ${cur ? `<button type="button" class="pp-btn ghost" data-st-share="${escapeHtml(cur.rid)}">📤 ابعت كشف الحساب</button>` : ''}
+      ${edit && cur ? `<button type="button" class="pp-btn ghost" data-st-door="${escapeHtml(apt.id)}">🖨 ورقة الباب</button>` : ''}
       ${!edit ? '' : cur ? `<button type="button" class="pp-btn ghost" data-st-moveout="${escapeHtml(apt.id)}">🚪 الساكن مشي</button>`
             : `<button type="button" class="pp-btn" data-st-movein="${escapeHtml(apt.id)}">🏠 ساكن جديد</button>`}
     </div>`;
-  }
-  if(edit){
-    // أي تحصيل من هنا بيتسجّل بالتاريخ ده وفي الخزنة دي
-    html += `<div class="st-cash">
-      <label>📅 <input type="date" class="st-cash-date" value="${escapeHtml(collectDate)}" aria-label="تاريخ التحصيل"></label>
-      <label>💼 الفلوس مع ${accSelectHtml('class="st-cash-acc" aria-label="الفلوس مع مين"', curAcc())}</label>
-    </div>`;
+    if(!edit) html += `<div class="pp-foot" style="padding:6px 16px 0;">للتحصيل أو التعديل افتح الكشف من تبويب «متأخرات السكان».</div>`;
   }
   if(!residents.length){
     html += `<div class="pp-sec"><div class="pp-foot">مفيش سكان متسجّلين للشقة دي لسه.</div></div>`;
@@ -1899,39 +2127,22 @@ function renderStatement(keepScroll){
         <span class="pp-split">${escapeHtml(residentRangeText(r))}</span>
       </div>
       <div class="pp-foot">الاشتراك ${fmt(subNow.subscription)} جنيه · ${subNow.elevator ? 'مشترك في الأسانسير' : 'مش مشترك في الأسانسير'}${r.periods.length > 1 ? ' (اتغيّر خلال السكن)' : ''}</div>
-      <div class="pp-subtitle">الاشتراكات الشهرية</div>`;
+      <div class="pp-subtitle">الشهور</div>`;
     if(!months.length) html += `<div class="pp-foot">لسه مفيش شهور عليه.</div>`;
     months.slice().reverse().forEach(mk=>{
       const waived = waivedFor(apt, mk);
       const sub = dueFor(apt, mk);                      // المطلوب بعد الشطب
-      const entries = paymentEntries(mk, apt.id);
-      const paid = entries.reduce((s,x)=> s + x.amount, 0);
+      const paid = monthPaid(apt, mk);
       due += sub; paidSum += paid;
-      const st = (paid >= sub ? (paid > 0 || !waived ? `<span class="pp-badge ok">مدفوع</span>` : '') : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)} — باقي ${fmt(sub - paid)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`)
+      const st = (paid >= sub ? (paid > 0 || !waived ? `<span class="pp-badge ok">مدفوع</span>` : '') : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} — باقي ${fmt(sub - paid)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`)
         + (waived ? ` <span class="pp-badge soft">✂️ مشطوب ${fmt(waived)}</span>${edit ? ` <button type="button" class="st-mini" data-st-unwaive="${mk}" title="رجّع المبلغ المشطوب على حسابه">↩</button>` : ''}` : '');
-      const oneDate = !edit && entries.length === 1 ? ' · ' + escapeHtml(entries[0].date) : '';
       html += `<div class="pp-row st-row">
-        <span class="k">${monthLabel(mk)}<small>${st}${oneDate}</small></span>
-        ${edit ? `<span class="st-edit">
-            <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="إجمالي المدفوع" title="إجمالي المدفوع للشهر — الزيادة بتتسجّل دفعة جديدة بتاريخ التحصيل">
-            ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع الباقي (${fmt(sub - paid)})">✔</button>` : ''}
-            ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح كل دفعات الشهر">✕</button>` : ''}
-            ${paid < sub ? `<button type="button" class="st-mini" data-st-waive="${mk}" title="شطب الباقي من الشهر ده (من غير ما فلوس تدخل الصندوق)">✂️</button>` : ''}
-            ${!paid && !waived ? `<button type="button" class="st-mini" data-st-skip="${mk}" title="مكنش ساكن الشهر ده — شيله من الحساب">🚫</button>` : ''}
-          </span>`
-        : `<span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>`}
+        <span class="k">${monthLabel(mk)}<small>${st}</small></span>
+        <span class="st-edit"><span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>
+          ${edit && paid < sub ? `<button type="button" class="st-mini" data-st-waive="${mk}" title="شطب الباقي من الشهر ده (من غير ما فلوس تدخل الصندوق)">✂️</button>` : ''}
+          ${edit && !paid && !waived ? `<button type="button" class="st-mini" data-st-skip="${mk}" title="مكنش ساكن الشهر ده — شيله من الحساب">🚫</button>` : ''}
+        </span>
       </div>`;
-      // كل دفعة بتاريخها (لو دفع على مرتين أو أكتر — أو في وضع التعديل عشان تقدر تغيّر التاريخ)
-      if(edit || entries.length > 1) entries.forEach((x, i)=>{
-        html += `<div class="pp-row st-row sub"><span class="k"><small>دفعة ${entries.length > 1 ? (i+1) : ''}</small></span>${edit
-          ? `<span class="st-edit">
-              <input type="number" min="0" class="st-in" data-st-e-amt="${mk}|${i}" value="${x.amount}" aria-label="مبلغ الدفعة">
-              <input type="date" class="st-date" data-st-e-date="${mk}|${i}" value="${escapeHtml(x.date)}" aria-label="تاريخ الدفعة">
-              ${accSelectHtml(`class="st-acc" data-st-e-acc="${mk}|${i}" aria-label="الفلوس مع مين"`, accOf(x))}
-              <button type="button" class="st-mini del" data-st-e-del="${mk}|${i}" title="مسح الدفعة دي">✕</button>
-            </span>`
-          : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date)} · ${escapeHtml(accName(accOf(x)))}</small></span>`}</div>`;
-      });
     });
 
     const skipped = residentSkippedMonths(r, maxMonth);
@@ -1943,40 +2154,38 @@ function renderStatement(keepScroll){
       commits.forEach(c=>{
         const upto = r.current ? maxMonth : shiftMonth(r.to, -1);
         const cDue = commitmentTotalDue(c, upto);
-        const pays = commitmentPayments(c);
-        const cPaid = pays.reduce((s,x)=> s+(Number(x.amount)||0), 0);
-        due += cDue; paidSum += cPaid;
+        const cPaid = commitmentPayments(c).reduce((s,x)=> s+(Number(x.amount)||0), 0);
         const cWaived = Number(c.waived)||0;
         const cLeft = round2(cDue - cPaid - cWaived);
-        due -= cWaived;
-        html += `<div class="st-commit">
-          <div class="pp-row"><span class="k">${escapeHtml(c.note || COMMITMENT_TYPES[c.type])}<small>${escapeHtml(COMMITMENT_TYPES[c.type])} · من ${monthLabel(c.startMonth)}${c.endMonth ? ' لحد ' + monthLabel(c.endMonth) : ''}${cWaived ? ` · <span class="pp-badge soft">✂️ مشطوب ${fmt(cWaived)}</span>${edit ? ` <button type="button" class="st-mini" data-st-c-unwaive="${escapeHtml(c.id)}" title="رجّع المشطوب">↩</button>` : ''}` : ''}</small></span>
-            <span class="v num">${fmt(cPaid)}<small> / ${fmt(cDue)}</small></span></div>`;
-        pays.forEach(x=>{
-          html += `<div class="pp-row st-row sub"><span class="k"><small>دفعة</small></span>${edit
-            ? `<span class="st-edit">
-                <input type="number" min="0" class="st-in" data-st-cp-amt="${escapeHtml(x.id)}" value="${x.amount}">
-                <input type="date" class="st-date" data-st-cp-date="${escapeHtml(x.id)}" value="${escapeHtml(x.date||'')}">
-                ${accSelectHtml(`class="st-acc" data-st-cp-acc="${escapeHtml(x.id)}" aria-label="الفلوس مع مين"`, accOf(x))}
-                <button type="button" class="st-mini del" data-st-cp-del="${escapeHtml(x.id)}" title="مسح الدفعة">✕</button>
-              </span>`
-            : `<span class="v num">${fmt(x.amount)}<small> ${escapeHtml(x.date||'')} · ${escapeHtml(accName(accOf(x)))}</small></span>`}</div>`;
-        });
-        if(edit) html += `<div class="st-edit add">
-            <input type="number" min="0" class="st-in" data-st-cp-new="${escapeHtml(c.id)}" placeholder="${fmt(Math.max(0, cDue - cPaid))}">
-            <button type="button" class="st-mini" data-st-cp-add="${escapeHtml(c.id)}">+ دفعة</button>
-            ${cLeft > 0 ? `<button type="button" class="st-mini" data-st-c-waive="${escapeHtml(c.id)}" title="شطب الباقي من الالتزام ده">✂️ شطب ${fmt(cLeft)}</button>` : ''}
-            <button type="button" class="st-mini del" data-st-commit-del="${escapeHtml(c.id)}" title="مسح الالتزام كله">🗑</button>
-          </div>`;
-        html += `</div>`;
+        due += cDue - cWaived; paidSum += cPaid;
+        html += `<div class="pp-row st-row"><span class="k">${escapeHtml(c.note || COMMITMENT_TYPES[c.type])}<small>${escapeHtml(COMMITMENT_TYPES[c.type])} · من ${monthLabel(c.startMonth)}${c.endMonth ? ' لحد ' + monthLabel(c.endMonth) : ''}${cWaived ? ` · <span class="pp-badge soft">✂️ مشطوب ${fmt(cWaived)}</span>${edit ? ` <button type="button" class="st-mini" data-st-c-unwaive="${escapeHtml(c.id)}" title="رجّع المشطوب">↩</button>` : ''}` : ''}</small></span>
+          <span class="st-edit"><span class="v num">${fmt(cPaid)}<small> / ${fmt(cDue)}</small></span>
+            ${edit && cLeft > 0 ? `<button type="button" class="st-mini" data-st-c-waive="${escapeHtml(c.id)}" title="شطب الباقي (${fmt(cLeft)}) من الالتزام ده">✂️</button>` : ''}
+            ${edit ? `<button type="button" class="st-mini del" data-st-commit-del="${escapeHtml(c.id)}" title="مسح الالتزام كله">🗑</button>` : ''}
+          </span></div>`;
       });
     }
+
+    // الدفعات: كل تحصيل سطر واحد بإجماليه، وتحته اتوزّع على إيه
+    const pays = residentPayments(r, maxMonth);
+    html += `<div class="pp-subtitle">💳 الدفعات</div>`;
+    if(!pays.length) html += `<div class="pp-foot">لسه مفيش دفعات.</div>`;
+    pays.forEach(p=>{
+      html += `<div class="pp-row st-row st-pay"><span class="k"><b class="num">${fmt(p.total)}</b> جنيه<small>${escapeHtml(paymentPartsText(p))}${edit ? '' : ' · ' + escapeHtml(p.date) + ' · ' + escapeHtml(accName(p.acc))}</small></span>
+        ${edit ? `<span class="st-edit">
+            <input type="date" class="st-date" data-st-p-date="${escapeHtml(p.key)}" value="${escapeHtml(p.date)}" aria-label="تاريخ الدفعة">
+            ${accSelectHtml(`class="st-acc" data-st-p-acc="${escapeHtml(p.key)}" aria-label="الفلوس مع مين"`, p.acc)}
+            <button type="button" class="st-mini del" data-st-p-del="${escapeHtml(p.key)}" data-amt="${p.total}" title="مسح الدفعة دي كلها">✕</button>
+          </span>` : ''}</div>`;
+    });
+
     const left = due - paidSum;
-    if(edit && left > 0) html += `<div class="st-waive-all"><button type="button" class="st-mini" data-st-waive-all="${escapeHtml(r.rid)}">✂️ شطب كل المديونية اللي عليه (${fmt(left)})</button></div>`;
-    html += `<div class="pp-row total"><span class="k">المطلوب ${fmt(due)} · المدفوع ${fmt(paidSum)}</span><span class="v num" style="color:${left>0?'var(--bad)':'var(--good)'}">${left>0 ? 'باقي ' + fmt(left) : left<0 ? 'زيادة ' + fmt(-left) : 'خالص ✓'}</span></div>
+    if(edit && left > 0) html += `<div class="st-waive-all">
+        ${!r.current ? `<button type="button" class="st-mini" data-st-collect="${escapeHtml(r.rid)}">💰 تحصيل منه</button>` : ''}
+        <button type="button" class="st-mini" data-st-waive-all="${escapeHtml(r.rid)}">✂️ شطب كل المديونية اللي عليه (${fmt(left)})</button></div>`;
+    html += `<div class="pp-row total"><span class="k">المطلوب ${fmt(due)} · المدفوع ${fmt(paidSum)}</span><span class="v num" style="color:${left>0?'var(--bad)':'var(--good)'}">${left>0 ? 'باقي ' + fmt(left) : left<0 ? 'مقدّم ' + fmt(-left) : 'خالص ✓'}</span></div>
       </div>`;
   });
-  if(edit) html += `<div class="pp-foot" style="padding:8px 16px 0;">الخانة اللي جنب الشهر هي إجمالي المدفوع: لو زوّدته، الزيادة بس بتتسجّل دفعة جديدة بتاريخ التحصيل المختار (${escapeHtml(collectDate)}) في خزنة «${escapeHtml(accName(curAcc()))}» والدفعات اللي قبلها بتفضل بتواريخها. تحتها كل دفعة لوحدها وتقدر تعدّل مبلغها أو تاريخها.</div>`;
 
   const ov = openPopup('statementPopup', html);
   ov.querySelector('.popup-box').scrollTop = scroll;
@@ -1986,38 +2195,28 @@ function renderStatement(keepScroll){
 
 function bindStatementEvents(ov, apt){
   const done = ()=>{ persist(); renderAll(); };
-  const setPay = (mk, val, date)=> setMonthPaid(mk, apt.id, val, date || collectDate);
-  ov.querySelectorAll('[data-st-pay]').forEach(inp=> inp.addEventListener('change', ()=>{
-    if(!unlocked) return;
-    setPay(inp.dataset.stPay, Math.max(0, Number(inp.value)||0)); done();
+  const ok = ()=> unlocked && statementEditable;
+  const findR = rid=> residentsOf(apt).find(x=> x.rid===rid);
+  ov.querySelectorAll('[data-st-collect]').forEach(b=> b.addEventListener('click', ()=>{ if(ok()) showCollect(apt.id, b.dataset.stCollect); }));
+  ov.querySelectorAll('[data-st-share]').forEach(b=> b.addEventListener('click', ()=>{ const r = findR(b.dataset.stShare); if(r) shareStatementImage(r, b); }));
+  ov.querySelectorAll('[data-st-p-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+    if(!ok() || !inp.value) return;
+    editPayment(inp.dataset.stPDate, {date: inp.value}); done();
   }));
-  // تعديل دفعة واحدة (مبلغها/تاريخها/مسحها) — الإجمالي بيتظبط لوحده
-  const editEntry = (ref, fn)=>{
-    const [mk, i] = ref.split('|');
-    const list = paymentEntries(mk, apt.id);
-    if(!list[Number(i)]) return;
-    fn(list, Number(i));
-    writePaymentEntries(mk, apt.id, list); done();
-  };
-  ov.querySelectorAll('[data-st-e-amt]').forEach(inp=> inp.addEventListener('change', ()=>{
-    if(!unlocked) return;
-    const v = Number(inp.value)||0;
-    if(v <= 0){ alert('لو عايز تشيل الدفعة دوس ✕'); renderStatement(true); return; }
-    editEntry(inp.dataset.stEAmt, (list, i)=> list[i].amount = v);
+  ov.querySelectorAll('[data-st-p-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
+    if(!ok() || !validAcc(sel.value)) return;
+    editPayment(sel.dataset.stPAcc, {acc: sel.value}); done();
   }));
-  ov.querySelectorAll('[data-st-e-date]').forEach(inp=> inp.addEventListener('change', ()=>{
-    if(!unlocked || !inp.value) return;
-    editEntry(inp.dataset.stEDate, (list, i)=> list[i].date = inp.value);
+  ov.querySelectorAll('[data-st-p-del]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!ok()) return;
+    if(!confirm('تمسح الدفعة دي (' + fmt(Number(b.dataset.amt)||0) + ' جنيه) كلها؟\nهتتشال من الصندوق وترجع على حسابه.')) return;
+    editPayment(b.dataset.stPDel, {del: true}); done();
   }));
-  const cd = ov.querySelector('.st-cash-date');
-  if(cd) cd.addEventListener('change', ()=>{ if(cd.value){ collectDate = cd.value; renderStatement(true); } });
-  const ca = ov.querySelector('.st-cash-acc');
-  if(ca) ca.addEventListener('change', ()=>{ setCurAcc(ca.value); renderStatement(true); });
   // ✂️ شطب: المبلغ بيتشال من المطلوب من الساكن، ومفيش فلوس بتدخل الصندوق
   ov.querySelectorAll('[data-st-waive]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     const mk = b.dataset.stWaive;
-    const left = round2(dueFor(apt, mk) - ((state.payments[mk]||{})[apt.id]||0));
+    const left = round2(dueFor(apt, mk) - monthPaid(apt, mk));
     const v = prompt('شطب من ' + monthLabel(mk) + ' — شقة ' + apt.id + '\nالباقي عليه ' + fmt(left) + '. تشطب كام؟\n(المبلغ ده مش هيدخل الصندوق، بس الساكن مش هيبقى مطالب بيه)', String(left));
     if(v === null) return;
     const amt = Math.min(left, round2(String(v).replace(/,/g,'')));
@@ -2025,28 +2224,28 @@ function bindStatementEvents(ov, apt){
     setWaived(apt, mk, waivedFor(apt, mk) + amt); done();
   }));
   ov.querySelectorAll('[data-st-unwaive]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     if(!confirm('ترجّع المبلغ المشطوب من ' + monthLabel(b.dataset.stUnwaive) + ' على حسابه تاني؟')) return;
     setWaived(apt, b.dataset.stUnwaive, 0); done();
   }));
   ov.querySelectorAll('[data-st-c-waive]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCWaive); if(!c) return;
     const rem = Math.max(0, round2(commitmentRemaining(c, arrearsAsOfMonth())));
     if(!(rem > 0) || !confirm('تشطب ' + fmt(rem) + ' الباقيين من «' + (c.note || COMMITMENT_TYPES[c.type]) + '»؟\n(مش هيدخلوا الصندوق، بس الساكن مش هيبقى مطالب بيهم)')) return;
     c.waived = round2((Number(c.waived)||0) + rem); done();
   }));
   ov.querySelectorAll('[data-st-c-unwaive]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCUnwaive); if(!c) return;
     if(!confirm('ترجّع المبلغ المشطوب من الالتزام ده على حسابه تاني؟')) return;
     delete c.waived; done();
   }));
   ov.querySelectorAll('[data-st-waive-all]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    const r = residentsOf(apt).find(x=> x.rid===b.dataset.stWaiveAll); if(!r) return;
+    if(!ok()) return;
+    const r = findR(b.dataset.stWaiveAll); if(!r) return;
     const asOf = arrearsAsOfMonth();
-    const months = residentMonths(r, asOf).map(mk=> [mk, round2(dueFor(apt, mk) - ((state.payments[mk]||{})[apt.id]||0))]).filter(x=> x[1] > 0);
+    const months = residentMonths(r, asOf).map(mk=> [mk, round2(dueFor(apt, mk) - monthPaid(apt, mk))]).filter(x=> x[1] > 0);
     const commits = residentCommitments(r).filter(c=> c.startMonth <= asOf).map(c=> [c, Math.max(0, round2(commitmentRemaining(c, asOf)))]).filter(x=> x[1] > 0);
     const total = round2(months.reduce((s,x)=> s + x[1], 0) + commits.reduce((s,x)=> s + x[1], 0));
     if(!(total > 0)){ alert('مفيش حاجة عليه لحد ' + monthLabel(asOf)); return; }
@@ -2056,71 +2255,18 @@ function bindStatementEvents(ov, apt){
     done();
   }));
   ov.querySelectorAll('[data-st-skip]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     const mk = b.dataset.stSkip;
-    if(((state.payments[mk]||{})[apt.id]||0) > 0){ alert('فيه فلوس متسجّلة في الشهر ده — امسحها الأول.'); return; }
+    if(monthPaid(apt, mk) > 0){ alert('فيه فلوس متسجّلة في الشهر ده — امسحها الأول.'); return; }
     if(!confirm('محدش كان ساكن في شقة ' + apt.id + ' في ' + monthLabel(mk) + '؟\nالشهر هيتشال من الحساب ومش هيتحسب عليه اشتراك. وتقدر ترجّعه بزرار ↩.')) return;
     setSkippedMonth(apt, mk, true); done();
   }));
   ov.querySelectorAll('[data-st-unskip]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     setSkippedMonth(apt, b.dataset.stUnskip, false); done();
   }));
-  ov.querySelectorAll('[data-st-e-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
-    if(!unlocked) return;
-    editEntry(sel.dataset.stEAcc, (list, i)=> list[i].acc = sel.value);
-  }));
-  ov.querySelectorAll('[data-st-cp-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
-    if(!unlocked) return;
-    const x = findCp(sel.dataset.stCpAcc); if(!x) return;
-    x.acc = sel.value; done();
-  }));
-  ov.querySelectorAll('[data-st-e-del]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    if(!confirm('تمسح الدفعة دي؟')) return;
-    editEntry(b.dataset.stEDel, (list, i)=> list.splice(i, 1));
-  }));
-  ov.querySelectorAll('[data-st-full]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    const mk = b.dataset.stFull;
-    setPay(mk, dueFor(apt, mk), collectDate); done();
-  }));
-  ov.querySelectorAll('[data-st-clear]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    if(!confirm('تمسح دفعة ' + monthLabel(b.dataset.stClear) + '؟')) return;
-    setPay(b.dataset.stClear, 0); done();
-  }));
-  const findCp = id=> (state.commitmentPayments||[]).find(x=> x.id===id);
-  ov.querySelectorAll('[data-st-cp-amt]').forEach(inp=> inp.addEventListener('change', ()=>{
-    if(!unlocked) return;
-    const x = findCp(inp.dataset.stCpAmt); if(!x) return;
-    const v = Number(inp.value)||0;
-    if(v <= 0){ alert('لو عايز تشيل الدفعة دوس ✕'); renderStatement(true); return; }
-    x.amount = v; done();
-  }));
-  ov.querySelectorAll('[data-st-cp-date]').forEach(inp=> inp.addEventListener('change', ()=>{
-    if(!unlocked || !inp.value) return;
-    const x = findCp(inp.dataset.stCpDate); if(!x) return;
-    x.date = inp.value; done();
-  }));
-  ov.querySelectorAll('[data-st-cp-del]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    if(!confirm('تمسح الدفعة دي؟')) return;
-    state.commitmentPayments = (state.commitmentPayments||[]).filter(x=> x.id!==b.dataset.stCpDel); done();
-  }));
-  ov.querySelectorAll('[data-st-cp-add]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
-    const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCpAdd); if(!c) return;
-    const inp = ov.querySelector(`[data-st-cp-new="${c.id}"]`);
-    const v = Number(inp && inp.value) || Number(inp && inp.placeholder.replace(/,/g,'')) || 0;
-    if(v <= 0){ alert('اكتب المبلغ'); return; }
-    if(!state.commitmentPayments) state.commitmentPayments = [];
-    state.commitmentPayments.push({acc: curAcc(), id:'cp'+Date.now(), commitmentId:c.id, aptId:c.aptId, date:collectDate, amount:v});
-    noteCash(v, curAcc());
-    done();
-  }));
   ov.querySelectorAll('[data-st-commit-del]').forEach(b=> b.addEventListener('click', ()=>{
-    if(!unlocked) return;
+    if(!ok()) return;
     if(!confirm('تمسح الالتزام ده وكل دفعاته؟')) return;
     const id = b.dataset.stCommitDel;
     state.commitments = state.commitments.filter(c=> c.id!==id);
@@ -2242,7 +2388,7 @@ function paymentEntries(mk, aptId){
   const fallback = ((state.paymentDates||{})[mk]||{})[aptId] || (mk + '-01');
   const list = (Array.isArray(raw) ? raw : [])
     .filter(x=> x && Number(x.amount) > 0)
-    .map(x=> ({amount: round2(x.amount), date: x.date || fallback, acc: x.acc}));
+    .map(x=> ({amount: round2(x.amount), date: x.date || fallback, acc: x.acc, rcpt: x.rcpt}));
   const sum = round2(list.reduce((s,x)=> s + x.amount, 0));
   if(sum < total) list.push({amount: round2(total - sum), date: fallback});
   else if(sum > total) trimPaymentEntries(list, round2(sum - total));
@@ -2265,6 +2411,7 @@ function writePaymentEntries(mk, aptId, list){
   list = sortPaymentEntries(list.filter(x=> x && round2(x.amount) > 0).map(x=>{
     const e = {amount: round2(x.amount), date: x.date || (mk + '-01')};
     if(x.acc) e.acc = x.acc;
+    if(x.rcpt) e.rcpt = x.rcpt;
     return e;
   }));
   if(!state.payments[mk]) state.payments[mk] = {};
@@ -3294,7 +3441,7 @@ function renderOverviewData(){
         : 'لسه مدفعش';
       w.appendChild(statusEl);
       // الضغط على الشباك بيفتح كشف حساب الشقة (ومنه الدفع والتعديل)
-      w.addEventListener('click', ()=> showStatement(apt.id));
+      w.addEventListener('click', ()=> showStatement(apt.id, {readOnly: true}));   // من الواجهة: عرض بس، التحصيل من المتأخرات
       wins.appendChild(w);
     });
     row.appendChild(wins);
@@ -3376,6 +3523,7 @@ function renderAll(){
   if(backupRow) backupRow.style.display = unlocked ? 'flex' : 'none';
   document.body.classList.toggle('view-mode', !unlocked);
   // تبويبات الإدارة (التحصيل، الشقق، الإعدادات) مش بتظهر للسكان
+  if(currentTab === 'collect') currentTab = 'arrears';   // التحصيل بقى من تبويب المتأخرات بس
   if(!unlocked && ['collect','apts','settings'].includes(currentTab)){
     currentTab = 'overview';
     document.querySelectorAll('#tabbar button').forEach(b=> b.classList.toggle('active', b.dataset.tab==='overview'));
@@ -3661,18 +3809,16 @@ function tplResidentsBalance(){
 
 function tplArrearsReport(){
   const arrears = computeArrears();
-  const selCount = arrears.filter(a=>selectedArrearApts.has(a.key)).length;
-  let html = (unlocked ? tplCashStrip('تاريخ التحصيل (للتسوية)', 'arrearsDateInput') : '') + `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
+  // التحصيل كله من هنا: 💰 جنب كل ساكن، أو من القايمة لأي ساكن (حتى لو مش عليه حاجة — دفع مقدّم)
+  const currentRes = state.apartments.flatMap(apt=> residentsOf(apt).filter(r=> r.current))
+    .sort((a,b)=> String(a.apt.id).localeCompare(String(b.apt.id), 'en', {numeric:true}));
+  let html = unlocked ? `<div class="card col-bar">
+      <label>💰 تحصيل من:</label>
+      <select id="colPick"><option value="">— اختار الساكن —</option>${currentRes.map(r=> `<option value="${escapeHtml(r.apt.id)}">${escapeHtml(r.apt.id)} — ${escapeHtml(r.name||'—')}</option>`).join('')}</select>
+    </div>` : '';
+  html += `<div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; gap:8px; flex-wrap:wrap;">
       <div class="section-title" style="margin:0;">مين لسه مدفعش (وأي شهور)</div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        ${arrears.length>0 ? `
-        <label class="edit-only" style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ink-soft); cursor:pointer;">
-          <input type="checkbox" id="selectAllArrears" class="bulk-checkbox" ${selCount>0 && selCount===arrears.length ? 'checked':''}>
-          تحديد الكل
-        </label>
-        <button type="button" id="delSelectedArrears" class="del" ${selCount===0?'disabled':''} style="${selCount===0?'opacity:.4;cursor:not-allowed;':''}">
-          ✔ اعتبار المحدد متسدد${selCount>0?' ('+selCount+')':''}
-        </button>` : ''}
         <button class="export-btn" id="exportReportBtn">⬇ تنزيل Excel</button>
         <button class="export-btn" id="exportPdfBtn" style="background:var(--lit-2);">⬇ تنزيل PDF</button>
         <button class="export-btn" id="sharePdfBtn" style="background:#25a35a;">📤 مشاركة</button>
@@ -3681,94 +3827,48 @@ function tplArrearsReport(){
     </div>`;
   if(arrears.length===0){
     html += `<div class="card"><div class="empty">مفيش متأخرات — كله متسدد 🎉</div></div>`;
-  } else {
-    // --- بناء الجدول pivot ---
-    // جمع كل الشهور الظاهرة في المتأخرات (من بيانات mk)
-    const monthKeysSet = new Set();
-    arrears.forEach(a=> a.items.forEach(m=>{ if(m.mk) monthKeysSet.add(m.mk); }));
-    const monthKeys = Array.from(monthKeysSet).sort();
-
-    // هل فيه ديون/التزامات (commitId) غير الشهور؟
-    const hasDebts = arrears.some(a=> a.items.some(m=> m.commitId));
-
-    html += `<div class="card" style="padding:0; overflow:hidden;">
-      <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-      <table style="width:100%; border-collapse:collapse; font-size:13px; direction:rtl;">
-        <thead>
-          <tr style="background:var(--night);">
-            <th style="padding:10px 12px; text-align:right; color:#fff; font-family:'El Messiri'; font-weight:700; white-space:nowrap; min-width:90px; position:sticky; right:0; background:var(--night); z-index:2; border-left:1px solid rgba(255,255,255,.1);">الاسم</th>
-            ${monthKeys.map(mk=>`
-            <th style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.8); font-family:'IBM Plex Mono'; font-size:11.5px; white-space:nowrap; min-width:72px;">${monthLabel(mk)}</th>`).join('')}
-            ${hasDebts ? `<th style="padding:10px 8px; text-align:center; color:rgba(255,200,100,.9); font-size:11.5px; white-space:nowrap; min-width:72px;">ديون/التزامات</th>` : ''}
-            <th style="padding:10px 10px; text-align:center; color:var(--lit); font-family:'IBM Plex Mono'; font-weight:700; white-space:nowrap;">الإجمالي</th>
-            <th class="edit-only" style="padding:10px 8px; text-align:center; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap;">تسوية</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${arrears.map((a,idx)=>{
-            const rowBg = idx%2===0 ? 'var(--paper)' : 'var(--paper-2)';
-            // حساب ديون هذا الساكن
-            const debtTotal = a.items.filter(m=>m.commitId).reduce((s,m)=>s+m.owed,0);
-            return `<tr style="background:${rowBg}; border-bottom:1px solid var(--line);">
-              <!-- الاسم -->
-              <td style="padding:10px 12px; position:sticky; right:0; background:${rowBg}; z-index:1; border-left:1px solid var(--line); font-weight:600; color:var(--ink); white-space:nowrap;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <input type="checkbox" class="arrear-select bulk-checkbox" data-arrear-select="${escapeHtml(a.key)}" ${selectedArrearApts.has(a.key)?'checked':''} style="accent-color:var(--lit);">
-                  <span class="st-link" data-open-statement="${escapeHtml(a.apt.id)}">${escapeHtml(a.name)||'—'} <span style="font-weight:500; font-size:11.5px; color:var(--ink-soft);">(${escapeHtml(a.apt.id)}${a.past ? ' · ساكن سابق' : ''})</span></span>
-                </div>
-              </td>
-              <!-- خانة لكل شهر -->
-              ${monthKeys.map(mk=>{
-                const item = a.items.find(m=> m.mk===mk);
-                if(!item) return `<td style="padding:8px; text-align:center; color:var(--ink-soft);">—</td>`;
-                const itemKey = 'm:'+mk;
-                if(!unlocked) return `<td style="padding:8px; text-align:center;"><span class="num" style="color:var(--bad); font-weight:700; font-size:12px;">${fmt(item.owed)}</span></td>`;
-                return `<td style="padding:6px 8px; text-align:center;">
-                  <input type="number" class="arrear-amount-input" data-arrear-owed="${a.apt.id}::${itemKey}" value="${item.owed}" step="0.01"
-                    style="width:68px; text-align:center; font-family:'IBM Plex Mono'; font-size:12px; font-weight:700;
-                           border:1px solid rgba(226,74,74,.35); border-radius:6px; padding:4px 4px;
-                           background:rgba(226,74,74,.07); color:var(--bad);">
-                </td>`;
-              }).join('')}
-              <!-- ديون/التزامات -->
-              ${hasDebts ? `<td style="padding:8px; text-align:center;">
-                ${debtTotal>0 ? `<span class="num" style="color:var(--bad); font-size:12px;">${fmt(debtTotal)}</span>` : `<span style="color:var(--ink-soft);">—</span>`}
-              </td>` : ''}
-              <!-- الإجمالي -->
-              <td style="padding:8px 10px; text-align:center;">
-                <span class="num" style="color:var(--bad); font-weight:700; font-size:13px;">${fmt(a.total)}</span>
-              </td>
-              <!-- تسوية -->
-              <td class="edit-only" style="padding:8px; text-align:center;">
-                <button type="button" class="del" data-settle-apt="${escapeHtml(a.key)}" style="font-size:11px; padding:3px 8px; white-space:nowrap;">✔ سدّد</button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-        <!-- صف الإجمالي الكلي -->
-        <tfoot>
-          <tr style="background:var(--night-2); border-top:2px solid rgba(234,169,63,.4);">
-            <td style="padding:10px 12px; color:var(--lit); font-family:'El Messiri'; font-weight:700; font-size:14px; position:sticky; right:0; background:var(--night-2);">الإجمالي الكلي</td>
-            ${monthKeys.map(mk=>{
-              const colTotal = arrears.reduce((s,a)=>{
-                const item = a.items.find(m=>m.mk===mk);
-                return s + (item ? item.owed : 0);
-              },0);
-              return `<td style="padding:10px 8px; text-align:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:12px; color:${colTotal>0?'var(--lit)':'rgba(255,255,255,.3)'};">${colTotal>0?fmt(colTotal):'—'}</td>`;
-            }).join('')}
-            ${hasDebts ? `<td style="padding:10px 8px; text-align:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:12px; color:var(--lit);">
-              ${fmt(arrears.reduce((s,a)=>s+a.items.filter(m=>m.commitId).reduce((ss,m)=>ss+m.owed,0),0))}
-            </td>` : ''}
-            <td style="padding:10px 8px; text-align:center; font-family:'IBM Plex Mono'; font-weight:700; font-size:14px; color:var(--lit);">
-              ${fmt(arrears.reduce((s,a)=>s+a.total,0))}
-            </td>
-            <td class="edit-only"></td>
-          </tr>
-        </tfoot>
-      </table>
-      </div>
-    </div>`;
+    return html;
   }
+  const monthKeys = [...new Set(arrears.flatMap(a=> a.items.filter(m=> m.mk).map(m=> m.mk)))].sort();
+  const hasDebts = arrears.some(a=> a.items.some(m=> m.commitId));
+  const th = 'padding:10px 8px; text-align:center; white-space:nowrap;';
+  html += `<div class="card" style="padding:0; overflow:hidden;">
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="arr-table">
+      <thead><tr>
+        <th class="arr-name">الاسم</th>
+        ${monthKeys.map(mk=> `<th style="${th} color:rgba(255,255,255,.8); font-family:'IBM Plex Mono'; font-size:11.5px; min-width:64px;">${monthLabel(mk)}</th>`).join('')}
+        ${hasDebts ? `<th style="${th} color:rgba(255,200,100,.9); font-size:11.5px;">ديون/التزامات</th>` : ''}
+        <th style="${th} color:var(--lit); font-family:'IBM Plex Mono'; font-weight:700;">الإجمالي</th>
+      </tr></thead>
+      <tbody>
+        ${arrears.map((a, idx)=>{
+          const bg = idx%2===0 ? 'var(--paper)' : 'var(--paper-2)';
+          const debt = a.items.filter(m=> m.commitId).reduce((s,m)=> s + m.owed, 0);
+          return `<tr style="background:${bg};">
+            <td class="arr-name" style="background:${bg};"><span class="st-link" data-open-statement="${escapeHtml(a.apt.id)}">${escapeHtml(a.name)||'—'} <span class="arr-sub">(${escapeHtml(a.apt.id)}${a.past ? ' · ساكن سابق' : ''})</span></span>
+              ${unlocked ? `<div class="arr-act">
+                <button type="button" class="arr-btn pay" data-col-apt="${escapeHtml(a.apt.id)}" data-col-rid="${escapeHtml(a.resident.rid)}">💰 تحصيل</button>
+                <button type="button" class="arr-btn" data-share-apt="${escapeHtml(a.apt.id)}" data-share-rid="${escapeHtml(a.resident.rid)}">📤 كشف</button>
+              </div>` : ''}</td>
+            ${monthKeys.map(mk=>{
+              const it = a.items.find(m=> m.mk===mk);
+              return it ? `<td class="arr-c"><span class="num arr-owed">${fmt(it.owed)}</span></td>` : `<td class="arr-c arr-nil">—</td>`;
+            }).join('')}
+            ${hasDebts ? `<td class="arr-c">${debt > 0 ? `<span class="num arr-owed">${fmt(debt)}</span>` : '<span class="arr-nil">—</span>'}</td>` : ''}
+            <td class="arr-c"><b class="num arr-owed">${fmt(a.total)}</b></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot><tr>
+        <td class="arr-name" style="background:var(--night-2); color:var(--lit); font-family:'El Messiri'; font-weight:700;">الإجمالي الكلي</td>
+        ${monthKeys.map(mk=>{ const t = arrears.reduce((s,a)=> s + ((a.items.find(m=> m.mk===mk)||{}).owed||0), 0); return `<td class="arr-c arr-foot">${t > 0 ? fmt(t) : '—'}</td>`; }).join('')}
+        ${hasDebts ? `<td class="arr-c arr-foot">${fmt(arrears.reduce((s,a)=> s + a.items.filter(m=> m.commitId).reduce((x,m)=> x + m.owed, 0), 0))}</td>` : ''}
+        <td class="arr-c arr-foot" style="font-size:14px;">${fmt(arrears.reduce((s,a)=> s + a.total, 0))}</td>
+      </tr></tfoot>
+    </table>
+    </div>
+  </div>`;
   return html;
 }
 
@@ -4040,7 +4140,8 @@ function doorNoticeFor(r){
     .map(c=> ({c, due: commitmentTotalDue(c, asOf), rem: commitmentRemaining(c, asOf), pays: commitmentPayments(c)}))
     .filter(x=> x.rem > 0);
   const total = round2(months.reduce((s,m)=> s + m.owed, 0) + debts.reduce((s,x)=> s + x.rem, 0));
-  return {r, apt, asOf, months, debts, total};
+  const payments = residentPayments(r).slice(0, 3);
+  return {r, apt, asOf, months, debts, total, payments};
 }
 function currentDoorNotices(){
   return state.apartments
@@ -4054,7 +4155,7 @@ function doorCardHtml(d, maxRows){
   let shown = d.months.filter(m=> m.owed > 0 || paidTail.includes(m));
   const olderPaid = d.months.filter(m=> m.owed <= 0 && !paidTail.includes(m) && (!shown.length || m.mk < shown[shown.length-1].mk)).length;
   // لو الشهور كتير على الورقة: أقدم الشهور بتتجمع في سطر واحد
-  const room = Math.max(3, maxRows - d.debts.length);
+  const room = Math.max(3, maxRows - d.debts.length - (d.payments && d.payments.length ? 1 : 0));
   let summary = null;
   if(shown.length > room){
     const old = shown.slice(0, shown.length - room + 1);
@@ -4092,6 +4193,7 @@ function doorCardHtml(d, maxRows){
       <tbody>${rows || '<tr><td colspan="4" class="c dc-nil">مفيش شهور عليه لسه</td></tr>'}</tbody>
     </table>
     ${olderPaid > 0 && !summary ? `<div class="dc-sub" style="margin-top:3px;">${olderPaid === 1 ? 'وفيه شهر قبل كده متسدد بالكامل.' : 'وفيه ' + olderPaid + ' شهور قبل كده متسددين بالكامل.'}</div>` : ''}
+    ${d.payments && d.payments.length ? `<div class="dc-last">💳 آخر دفعات: ${d.payments.map(p=> `<span class="dc-pay"><b class="num">${fmt(p.total)}</b> <small>يوم ${escapeHtml(shortDate(p.date))}${p.parts.length > 1 ? ' (' + escapeHtml(p.parts.map(x=> x.label.replace(/ 20\d\d/, '')).join(' + ')) + ')' : ''}</small></span>`).join('، ')}</div>` : ''}
     <div class="dc-foot">
       <div class="dc-msg">${d.total > 0 ? 'برجاء سداد المبلغ المطلوب في أقرب وقت. لو دفعت ومش ظاهر هنا ابلغنا.' : 'شكرًا على التزامك 🌟'}</div>
       ${opts.length ? `<div class="dc-opts">💳 ${opts.map(escapeHtml).join(' · ')}</div>` : ''}
@@ -4369,20 +4471,32 @@ function tplFund(){
   (state.transfers||[]).forEach(t=>{
     ledgerEntries.push({date:t.date, note:'🔁 نقل من '+accName(t.from)+' لـ '+accName(t.to)+(t.note ? ' — '+t.note : ''), amount:Number(t.amount)||0, kind:'transfer', id:t.id, record:t, from:t.from, to:t.to});
   });
+  // تحصيل واحد اتوزّع على كذا شهر/التزام (rcpt) بيظهر سطر واحد بإجماليه
+  const rcptRows = new Map();
+  const addToRcpt = (x, who, label, amount)=>{
+    let g = rcptRows.get(x.rcpt);
+    if(!g){ g = {date:x.date, who, parts:[], amount:0, kind:'receipt', id:x.rcpt, acc:accOf(x)}; rcptRows.set(x.rcpt, g); }
+    g.parts.push(label + ' ' + fmt(amount)); g.amount = round2(g.amount + amount);
+  };
   Object.entries(state.payments).forEach(([mk, obj])=>{
     Object.keys(obj).forEach(aptId=>{
       const apt = state.apartments.find(a=>a.id===aptId);
       const entries = paymentEntries(mk, aptId);
       entries.forEach((x, i)=>{
+        if(x.rcpt){ addToRcpt(x, ((apt && residentNameFor(apt, mk)) || aptId) + ' (' + aptId + ')', monthLabel(mk), x.amount); return; }
         ledgerEntries.push({date:x.date, note:'تحصيل من '+((apt && residentNameFor(apt, mk)) || aptId)+' — '+monthLabel(mk)+(entries.length>1 ? ' (دفعة '+(i+1)+' من '+entries.length+')' : ''), amount:x.amount, kind:'payment', month:mk, aptId, idx:i, acc:accOf(x)});
       });
     });
   });
   (state.commitmentPayments||[]).forEach(cp=>{
     const c = state.commitments.find(x=>x.id===cp.commitmentId);
+    if(cp.rcpt){ addToRcpt(cp, c ? commitmentAptLabel(c) : '', c ? (c.note||COMMITMENT_TYPES[c.type]) : 'التزام', Number(cp.amount)||0); return; }
     const isGeneral = c && !c.aptId;
     const amt = isGeneral ? -cp.amount : cp.amount;
     ledgerEntries.push({date:cp.date, note:'التزام'+(c?(' — '+(c.note||COMMITMENT_TYPES[c.type])):'')+' من '+(c?commitmentAptLabel(c):''), amount:amt, kind:'commitPay', id:cp.id, record:cp, acc:accOf(cp)});
+  });
+  rcptRows.forEach(g=>{
+    ledgerEntries.push({date:g.date, note:'تحصيل من ' + g.who + (g.parts.length > 1 ? ' — ' + g.parts.join(' + ') : ' — ' + g.parts[0].replace(/ [\d,.]+$/, '')), amount:g.amount, kind:'receipt', id:g.id, acc:g.acc});
   });
   state.expenses.forEach(e=>{
     ledgerEntries.push({date:e.date, note:e.category+(e.note?(' — '+e.note):''), amount:-e.amount, kind:'expense', id:e.id, record:e, acc:accOf(e)});
@@ -4412,8 +4526,10 @@ function tplFund(){
     else if(le.kind==='payment'){ delAttr = `data-del-payment="${le.month}|${le.aptId}|${le.idx}"`; dateAttr = `data-edit-payment-date="${le.month}|${le.aptId}|${le.idx}"`; }
     else if(le.kind==='elevatorSpend'){ delAttr = `data-del-elevator-spend="${le.id}"`; dateAttr = `data-edit-elevator-spend-date="${le.id}"`; }
     else if(le.kind==='transfer'){ delAttr = `data-del-transfer="${le.id}"`; dateAttr = `data-edit-transfer-date="${le.id}"`; }
+    else if(le.kind==='receipt'){ delAttr = `data-del-rcpt="${le.id}" data-amt="${le.amount}"`; dateAttr = `data-edit-rcpt-date="${le.id}"`; }
     const accRef = le.kind==='manual' || le.kind==='commitPay' || le.kind==='expense' || le.kind==='elevatorSpend' ? le.kind + '|' + le.id
-      : le.kind==='payment' ? 'payment|' + le.month + '|' + le.aptId + '|' + le.idx : '';
+      : le.kind==='payment' ? 'payment|' + le.month + '|' + le.aptId + '|' + le.idx
+      : le.kind==='receipt' ? 'rcpt|' + le.id : '';
     const accEl = le.kind==='transfer' ? ''
       : (unlocked && accRef) ? accSelectHtml(`class="acc-sel" data-set-acc="${escapeHtml(accRef)}" aria-label="الخزنة"`, le.acc)
       : `<span class="acc-chip">${escapeHtml(accName(le.acc))}</span>`;
@@ -4594,7 +4710,9 @@ function bindTabEvents(){
   document.querySelectorAll('[data-set-acc]').forEach(sel=> sel.addEventListener('change', ()=>{
     if(!unlocked || !validAcc(sel.value)) return;
     const [kind, ...ref] = sel.dataset.setAcc.split('|');
-    if(kind==='payment'){
+    if(kind==='rcpt'){
+      editPayment('g:' + ref[0], {acc: sel.value});
+    } else if(kind==='payment'){
       const [mk, aptId, idx] = ref;
       const list = paymentEntries(mk, aptId);
       if(!list[Number(idx)]) return;
@@ -4754,6 +4872,14 @@ function bindTabEvents(){
     if(pdfBtn) pdfBtn.addEventListener('click', exportArrearsPDF);
     const shareBtn = document.getElementById('sharePdfBtn');
     if(shareBtn) shareBtn.addEventListener('click', ()=> shareArrearsPDF(shareBtn));
+    document.querySelectorAll('[data-col-apt]').forEach(b=> b.addEventListener('click', ()=> showCollect(b.dataset.colApt, b.dataset.colRid)));
+    document.querySelectorAll('[data-share-apt]').forEach(b=> b.addEventListener('click', ()=>{
+      const apt = state.apartments.find(a=> a.id===b.dataset.shareApt);
+      const r = apt && residentsOf(apt).find(x=> x.rid===b.dataset.shareRid);
+      if(r) shareStatementImage(r, b);
+    }));
+    const colPick = document.getElementById('colPick');
+    if(colPick) colPick.addEventListener('change', ()=>{ const v = colPick.value; colPick.value = ''; if(v) showCollect(v); });
     const doorBtn = document.getElementById('doorNoticesBtn');
     if(doorBtn) doorBtn.addEventListener('click', showDoorNoticesPopup);
     document.querySelectorAll('[data-settle-apt]').forEach(b=>{
@@ -5036,6 +5162,15 @@ function bindTabEvents(){
       state.transfers.push({id:'tr'+Date.now(), date: f.date.value || todayStr(), from: f.from.value, to: f.to.value, amount, note: f.note.value.trim()});
       persist(); renderAll();
     });
+    document.querySelectorAll('[data-del-rcpt]').forEach(b=> b.addEventListener('click', ()=>{
+      if(!unlocked) return;
+      if(!confirm('تمسح التحصيل ده (' + fmt(Number(b.dataset.amt)||0) + ' جنيه) كله؟\nهيتشال من الصندوق ويرجع على حساب الساكن.')) return;
+      editPayment('g:' + b.dataset.delRcpt, {del: true}); persist(); renderAll();
+    }));
+    document.querySelectorAll('[data-edit-rcpt-date]').forEach(inp=> inp.addEventListener('change', ()=>{
+      if(!unlocked || !inp.value) return;
+      editPayment('g:' + inp.dataset.editRcptDate, {date: inp.value}); persist(); renderAll();
+    }));
     document.querySelectorAll('[data-del-transfer]').forEach(b=> b.addEventListener('click', ()=>{
       if(!unlocked || !confirm('تمسح النقل ده؟')) return;
       state.transfers = (state.transfers||[]).filter(t=> t.id!==b.dataset.delTransfer);
