@@ -715,6 +715,7 @@
   .st-cash label{ display:flex; align-items:center; gap:4px; }
   .st-cash select{ font-weight:700; }
   .st-skipped{ padding-top:6px; }
+  .st-waive-all{ padding:6px 0 0; text-align:left; }
   .st-skip-chip{ display:inline-flex; align-items:center; gap:4px; background:var(--paper-2); border-radius:999px; padding:2px 8px; margin:2px 0; }
   #appToast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%, 20px); background:#1f6b45; color:#fff; padding:10px 16px; border-radius:12px;
     font-size:13.5px; font-weight:700; white-space:pre-line; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none;
@@ -821,7 +822,7 @@
 
 <script>
 const STORE_KEY = 'building-finances-v1';
-const APP_VERSION = '2026-11-15a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
+const APP_VERSION = '2026-11-20a'; // بيتغيّر مع كل نسخة جديدة من البرنامج — زرار "تحديث" بيقارنه باللي على الموقع
 const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const FLOOR_ORDER = ['الأرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر','الحادي عشر','الثاني عشر','الثالث عشر'];
 const START_MONTH = '2026-08';
@@ -1322,6 +1323,7 @@ function migrateState(opts){
     changed = true;
   }
   if(!Array.isArray(state.transfers)){ state.transfers = []; changed = true; }
+  if(!state.waivers || typeof state.waivers !== 'object'){ state.waivers = {}; changed = true; }
   {
     // الرصيد الافتتاحي الإجمالي = مجموع افتتاحي الخزن (لو نسخة قديمة غيّرت الإجمالي، الفرق بيروح على الخزنة الأولى)
     const accs = state.settings.accounts;
@@ -1610,6 +1612,18 @@ function periodFor(apt, mk){
 function openPeriod(apt){
   return (apt.occupancyPeriods||[]).find(p=> p.to===null) || null;
 }
+/* شطب مديونية (إعفاء): state.waivers[mk][aptId] = مبلغ اتشطب من اشتراك الشهر ده.
+   الفلوس دي ما دخلتش الصندوق — بس الساكن مابقاش مطالب بيها. والتزامات الساكن ليها c.waived.
+   الفرق عن 🚫 "مكنش ساكن": الشطب بيسيب الساكن ساكن عادي (بيدخل في تقسيم المصروفات). */
+function waivedFor(apt, mk){ return round2(((state.waivers||{})[mk]||{})[apt.id] || 0); }
+function dueFor(apt, mk){ return Math.max(0, round2(subscriptionFor(apt, mk) - waivedFor(apt, mk))); }
+function setWaived(apt, mk, amount){
+  amount = Math.max(0, round2(amount));
+  if(!state.waivers) state.waivers = {};
+  if(!state.waivers[mk]) state.waivers[mk] = {};
+  if(amount > 0) state.waivers[mk][apt.id] = amount; else delete state.waivers[mk][apt.id];
+  if(!Object.keys(state.waivers[mk]).length) delete state.waivers[mk];
+}
 function subscriptionFor(apt, mk){
   const p = periodFor(apt, mk);
   return p && typeof p.subscription==='number' ? p.subscription : (Number(apt.subscription)||0);
@@ -1888,11 +1902,13 @@ function renderStatement(keepScroll){
       <div class="pp-subtitle">الاشتراكات الشهرية</div>`;
     if(!months.length) html += `<div class="pp-foot">لسه مفيش شهور عليه.</div>`;
     months.slice().reverse().forEach(mk=>{
-      const sub = subscriptionFor(apt, mk);
+      const waived = waivedFor(apt, mk);
+      const sub = dueFor(apt, mk);                      // المطلوب بعد الشطب
       const entries = paymentEntries(mk, apt.id);
       const paid = entries.reduce((s,x)=> s + x.amount, 0);
       due += sub; paidSum += paid;
-      const st = paid >= sub ? `<span class="pp-badge ok">مدفوع</span>` : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)} — باقي ${fmt(sub - paid)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`;
+      const st = (paid >= sub ? (paid > 0 || !waived ? `<span class="pp-badge ok">مدفوع</span>` : '') : paid > 0 ? `<span class="pp-badge warn">دفع ${fmt(paid)} من ${fmt(sub)} — باقي ${fmt(sub - paid)}</span>` : `<span class="pp-badge bad">لسه مدفعش</span>`)
+        + (waived ? ` <span class="pp-badge soft">✂️ مشطوب ${fmt(waived)}</span>${edit ? ` <button type="button" class="st-mini" data-st-unwaive="${mk}" title="رجّع المبلغ المشطوب على حسابه">↩</button>` : ''}` : '');
       const oneDate = !edit && entries.length === 1 ? ' · ' + escapeHtml(entries[0].date) : '';
       html += `<div class="pp-row st-row">
         <span class="k">${monthLabel(mk)}<small>${st}${oneDate}</small></span>
@@ -1900,7 +1916,8 @@ function renderStatement(keepScroll){
             <input type="number" min="0" class="st-in" data-st-pay="${mk}" value="${paid||''}" placeholder="0" aria-label="إجمالي المدفوع" title="إجمالي المدفوع للشهر — الزيادة بتتسجّل دفعة جديدة بتاريخ التحصيل">
             ${paid < sub ? `<button type="button" class="st-mini" data-st-full="${mk}" title="دفع الباقي (${fmt(sub - paid)})">✔</button>` : ''}
             ${paid ? `<button type="button" class="st-mini del" data-st-clear="${mk}" title="مسح كل دفعات الشهر">✕</button>` : ''}
-            ${!paid ? `<button type="button" class="st-mini" data-st-skip="${mk}" title="مكنش ساكن الشهر ده — شيله من الحساب">🚫</button>` : ''}
+            ${paid < sub ? `<button type="button" class="st-mini" data-st-waive="${mk}" title="شطب الباقي من الشهر ده (من غير ما فلوس تدخل الصندوق)">✂️</button>` : ''}
+            ${!paid && !waived ? `<button type="button" class="st-mini" data-st-skip="${mk}" title="مكنش ساكن الشهر ده — شيله من الحساب">🚫</button>` : ''}
           </span>`
         : `<span class="v num">${fmt(paid)}<small> / ${fmt(sub)}</small></span>`}
       </div>`;
@@ -1929,8 +1946,11 @@ function renderStatement(keepScroll){
         const pays = commitmentPayments(c);
         const cPaid = pays.reduce((s,x)=> s+(Number(x.amount)||0), 0);
         due += cDue; paidSum += cPaid;
+        const cWaived = Number(c.waived)||0;
+        const cLeft = round2(cDue - cPaid - cWaived);
+        due -= cWaived;
         html += `<div class="st-commit">
-          <div class="pp-row"><span class="k">${escapeHtml(c.note || COMMITMENT_TYPES[c.type])}<small>${escapeHtml(COMMITMENT_TYPES[c.type])} · من ${monthLabel(c.startMonth)}${c.endMonth ? ' لحد ' + monthLabel(c.endMonth) : ''}</small></span>
+          <div class="pp-row"><span class="k">${escapeHtml(c.note || COMMITMENT_TYPES[c.type])}<small>${escapeHtml(COMMITMENT_TYPES[c.type])} · من ${monthLabel(c.startMonth)}${c.endMonth ? ' لحد ' + monthLabel(c.endMonth) : ''}${cWaived ? ` · <span class="pp-badge soft">✂️ مشطوب ${fmt(cWaived)}</span>${edit ? ` <button type="button" class="st-mini" data-st-c-unwaive="${escapeHtml(c.id)}" title="رجّع المشطوب">↩</button>` : ''}` : ''}</small></span>
             <span class="v num">${fmt(cPaid)}<small> / ${fmt(cDue)}</small></span></div>`;
         pays.forEach(x=>{
           html += `<div class="pp-row st-row sub"><span class="k"><small>دفعة</small></span>${edit
@@ -1945,12 +1965,14 @@ function renderStatement(keepScroll){
         if(edit) html += `<div class="st-edit add">
             <input type="number" min="0" class="st-in" data-st-cp-new="${escapeHtml(c.id)}" placeholder="${fmt(Math.max(0, cDue - cPaid))}">
             <button type="button" class="st-mini" data-st-cp-add="${escapeHtml(c.id)}">+ دفعة</button>
+            ${cLeft > 0 ? `<button type="button" class="st-mini" data-st-c-waive="${escapeHtml(c.id)}" title="شطب الباقي من الالتزام ده">✂️ شطب ${fmt(cLeft)}</button>` : ''}
             <button type="button" class="st-mini del" data-st-commit-del="${escapeHtml(c.id)}" title="مسح الالتزام كله">🗑</button>
           </div>`;
         html += `</div>`;
       });
     }
     const left = due - paidSum;
+    if(edit && left > 0) html += `<div class="st-waive-all"><button type="button" class="st-mini" data-st-waive-all="${escapeHtml(r.rid)}">✂️ شطب كل المديونية اللي عليه (${fmt(left)})</button></div>`;
     html += `<div class="pp-row total"><span class="k">المطلوب ${fmt(due)} · المدفوع ${fmt(paidSum)}</span><span class="v num" style="color:${left>0?'var(--bad)':'var(--good)'}">${left>0 ? 'باقي ' + fmt(left) : left<0 ? 'زيادة ' + fmt(-left) : 'خالص ✓'}</span></div>
       </div>`;
   });
@@ -1991,6 +2013,48 @@ function bindStatementEvents(ov, apt){
   if(cd) cd.addEventListener('change', ()=>{ if(cd.value){ collectDate = cd.value; renderStatement(true); } });
   const ca = ov.querySelector('.st-cash-acc');
   if(ca) ca.addEventListener('change', ()=>{ setCurAcc(ca.value); renderStatement(true); });
+  // ✂️ شطب: المبلغ بيتشال من المطلوب من الساكن، ومفيش فلوس بتدخل الصندوق
+  ov.querySelectorAll('[data-st-waive]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const mk = b.dataset.stWaive;
+    const left = round2(dueFor(apt, mk) - ((state.payments[mk]||{})[apt.id]||0));
+    const v = prompt('شطب من ' + monthLabel(mk) + ' — شقة ' + apt.id + '\nالباقي عليه ' + fmt(left) + '. تشطب كام؟\n(المبلغ ده مش هيدخل الصندوق، بس الساكن مش هيبقى مطالب بيه)', String(left));
+    if(v === null) return;
+    const amt = Math.min(left, round2(String(v).replace(/,/g,'')));
+    if(!(amt > 0)){ alert('اكتب مبلغ أكبر من صفر'); return; }
+    setWaived(apt, mk, waivedFor(apt, mk) + amt); done();
+  }));
+  ov.querySelectorAll('[data-st-unwaive]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    if(!confirm('ترجّع المبلغ المشطوب من ' + monthLabel(b.dataset.stUnwaive) + ' على حسابه تاني؟')) return;
+    setWaived(apt, b.dataset.stUnwaive, 0); done();
+  }));
+  ov.querySelectorAll('[data-st-c-waive]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCWaive); if(!c) return;
+    const rem = Math.max(0, round2(commitmentRemaining(c, arrearsAsOfMonth())));
+    if(!(rem > 0) || !confirm('تشطب ' + fmt(rem) + ' الباقيين من «' + (c.note || COMMITMENT_TYPES[c.type]) + '»؟\n(مش هيدخلوا الصندوق، بس الساكن مش هيبقى مطالب بيهم)')) return;
+    c.waived = round2((Number(c.waived)||0) + rem); done();
+  }));
+  ov.querySelectorAll('[data-st-c-unwaive]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const c = (state.commitments||[]).find(x=> x.id===b.dataset.stCUnwaive); if(!c) return;
+    if(!confirm('ترجّع المبلغ المشطوب من الالتزام ده على حسابه تاني؟')) return;
+    delete c.waived; done();
+  }));
+  ov.querySelectorAll('[data-st-waive-all]').forEach(b=> b.addEventListener('click', ()=>{
+    if(!unlocked) return;
+    const r = residentsOf(apt).find(x=> x.rid===b.dataset.stWaiveAll); if(!r) return;
+    const asOf = arrearsAsOfMonth();
+    const months = residentMonths(r, asOf).map(mk=> [mk, round2(dueFor(apt, mk) - ((state.payments[mk]||{})[apt.id]||0))]).filter(x=> x[1] > 0);
+    const commits = residentCommitments(r).filter(c=> c.startMonth <= asOf).map(c=> [c, Math.max(0, round2(commitmentRemaining(c, asOf)))]).filter(x=> x[1] > 0);
+    const total = round2(months.reduce((s,x)=> s + x[1], 0) + commits.reduce((s,x)=> s + x[1], 0));
+    if(!(total > 0)){ alert('مفيش حاجة عليه لحد ' + monthLabel(asOf)); return; }
+    if(!confirm('تشطب كل المديونية اللي على ' + (r.name || 'الساكن') + ' (شقة ' + apt.id + ') لحد ' + monthLabel(asOf) + '؟\nالإجمالي ' + fmt(total) + ' جنيه.\n\nالمبلغ ده مش هيدخل الصندوق، بس مش هيبقى مطلوب منه. وتقدر ترجّع أي شهر بزرار ↩.')) return;
+    months.forEach(([mk, v])=> setWaived(apt, mk, waivedFor(apt, mk) + v));
+    commits.forEach(([c, v])=> c.waived = round2((Number(c.waived)||0) + v));
+    done();
+  }));
   ov.querySelectorAll('[data-st-skip]').forEach(b=> b.addEventListener('click', ()=>{
     if(!unlocked) return;
     const mk = b.dataset.stSkip;
@@ -2019,7 +2083,7 @@ function bindStatementEvents(ov, apt){
   ov.querySelectorAll('[data-st-full]').forEach(b=> b.addEventListener('click', ()=>{
     if(!unlocked) return;
     const mk = b.dataset.stFull;
-    setPay(mk, subscriptionFor(apt, mk), collectDate); done();
+    setPay(mk, dueFor(apt, mk), collectDate); done();
   }));
   ov.querySelectorAll('[data-st-clear]').forEach(b=> b.addEventListener('click', ()=>{
     if(!unlocked) return;
@@ -2240,7 +2304,7 @@ function statusFor(apt, monthKey){
   if(!isOccupiedInMonth(apt, monthKey)) return 'vacant';
   const paid = (state.payments[monthKey]||{})[apt.id] || 0;
   if(paid<=0) return 'unpaid';
-  if(paid>=subscriptionFor(apt, monthKey)) return 'paid';
+  if(paid>=dueFor(apt, monthKey)) return 'paid';
   return 'partial';
 }
 
@@ -2248,7 +2312,7 @@ function computeMonthTotals(monthKey){
   let expected=0, collected=0, outstanding=0;
   state.apartments.forEach(a=>{
     if(!isOccupiedInMonth(a, monthKey)) return;
-    const sub = subscriptionFor(a, monthKey);
+    const sub = dueFor(a, monthKey);
     expected += sub;
     const paid = (state.payments[monthKey]||{})[a.id] || 0;
     collected += paid;
@@ -2303,14 +2367,14 @@ function commitmentPaidTotal(c){
 function commitmentRemaining(c, uptoMonthKey){
   const due = commitmentTotalDue(c, uptoMonthKey);
   const paid = commitmentPaidTotal(c);
-  const rem = due - paid;
+  const rem = due - paid - (Number(c.waived)||0);
   return c.type==='monthly' ? rem : Math.max(0, rem);
 }
 
 function commitmentTotalRemaining(c){
   // remaining to fully close the commitment, regardless of how many months elapsed
   const total = c.type==='installment' ? (c.totalAmount||0) : commitmentTotalDue(c, currentMonth);
-  return Math.max(0, total - commitmentPaidTotal(c));
+  return Math.max(0, total - commitmentPaidTotal(c) - (Number(c.waived)||0));
 }
 
 function commitmentSuggestedAmount(c){
@@ -2348,7 +2412,7 @@ function computeArrears(){
       const row = {key: residentKey(r), apt, resident: r, name: r.name, past: !r.current, total:0, items:[]};
       residentMonths(r, asOf).forEach(mk=>{
         const paid = (state.payments[mk]||{})[apt.id] || 0;
-        const owed = subscriptionFor(apt, mk) - paid;
+        const owed = round2(dueFor(apt, mk) - paid);
         if(owed>0){
           row.total += owed;
           row.items.push({label: monthLabel(mk), owed, mk});
@@ -2374,7 +2438,7 @@ function settleArrearsFor(key){
   const asOf = arrearsAsOfMonth();
   residentMonths(r, asOf).forEach(mk=>{
     const paid = (state.payments[mk]||{})[apt.id] || 0;
-    const sub = subscriptionFor(apt, mk);
+    const sub = dueFor(apt, mk);
     // الباقي بس بيتسجّل دفعة بتاريخ التحصيل المختار، واللي اتدفع قبل كده بيفضل بتاريخه
     if(paid < sub) setMonthPaid(mk, apt.id, sub, collectDate);
   });
@@ -2398,7 +2462,7 @@ function editArrearOwed(aptId, key, newOwedRaw){
   if(key.startsWith('m:')){
     // بند اشتراك شهر معيّن: المتأخر = الاشتراك - المدفوع، فتعديل المتأخر معناه تعديل المدفوع المقابل
     const mk = key.slice(2);
-    const sub = subscriptionFor(apt, mk);
+    const sub = dueFor(apt, mk);
     if(newOwed > sub){
       // المتأخر مايزيدش عن الاشتراك، وإلا المدفوع هيتسجّل بالسالب وينقّص رصيد الصندوق
       alert('المتأخر ماينفعش يبقى أكبر من الاشتراك الشهري (' + fmt(sub) + ' جنيه).\nلو فيه مبلغ زيادة على الساكن سجّله كالتزام/دين عليه.');
@@ -2459,7 +2523,7 @@ function useElevatorShareForApt(aptId, amount){
     if(remaining<=0) return;
     if(!isOccupiedInMonth(apt, mk)) return;
     const paid = (state.payments[mk]||{})[apt.id] || 0;
-    const owed = subscriptionFor(apt, mk) - paid;
+    const owed = round2(dueFor(apt, mk) - paid);
     if(owed>0){
       const pay = Math.min(owed, remaining);
       setMonthPaid(mk, apt.id, paid + pay, todayStr());
@@ -3289,7 +3353,7 @@ function quickTogglePaid(aptId){
   const apt = state.apartments.find(a=>a.id===aptId);
   if(!apt) return;
   const current = (state.payments[currentMonth]||{})[aptId]||0;
-  const sub = subscriptionFor(apt, currentMonth);
+  const sub = dueFor(apt, currentMonth);
   const goingToZero = current>=sub;
   if(goingToZero && !confirm('تمسح كل دفعات ' + monthLabel(currentMonth) + ' للشقة ' + aptId + '؟')) return;
   // "دفع كامل" بيسجّل الباقي بس كدفعة جديدة — اللي اتدفع قبل كده بيفضل بتاريخه
@@ -3374,7 +3438,7 @@ function tplCollect(){
       }
       const sub = subscriptionFor(apt, currentMonth);
       const paid = (state.payments[currentMonth]||{})[apt.id]||0;
-      const done = paid>=sub;
+      const done = paid>=dueFor(apt, currentMonth);
       const resP = periodFor(apt, currentMonth);
       html += `
         <div class="apt-row">
@@ -3967,10 +4031,10 @@ async function shareArrearsPDF(btn){
 function doorNoticeFor(r){
   const apt = r.apt, asOf = arrearsAsOfMonth();
   const months = residentMonths(r, asOf).map(mk=>{
-    const sub = subscriptionFor(apt, mk);
+    const sub = dueFor(apt, mk);
     const entries = paymentEntries(mk, apt.id);
     const paid = round2(entries.reduce((s,x)=> s + x.amount, 0));
-    return {mk, sub, entries, paid, owed: Math.max(0, round2(sub - paid))};
+    return {mk, sub, entries, paid, waived: waivedFor(apt, mk), owed: Math.max(0, round2(sub - paid))};
   });
   const debts = residentCommitments(r).filter(c=> c.startMonth <= asOf)
     .map(c=> ({c, due: commitmentTotalDue(c, asOf), rem: commitmentRemaining(c, asOf), pays: commitmentPayments(c)}))
@@ -4005,7 +4069,7 @@ function doorCardHtml(d, maxRows){
   let rows = '';
   if(summary) rows += `<tr><td>${monthLabel(summary.from)} ← ${monthLabel(summary.to)}</td><td class="c num">${fmt(summary.sub)}</td>
       <td class="c">${summary.paid ? '<b class="num">' + fmt(summary.paid) + '</b>' : '<span class="dc-nil">—</span>'}</td>${leftCell(summary.owed)}</tr>`;
-  rows += shown.map(m=> `<tr><td>${monthLabel(m.mk)}</td><td class="c num">${fmt(m.sub)}</td><td class="c">${payCell(m.entries)}</td>${leftCell(m.owed)}</tr>`).join('');
+  rows += shown.map(m=> `<tr><td>${monthLabel(m.mk)}</td><td class="c num">${fmt(m.sub)}</td><td class="c">${m.entries.length || !m.waived ? payCell(m.entries) : ''}${m.waived ? `<span class="dc-pay"><small>مشطوب ${fmt(m.waived)}</small></span>` : ''}</td>${leftCell(m.owed)}</tr>`).join('');
   rows += d.debts.map(x=> `<tr><td>${escapeHtml(x.c.note || COMMITMENT_TYPES[x.c.type])}<div class="dc-sub">${escapeHtml(COMMITMENT_TYPES[x.c.type])}</div></td>
       <td class="c num">${fmt(x.due)}</td><td class="c">${payCell(x.pays.map(p=> ({amount: Number(p.amount)||0, date: p.date || ''})))}</td>${leftCell(x.rem)}</tr>`).join('');
   const opts = String(state.settings.paymentOptions||'').split('\n').map(x=> x.trim()).filter(Boolean);
@@ -5157,6 +5221,9 @@ function bindTabEvents(){
           if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
         });
         Object.values(state.paymentLog||{}).forEach(monthObj=>{
+          if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
+        });
+        Object.values(state.waivers||{}).forEach(monthObj=>{
           if(monthObj[oldId]!==undefined){ monthObj[newId]=monthObj[oldId]; delete monthObj[oldId]; }
         });
         (state.commitments||[]).forEach(c=>{ if(c.aptId===oldId) c.aptId=newId; });
